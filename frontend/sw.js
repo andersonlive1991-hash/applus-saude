@@ -62,7 +62,7 @@ self.addEventListener('notificationclick', e => {
           return client.focus();
         }
       }
-      return clients.openWindow(e.notification.data.url || '/');
+      return clients.openWindow('https://applus-saude.onrender.com/');
     })
   );
 });
