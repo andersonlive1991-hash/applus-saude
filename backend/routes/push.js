@@ -68,10 +68,9 @@ router.post('/enviar-membro', async (req, res) => {
   }
 });
 
-// Gerar chaves VAPID
+// Retornar chave pública VAPID configurada no servidor
 router.get('/gerar-vapid', (req, res) => {
-  const vapidKeys = webpush.generateVAPIDKeys();
-  res.json(vapidKeys);
+  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
 });
 
 module.exports = router;
