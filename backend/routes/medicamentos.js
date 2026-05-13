@@ -72,3 +72,40 @@ router.delete('/:id', async (req, res) => {
 });
 
 module.exports = router;
+
+// ── AGENDADOR PUSH MEDICAMENTOS ──
+const webpush = require('web-push');
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    'mailto:contato@applus.saude',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
+
+async function dispararPushMedicamentos() {
+  try {
+    const agora = new Date();
+    const horaAtual = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
+    const meds = await db.query('SELECT * FROM medicamentos');
+    for (const med of meds.rows) {
+      const horarios = typeof med.horarios === 'string' ? JSON.parse(med.horarios) : med.horarios;
+      if (!Array.isArray(horarios) || !horarios.includes(horaAtual)) continue;
+      const subRes = await db.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [med.membro_id]);
+      if (!subRes.rows.length) continue;
+      const sub = typeof subRes.rows[0].subscription === 'string' ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
+      const payload = JSON.stringify({
+        titulo: '💊 Hora do medicamento!',
+        corpo: `${med.nome}${med.dosagem ? ' — ' + med.dosagem : ''} · ${horaAtual}`,
+        url: '/#remedios',
+        medicamento: true,
+        medId: med.id,
+        medNome: med.nome
+      });
+      webpush.sendNotification(sub, payload).catch(() => {});
+    }
+  } catch (e) {
+    console.error('Erro agendador:', e.message);
+  }
+}
+setInterval(dispararPushMedicamentos, 60000);

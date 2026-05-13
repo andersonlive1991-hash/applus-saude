@@ -79,23 +79,54 @@ async function registrarSW() {
     try {
       await navigator.serviceWorker.register('/sw.js');
       console.log('SW registrado');
-
       navigator.serviceWorker.addEventListener('message', (e) => {
+        if (e.data && e.data.tipo === 'tocar-alarme') iniciarSomAlarme();
+        if (e.data && e.data.tipo === 'parar-alarme') pararSomAlarme();
         if (e.data && e.data.tipo === 'alarme-push') {
+          pararSomAlarme();
           const dados = e.data.dados;
           if (dados && dados.medicamento) {
-            api('GET', `/api/medicamentos/${APP.familiaId}?membro_id=${APP.membroId}`)
+            api('GET', '/api/medicamentos/' + APP.familiaId + '?membro_id=' + APP.membroId)
               .then(meds => {
-                const med = meds.find(m => dados.corpo && dados.corpo.includes(m.nome)) || meds[0];
+                const med = meds.find(m => (dados.medId && m.id == dados.medId) || (dados.corpo && dados.corpo.includes(m.nome))) || meds[0];
                 if (med) dispararAlarme(med);
               }).catch(() => {});
           }
         }
       });
-    } catch (e) {
-      console.log('SW erro:', e);
-    }
+    } catch (e) { console.log('SW erro:', e); }
   }
+}
+
+// ── SOM DO ALARME ──
+let _alarmeAudioCtx = null;
+let _alarmeLoopTimer = null;
+
+function iniciarSomAlarme() {
+  pararSomAlarme();
+  const freqs = [440, 523, 659, 784, 880];
+  function tocarBeep() {
+    try {
+      _alarmeAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = _alarmeAudioCtx.createOscillator();
+      const gain = _alarmeAudioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(_alarmeAudioCtx.destination);
+      osc.frequency.value = freqs[Math.floor(Math.random() * freqs.length)];
+      osc.type = 'square';
+      gain.gain.setValueAtTime(1, _alarmeAudioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, _alarmeAudioCtx.currentTime + 0.8);
+      osc.start(_alarmeAudioCtx.currentTime);
+      osc.stop(_alarmeAudioCtx.currentTime + 0.8);
+    } catch(err) { console.warn('Erro som:', err); }
+  }
+  tocarBeep();
+  _alarmeLoopTimer = setInterval(tocarBeep, 1200);
+}
+
+function pararSomAlarme() {
+  if (_alarmeLoopTimer) { clearInterval(_alarmeLoopTimer); _alarmeLoopTimer = null; }
+  if (_alarmeAudioCtx) { _alarmeAudioCtx.close().catch(() => {}); _alarmeAudioCtx = null; }
 }
 
 // ── LOGIN ──
@@ -518,6 +549,7 @@ async function confirmarDose(status) {
   const medId = document.getElementById('alarme-overlay').dataset.medId;
   clearInterval(APP.alarmeRepetir);
   speechSynthesis.cancel();
+  pararSomAlarme();
   document.getElementById('alarme-overlay').classList.remove('ativo');
   APP.alarmeAtivo = null;
 
@@ -532,6 +564,7 @@ async function confirmarDose(status) {
 function lembrarDepois() {
   clearInterval(APP.alarmeRepetir);
   speechSynthesis.cancel();
+  pararSomAlarme();
   document.getElementById('alarme-overlay').classList.remove('ativo');
   setTimeout(() => {
     const medId = document.getElementById('alarme-overlay').dataset.medId;
