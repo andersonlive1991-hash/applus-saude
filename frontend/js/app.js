@@ -822,15 +822,13 @@ async function inscreverPush() {
   if (!('PushManager' in window)) return;
   try {
     const reg = await navigator.serviceWorker.ready;
-    const res = await fetch('/api/push/gerar-vapid');
 
-    // Só inscreve se já tiver VAPID configurado
-    const vapid = await res.json();
-    if (!vapid.publicKey) return;
+    // Usar a chave pública fixa do servidor
+    const VAPID_PUBLIC_KEY = 'BO6JXBRmtjSjiM9OAa7NSy2CtZS6x_caWM582FMie8idIzpapx8McDuQl62PChqMHxQAELiE1ja1kHDmK91nLGE';
 
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapid.publicKey)
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
 
     await api('POST', '/api/push/inscrever', {
@@ -838,6 +836,7 @@ async function inscreverPush() {
       familia_id: APP.familiaId,
       subscription: sub
     });
+    console.log('Push inscrito com sucesso!');
   } catch (e) {
     console.log('Push não disponível:', e);
   }
