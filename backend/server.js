@@ -65,7 +65,8 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 setInterval(async () => {
   try {
     const agora = new Date();
-    const horaAtual = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
+    const horaBrasil = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const horaAtual = `${String(horaBrasil.getHours()).padStart(2,'0')}:${String(horaBrasil.getMinutes()).padStart(2,'0')}`;
 
     console.log('[Agendador] Verificando:', horaAtual);
     const meds = await pool.query('SELECT * FROM medicamentos WHERE horarios IS NOT NULL');
