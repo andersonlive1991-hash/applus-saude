@@ -1,0 +1,90 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
+const path = require('path');
+const pool = require('./db');
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
+
+app.use(cors());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Rotas
+app.use('/api/familias', require('./routes/familias'));
+app.use('/api/membros', require('./routes/membros'));
+app.use('/api/medicamentos', require('./routes/medicamentos'));
+app.use('/api/eventos', require('./routes/eventos'));
+app.use('/api/sinais', require('./routes/sinais'));
+app.use('/api/vacinas', require('./routes/vacinas'));
+app.use('/api/mensagens', require('./routes/mensagens'));
+app.use('/api/gastos', require('./routes/gastos'));
+app.use('/api/push', require('./routes/push'));
+app.use('/api/ia', require('./routes/ia'));
+app.use('/api/escala', require('./routes/escala'));
+app.use('/api/perfil', require('./routes/perfil'));
+app.use('/api/historico', require('./routes/saude_historico'));
+app.use('/api/prontuarios', require('./routes/prontuarios'));
+app.use('/api/rotina-tea', require('./routes/rotina_tea'));
+
+// Socket.io
+io.on('connection', (socket) => {
+  console.log('Cliente conectado:', socket.id);
+  socket.on('entrar-familia', (familiaId) => {
+    familiaId = String(familiaId);
+    console.log('Entrou na sala:', familiaId);
+    socket.join(familiaId);
+  });
+  socket.on('emergencia', (data) => {
+    io.to(data.familiaId).emit('alerta-emergencia', data);
+  });
+  socket.on('mensagem', (data) => {
+    const sala = String(data.familiaId || data.familia_id);
+    io.to(sala).emit('nova-mensagem', data);
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`AP+ Saúde rodando na porta ${PORT}`));
+
+// ── VERIFICAR HORÁRIOS DE MEDICAMENTOS A CADA MINUTO ──
+const webpush = require('web-push');
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    'mailto:contato@applus.saude',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
+
+setInterval(async () => {
+  try {
+    const agora = new Date();
+    const horaAtual = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
+
+    const meds = await pool.query('SELECT m.*, ps.subscription FROM medicamentos m JOIN push_subscriptions ps ON ps.membro_id = m.membro_id WHERE m.horarios IS NOT NULL');
+
+    for (const med of meds.rows) {
+      const horarios = typeof med.horarios === 'string' ? JSON.parse(med.horarios) : med.horarios;
+      if (!Array.isArray(horarios)) continue;
+
+      if (horarios.includes(horaAtual)) {
+        const sub = typeof med.subscription === 'string' ? JSON.parse(med.subscription) : med.subscription;
+        const payload = JSON.stringify({
+          titulo: `💊 Hora do remédio!`,
+          corpo: `Hora de tomar: ${med.nome} ${med.dosagem || ''}`,
+          url: '/',
+          medicamento: true
+        });
+        webpush.sendNotification(sub, payload).catch(() => {});
+      }
+    }
+  } catch(e) {
+    console.log('Erro push automático:', e.message);
+  }
+}, 60000);

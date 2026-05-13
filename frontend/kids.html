@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#f97316">
+<title>AP+ Kids</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: #fff8f0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.app {
+  max-width: 480px;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TELA LOGIN KIDS ── */
+.login-kids {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  background: linear-gradient(160deg, #f97316, #fb923c, #fed7aa);
+  min-height: 100vh;
+}
+
+.kids-logo { font-size: 80px; margin-bottom: 16px; animation: bounce 1s infinite; }
+
+.kids-titulo {
+  font-size: 36px;
+  font-weight: 900;
+  color: white;
+  margin-bottom: 8px;
+}
+
+.kids-sub {
+  font-size: 16px;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 40px;
+}
+
+.kids-input-box {
+  background: white;
+  border-radius: 24px;
+  padding: 32px 24px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.kids-input-box label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f97316;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.kids-input-box input {
+  width: 100%;
+  padding: 16px;
+  border: 3px solid #fed7aa;
+  border-radius: 16px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  outline: none;
+  color: #1a1f2e;
+}
+
+.kids-input-box input:focus { border-color: #f97316; }
+
+.btn-kids-entrar {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 18px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ── TELA PRINCIPAL KIDS ── */
+.kids-home {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100vh;
+}
+
+.kids-header {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  padding: 48px 24px 32px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.kids-header::before {
+  content: '⭐';
+  position: absolute;
+  font-size: 60px;
+  top: -10px; left: -10px;
+  opacity: 0.2;
+}
+
+.kids-header::after {
+  content: '🌟';
+  position: absolute;
+  font-size: 60px;
+  bottom: -10px; right: -10px;
+  opacity: 0.2;
+}
+
+.kids-avatar {
+  font-size: 64px;
+  margin-bottom: 8px;
+}
+
+.kids-ola {
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+}
+
+.kids-curva {
+  width: 100%;
+  height: 40px;
+  background: #fff8f0;
+  border-radius: 32px 32px 0 0;
+  margin-top: -24px;
+}
+
+.kids-content {
+  flex: 1;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #fff8f0;
+}
+
+/* ── BOTÃO SOS ── */
+.btn-sos {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  border: none;
+  border-radius: 24px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(220,38,38,0.4);
+  animation: pulse-sos 2s infinite;
+  width: 100%;
+}
+
+.btn-sos .sos-icone { font-size: 64px; }
+.btn-sos .sos-texto {
+  font-family: 'Nunito', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+  letter-spacing: 2px;
+}
+.btn-sos .sos-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.8);
+  font-weight: 700;
+}
+
+/* ── CHAT KIDS ── */
+.chat-kids-box {
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.chat-kids-titulo {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 800;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-kids-msgs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 200px;
+  max-height: 300px;
+}
+
+.msg-kids {
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 15px;
+  font-weight: 700;
+  max-width: 80%;
+  line-height: 1.4;
+}
+
+.msg-kids.propria {
+  background: #f97316;
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.msg-kids.outra {
+  background: #f3f4f6;
+  color: #1a1f2e;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.msg-kids-autor { font-size: 11px; opacity: 0.7; margin-bottom: 3px; }
+.msg-kids-hora { font-size: 10px; opacity: 0.6; margin-top: 3px; text-align: right; }
+
+.chat-kids-input {
+  padding: 12px 16px;
+  border-top: 2px solid #fed7aa;
+  display: flex;
+  gap: 10px;
+  background: white;
+}
+
+.chat-kids-input input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #fed7aa;
+  border-radius: 20px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+}
+
+.chat-kids-input input:focus { border-color: #f97316; }
+
+.chat-kids-input button {
+  width: 44px; height: 44px;
+  background: #f97316;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── ALERTA SOS ENVIADO ── */
+.sos-enviado {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(220,38,38,0.95);
+  z-index: 300;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+}
+
+.sos-enviado.ativo { display: flex; }
+.sos-enviado .icone { font-size: 80px; margin-bottom: 16px; animation: bounce 0.5s infinite; }
+.sos-enviado h2 { font-size: 28px; font-weight: 900; color: white; margin-bottom: 8px; }
+.sos-enviado p { font-size: 16px; color: rgba(255,255,255,0.8); margin-bottom: 32px; }
+.sos-enviado button {
+  background: white;
+  color: #dc2626;
+  border: none;
+  border-radius: 16px;
+  padding: 16px 32px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-sos {
+  0%, 100% { box-shadow: 0 8px 32px rgba(220,38,38,0.4); }
+  50% { box-shadow: 0 8px 48px rgba(220,38,38,0.7); transform: scale(1.02); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── LOGIN KIDS ── -->
+  <div class="login-kids" id="login-kids">
+    <div class="kids-logo">👶</div>
+    <div class="kids-titulo">AP+ Kids</div>
+    <div class="kids-sub">Área da criança</div>
+    <div class="kids-input-box">
+      <label>Digite seu ID</label>
+      <input id="kids-id-input" type="text" placeholder="Ex: LAU-L8D5O" maxlength="10">
+      <button class="btn-kids-entrar" onclick="entrarKids()">Entrar ✨</button>
+    </div>
+  </div>
+
+  <!-- ── HOME KIDS ── -->
+  <div class="kids-home" id="kids-home">
+    <div class="kids-header">
+      <div class="kids-avatar">👶</div>
+      <div class="kids-ola" id="kids-nome">Olá!</div>
+    </div>
+    <div class="kids-curva"></div>
+
+    <div class="kids-content">
+      <!-- Botão SOS -->
+      <button class="btn-sos" onclick="enviarSOS()">
+        <span class="sos-icone">🆘</span>
+        <span class="sos-texto">SOCORRO!</span>
+        <span class="sos-sub">Toca aqui se precisar de ajuda</span>
+      </button>
+
+      <!-- Chat com a família -->
+      <div class="chat-kids-box">
+        <div class="chat-kids-titulo">💬 Falar com a família</div>
+        <div class="chat-kids-msgs" id="chat-kids-msgs"></div>
+        <div class="chat-kids-input">
+          <input id="chat-kids-input" type="text" placeholder="Escreva algo...">
+          <button onclick="enviarMsgKids()">➤</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SOS ENVIADO ── -->
+  <div class="sos-enviado" id="sos-enviado">
+    <div class="icone">🆘</div>
+    <h2>Socorro enviado!</h2>
+    <p>Sua família foi avisada e já vem te ajudar!</p>
+    <button onclick="fecharSOS()">Ok, obrigado!</button>
+  </div>
+
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+const KIDS = {
+  membroId: null,
+  membroNome: null,
+  familiaId: null,
+  idPessoal: null,
+  socket: null
+};
+
+// Verificar se veio com ID na URL
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (id) {
+    document.getElementById('kids-id-input').value = id.toUpperCase();
+    entrarKids();
+  }
+});
+
+async function entrarKids() {
+  const id = document.getElementById('kids-id-input').value.trim().toUpperCase();
+  if (!id) return alert('Digite seu ID!');
+
+  try {
+    const res = await fetch(`/api/membros/id/${id}`);
+    if (!res.ok) throw new Error('ID não encontrado');
+    const mem = await res.json();
+
+    if (mem.tipo !== 'crianca' && mem.tipo !== 'tea') {
+      return alert('Este ID não é de uma criança!');
+    }
+    if (mem.tipo === 'tea') {
+      window.location.href = `/tea.html?id=${id}`;
+      return;
+    }
+
+    KIDS.membroId = mem.id;
+    KIDS.membroNome = mem.nome;
+    KIDS.familiaId = String(mem.familia_id);
+    KIDS.idPessoal = mem.id_pessoal;
+
+    document.getElementById('login-kids').style.display = 'none';
+    document.getElementById('kids-home').style.display = 'flex';
+    document.getElementById('kids-nome').textContent = `Olá, ${mem.nome.split(' ')[0]}! 👋`;
+
+    conectarSocketKids();
+    carregarMsgsKids();
+  } catch (e) {
+    alert('ID não encontrado. Tenta de novo!');
+  }
+}
+
+function conectarSocketKids() {
+  KIDS.socket = io({ reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: Infinity });
+  KIDS.socket.on("reconnect", () => { KIDS.socket.emit("entrar-familia", KIDS.familiaId); });
+  KIDS.socket.emit('entrar-familia', KIDS.familiaId);
+
+  KIDS.socket.on('nova-mensagem', (msg) => {
+    if (msg.autor_id !== KIDS.idPessoal) {
+      adicionarMsgKids(msg, false);
+    }
+  });
+}
+
+async function carregarMsgsKids() {
+  try {
+    const res = await fetch(`/api/mensagens/${KIDS.familiaId}`);
+    const msgs = await res.json();
+    const container = document.getElementById('chat-kids-msgs');
+    container.innerHTML = msgs.map(m => msgKidsHTML(m)).join('');
+    container.scrollTop = container.scrollHeight;
+  } catch (e) {
+    console.log('Erro msgs:', e);
+  }
+}
+
+function msgKidsHTML(msg) {
+  const propria = msg.autor_id === KIDS.idPessoal;
+  return `
+    <div class="msg-kids ${propria ? 'propria' : 'outra'}">
+      <div class="msg-kids-autor">${msg.autor}</div>
+      ${msg.texto}
+      <div class="msg-kids-hora">${new Date(msg.criado_em).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div>
+    </div>`;
+}
+
+async function enviarMsgKids() {
+  const input = document.getElementById('chat-kids-input');
+  const texto = input.value.trim();
+  if (!texto) return;
+
+  const msg = {
+    familia_id: KIDS.familiaId,
+    autor: KIDS.membroNome,
+    autor_id: KIDS.idPessoal,
+    texto,
+    categoria: 'Kids'
+  };
+
+  input.value = '';
+  adicionarMsgKids(msg, true);
+
+  await fetch('/api/mensagens', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(msg)
+  });
+
+  if (KIDS.socket) KIDS.socket.emit('mensagem', msg);
+}
+
+function adicionarMsgKids(msg, propria) {
+  const container = document.getElementById('chat-kids-msgs');
+  const div = document.createElement('div');
+  div.className = `msg-kids ${propria ? 'propria' : 'outra'}`;
+  div.innerHTML = `
+    <div class="msg-kids-autor">${msg.autor}</div>
+    ${msg.texto}
+    <div class="msg-kids-hora">${new Date(msg.criado_em || new Date()).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function enviarSOS() {
+  try {
+    await fetch('/api/push/enviar-familia', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        familia_id: KIDS.familiaId,
+        titulo: `🆘 SOCORRO — ${KIDS.membroNome}`,
+        corpo: `${KIDS.membroNome} precisa de ajuda!`,
+        url: '/'
+      })
+    });
+
+    if (KIDS.socket) {
+      KIDS.socket.emit('emergencia', {
+        familiaId: KIDS.familiaId,
+        autor: KIDS.membroNome,
+        tipo: 'SOS Criança',
+        hora: new Date().toLocaleTimeString('pt-BR')
+      });
+    }
+
+    document.getElementById('sos-enviado').classList.add('ativo');
+  } catch (e) {
+    alert('Erro ao enviar socorro!');
+  }
+}
+
+function fecharSOS() {
+  document.getElementById('sos-enviado').classList.remove('ativo');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement.id === 'chat-kids-input') enviarMsgKids();
+  if (e.key === 'Enter' && document.activeElement.id === 'kids-id-input') entrarKids();
+});
+</script>
+</body>
+</html>

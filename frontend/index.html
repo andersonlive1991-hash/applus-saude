@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a9e6e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>AP+ Saúde</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- ══ TELA DE LOGIN ══ -->
+<div id="login-page" class="login-page" style="display:flex">
+
+  <div class="login-top">
+    <div class="login-icone">🌿</div>
+    <div class="login-titulo">AP<span>+</span></div>
+    <div class="login-sub">Saúde Familiar</div>
+  </div>
+
+  <div class="login-bottom">
+    <h2>Como deseja entrar?</h2>
+    <div class="login-opcoes">
+
+      <button class="login-opcao" onclick="abrirModal('modal-criar')">
+        <span class="login-opcao-icone">🏠</span>
+        <div>
+          <div class="login-opcao-titulo">Criar família</div>
+          <div class="login-opcao-sub">Primeira vez usando o app</div>
+        </div>
+      </button>
+
+      <button class="login-opcao" onclick="abrirModal('modal-entrar')">
+        <span class="login-opcao-icone">👨‍👩‍👧</span>
+        <div>
+          <div class="login-opcao-titulo">Entrar em família</div>
+          <div class="login-opcao-sub">Tenho o código da família</div>
+        </div>
+      </button>
+
+      <button class="login-opcao" onclick="abrirModal('modal-recuperar')">
+        <span class="login-opcao-icone">🔑</span>
+        <div>
+          <div class="login-opcao-titulo">Já tenho ID</div>
+          <div class="login-opcao-sub">Recuperar acesso em novo celular</div>
+        </div>
+      </button>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ TELA SELEÇÃO DE PERFIL ══ -->
+<div id="perfil-page" class="perfil-page" style="display:none">
+  <div class="perfil-page-top">
+    <div style="font-size:48px;margin-bottom:12px">🌿</div>
+    <h2 id="perfil-familia-nome">Família</h2>
+    <p>Quem está usando o app?</p>
+  </div>
+  <div class="perfil-page-bottom">
+    <div style="font-family:'Sora',sans-serif;font-size:12px;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px">Selecione o perfil</div>
+    <div class="perfis-grid" id="lista-perfis"></div>
+  </div>
+</div>
+
+<!-- ══ APP PRINCIPAL ══ -->
+<div id="app-page" class="app" style="display:none">
+
+  <!-- ── HOME ── -->
+  <div id="pag-home" class="pagina">
+    <div class="header-verde">
+      <div class="logo-area">
+        <div class="logo-icon">🌿</div>
+        <div class="logo-nome">
+          <div class="ap">AP<span>+</span></div>
+          <div class="sub">Saúde</div>
+        </div>
+      </div>
+      <div class="perfil-selector">
+        <div class="perfil-btn-atual" onclick="toggleDropdown()">
+          <div class="av-mini" id="dropdown-avatar">👤</div>
+          <span class="nome-curto" id="dropdown-nome">...</span>
+          <span class="seta">▼</span>
+        </div>
+        <div class="perfil-dropdown" id="perfil-dropdown">
+          <div class="dropdown-titulo">Trocar perfil</div>
+          <div id="dropdown-lista"></div>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item" onclick="abrirModal('modal-add-membro');fecharDropdown()">
+            <div class="av" style="background:#e8f7f1">➕</div>
+            <div class="dropdown-item-info">
+              <div class="dn" style="color:var(--verde)">Adicionar membro</div>
+            </div>
+          </button>
+        </div>
+      </div>
+      <h1 id="home-nome">Olá 👋</h1>
+      <p id="home-data"></p>
+    </div>
+    <div class="curva"></div>
+
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      <span id="home-status">Carregando...</span>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card destaque" onclick="navegarPara('remedios')">
+        <div class="card-icone">💊</div>
+        <div>
+          <div class="card-titulo">Medicamentos</div>
+          <div class="card-sub">Gerenciar remédios</div>
+        </div>
+      </div>
+      <div class="card" onclick="navegarPara('agenda')">
+        <div class="card-icone">📅</div>
+        <div class="card-titulo">Agenda</div>
+        <div class="card-sub">Consultas e exames</div>
+      </div>
+      <div class="card" onclick="navegarPara('chat')">
+        <div class="card-icone">💬</div>
+        <div class="card-titulo">Família</div>
+        <div class="card-sub">Chat familiar</div>
+      </div>
+      <div class="card" onclick="navegarPara('saude')">
+        <div class="card-icone">❤️</div>
+        <div class="card-titulo">Saúde</div>
+        <div class="card-sub">Sinais vitais</div>
+      </div>
+      <div class="card" onclick="navegarPara('ia')">
+        <div class="card-icone">🤖</div>
+        <div class="card-titulo">Assistente IA</div>
+        <div class="card-sub">Tire dúvidas</div>
+      </div>
+      <div class="card" onclick="navegarPara('historico')">
+        <div class="card-icone">🏥</div>
+        <div class="card-titulo">Histórico</div>
+        <div class="card-sub">Doenças e tratamentos</div>
+      </div>
+      <div class="card" id="card-tea" onclick="navegarPara('tea')" style="display:none">
+        <div class="card-icone">🧩</div>
+        <div class="card-titulo">TEA</div>
+        <div class="card-sub">Rotina e comunicação</div>
+      </div>
+    </div>
+
+    <div class="secao">
+      <div class="secao-titulo">Hoje</div>
+      <div id="home-eventos"></div>
+    </div>
+  </div>
+
+  <!-- ── MEDICAMENTOS ── -->
+  <div id="pag-remedios" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#1a4e9e,#1a6eb5,#3b9eff)">
+      <h1>💊 Medicamentos</h1>
+      <p>Controle de remédios e alarmes</p>
+    </div>
+    <div class="curva"></div>
+    <div class="secao" style="padding-top:8px">
+      <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-med')">+ Adicionar medicamento</button>
+    </div>
+    <div class="secao">
+      <div id="lista-medicamentos"></div>
+    </div>
+  </div>
+
+  <!-- ── AGENDA ── -->
+  <div id="pag-agenda" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#6b21a8,#9333ea,#c084fc)">
+      <h1>📅 Agenda</h1>
+      <p>Consultas, exames e eventos</p>
+    </div>
+    <div class="curva"></div>
+    <div class="secao" style="padding-top:8px">
+      <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-evento')">+ Adicionar evento</button>
+    </div>
+    <div class="secao">
+      <div id="lista-eventos"></div>
+    </div>
+  </div>
+
+  <!-- ── CHAT ── -->
+    <div id="pag-chat" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#0f6647,#1a9e6e,#22c991);padding-bottom:20px">
+      <h1>💬 Família</h1>
+      <p>Chat em tempo real</p>
+    </div>
+    <div class="curva" style="background:var(--creme)"></div>
+    <div id="chat-mensagens" class="chat-mensagens" style="background:var(--creme)"></div>
+    <div class="chat-input">
+      <input id="chat-input" type="text" placeholder="Digite uma mensagem...">
+      <button onclick="enviarMensagem()">➤</button>
+    </div>
+  </div>
+
+  <!-- ── SAÚDE<!-- ── SAÚDE ── -->
+  <div id="pag-saude" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#991b1b,#e53e3e,#fc8181)">
+      <h1>❤️ Saúde</h1>
+      <p>Sinais vitais e bem-estar</p>
+    </div>
+    <div class="curva"></div>
+    <div class="cards-grid" style="padding-top:8px">
+      <div class="card" onclick="abrirModal('modal-pressao')">
+        <div class="card-icone">🩺</div>
+        <div class="card-titulo">Pressão</div>
+        <div class="card-sub">Registrar</div>
+      </div>
+      <div class="card" onclick="abrirModal('modal-glicemia')">
+        <div class="card-icone">🩸</div>
+        <div class="card-titulo">Glicemia</div>
+        <div class="card-sub">Registrar</div>
+      </div>
+      <div class="card" onclick="abrirModal('modal-peso')">
+        <div class="card-icone">⚖️</div>
+        <div class="card-titulo">Peso</div>
+        <div class="card-sub">Registrar</div>
+      </div>
+      <div class="card" onclick="abrirModal('modal-oximetria')">
+        <div class="card-icone">💨</div>
+        <div class="card-titulo">Oximetria</div>
+        <div class="card-sub">Registrar</div>
+      </div>
+      <div class="card" onclick="navegarPara('emergencia')">
+        <div class="card-icone">🚨</div>
+        <div class="card-titulo">Emergência</div>
+        <div class="card-sub">Alertar família</div>
+      </div>
+      <div class="card" onclick="navegarPara('ia')">
+        <div class="card-icone">🤖</div>
+        <div class="card-titulo">Assistente</div>
+        <div class="card-sub">Tire dúvidas</div>
+      </div>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Últimos registros</div>
+      <div id="lista-sinais"></div>
+    </div>
+  </div>
+
+  <!-- ── MAIS ── -->
+  <div id="pag-mais" class="pagina">
+    <div class="header-verde">
+      <h1>⚙️ Mais</h1>
+      <p>Configurações e recursos</p>
+    </div>
+    <div class="curva"></div>
+    <div class="secao" style="padding-top:8px">
+      <div class="item-lista">
+        <span style="font-size:24px">👤</span>
+        <div class="item-info">
+          <div class="item-nome" id="mais-nome"></div>
+          <div class="item-sub">ID: <span id="mais-id"></span></div>
+        </div>
+        <button onclick="trocarPerfil()" style="background:none;border:none;font-size:12px;color:var(--cinza);cursor:pointer;font-family:'Sora',sans-serif">Trocar</button>
+      </div>
+
+      <div id="kids-qr-section" style="display:none;background:#fff8f0;border:2px solid #fed7aa;border-radius:16px;padding:16px;margin-bottom:10px">
+        <div style="font-family:'Sora',sans-serif;font-size:13px;font-weight:700;color:#f97316;margin-bottom:12px">📱 Acesso Kids</div>
+        <div style="display:flex;gap:16px;align-items:center">
+          <img id="kids-qr-canvas" width="100" height="100" style="border-radius:8px">
+          <div>
+            <div style="font-size:12px;color:var(--cinza);margin-bottom:6px">A criança escaneia este QR Code para acessar o app Kids</div>
+            <div style="font-family:'Sora',sans-serif;font-size:13px;font-weight:700;color:var(--texto)" id="kids-qr-id"></div>
+            <button onclick="compartilharKids()" style="margin-top:8px;background:#f97316;color:white;border:none;border-radius:10px;padding:8px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:700;cursor:pointer">📤 Compartilhar link</button>
+          </div>
+        </div>
+      </div>
+      <div class="item-lista">
+        <span style="font-size:24px">👨‍👩‍👧</span>
+        <div class="item-info">
+          <div class="item-nome">Código da Família</div>
+          <div class="item-sub" id="mais-familia"></div>
+        </div>
+        <button onclick="compartilharCodigo()" style="background:none;border:none;font-size:20px;cursor:pointer">📤</button>
+      </div>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Módulos</div>
+      <div class="item-lista" onclick="navegarPara('vacinas')">
+        <span style="font-size:24px">💉</span>
+        <div class="item-info"><div class="item-nome">Vacinas</div></div>
+        <span>›</span>
+      </div>
+      <div class="item-lista" onclick="navegarPara('financeiro')">
+        <span style="font-size:24px">💰</span>
+        <div class="item-info"><div class="item-nome">Financeiro</div></div>
+        <span>›</span>
+      </div>
+      <div class="item-lista" onclick="navegarPara('checklist')">
+        <span style="font-size:24px">✅</span>
+        <div class="item-info"><div class="item-nome">Checklist</div></div>
+        <span>›</span>
+      </div>
+      <div class="item-lista" onclick="navegarPara('escala')">
+        <span style="font-size:24px">📋</span>
+        <div class="item-info"><div class="item-nome">Escala de Cuidado</div></div>
+        <span>›</span>
+      </div>
+      <div class="item-lista" onclick="navegarPara('perfil')">
+        <span style="font-size:24px">🧓</span>
+        <div class="item-info"><div class="item-nome">Perfil do Idoso</div></div>
+        <span>›</span>
+      </div>
+    </div>
+    <div class="secao">
+      <button class="btn btn-outline btn-block" onclick="sair()">Sair / Trocar conta</button>
+    </div>
+  </div>
+
+  <!-- ── EMERGÊNCIA ── -->
+  <div id="pag-emergencia" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#7f1d1d,#c0392b,#e74c3c)">
+      <h1>🚨 Emergência</h1>
+      <p>Alerta imediato para a família</p>
+    </div>
+    <div class="curva"></div>
+    <div class="form" style="gap:12px">
+      <button class="btn-emergencia" onclick="dispararEmergencia('Queda')">
+        <span class="icone">🤕</span> Queda
+      </button>
+      <button class="btn-emergencia" onclick="dispararEmergencia('Dor intensa')">
+        <span class="icone">😣</span> Dor intensa
+      </button>
+      <button class="btn-emergencia" onclick="dispararEmergencia('Mal-estar')">
+        <span class="icone">😰</span> Mal-estar
+      </button>
+      <button class="btn-emergencia" style="background:#fff9e6;border-color:#fcd34d;color:#854d0e" onclick="dispararEmergencia('Outro')">
+        <span class="icone">❓</span> Outro
+      </button>
+      <button class="btn btn-cinza btn-block" onclick="navegarPara('saude')">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- ── ASSISTENTE IA ── -->
+  <div id="pag-ia" class="pagina" style="padding-bottom:0">
+    <div class="header-verde" style="background:linear-gradient(145deg,#1e3a5f,#1a6eb5,#3b9eff);padding-bottom:20px">
+      <h1>🤖 Assistente IA</h1>
+      <p>Powered by Gemini</p>
+    </div>
+    <div class="curva" style="background:var(--creme)"></div>
+    <div id="ia-mensagens" class="ia-mensagens" style="background:var(--creme)">
+      <div class="ia-msg-bot">Olá! Sou o assistente de saúde do AP+ Saúde. Posso ajudar com dúvidas sobre medicamentos, cuidados e saúde em geral. Como posso ajudar?</div>
+    </div>
+    <div class="chat-input">
+      <input id="ia-input" type="text" placeholder="Faça uma pergunta...">
+      <button onclick="perguntarIA()">➤</button>
+    </div>
+  </div>
+
+  <!-- ── VACINAS ── -->
+  <div id="pag-vacinas" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#065f46,#059669,#34d399)">
+      <h1>💉 Vacinas</h1>
+      <p>Cartão de vacinação digital</p>
+    </div>
+    <div class="curva"></div>
+    <div class="secao" style="padding-top:8px">
+      <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-vacina')">+ Adicionar vacina</button>
+    </div>
+    <div class="secao">
+      <div id="lista-vacinas"></div>
+    </div>
+    <div class="secao">
+      <button class="btn btn-cinza btn-block" onclick="navegarPara('mais')">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- ── FINANCEIRO ── -->
+  <div id="pag-financeiro" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#1e3a5f,#2563eb,#60a5fa)">
+      <h1>💰 Financeiro</h1>
+      <p>Controle de gastos do cuidado</p>
+    </div>
+    <div class="curva"></div>
+    <div class="secao" style="padding-top:8px">
+      <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-gasto')">+ Registrar gasto</button>
+    </div>
+    <div class="secao">
+      <div id="lista-gastos"></div>
+    </div>
+    <div class="secao">
+      <button class="btn btn-cinza btn-block" onclick="navegarPara('mais')">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- ── CHECKLIST ── -->
+  <div id="pag-checklist" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#713f12,#d97706,#fbbf24)">
+      <h1>✅ Checklist</h1>
+      <p>Tarefas diárias de cuidado</p>
+    </div>
+    <div class="curva"></div>
+    <div class="secao" style="padding-top:8px">
+      <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-tarefa')">+ Adicionar tarefa</button>
+    </div>
+    <div class="secao">
+      <div id="lista-checklist"></div>
+    </div>
+    <div class="secao">
+      <button class="btn btn-cinza btn-block" onclick="navegarPara('mais')">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- ── ESCALA ── -->
+  <div id="pag-escala" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#312e81,#4f46e5,#818cf8)">
+      <h1>📋 Escala de Cuidado</h1>
+      <p>Divisão de tarefas familiar</p>
+    </div>
+    <div class="curva"></div>
+    <div class="secao" style="padding-top:8px">
+      <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-escala')">+ Adicionar turno</button>
+    </div>
+    <div class="secao">
+      <div id="lista-escala"></div>
+    </div>
+    <div class="secao">
+      <button class="btn btn-cinza btn-block" onclick="navegarPara('mais')">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- ── PERFIL IDOSO ── -->
+  <div id="pag-perfil" class="pagina">
+    <div class="header-verde">
+      <h1>🧓 Perfil do Idoso</h1>
+      <p>Dados pessoais e médicos</p>
+    </div>
+    <div class="curva"></div>
+    <div class="form" id="form-perfil">
+      <div class="campo"><label>Nome completo</label><input id="pf-nome" type="text" placeholder="Nome do paciente"></div>
+      <div class="campo"><label>Data de nascimento</label><input id="pf-nascimento" type="date"></div>
+      <div class="campo"><label>Tipo sanguíneo</label>
+        <select id="pf-sangue">
+          <option value="">Selecione</option>
+          <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+          <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+        </select>
+      </div>
+      <div class="campo"><label>Alergias</label><textarea id="pf-alergias" placeholder="Liste as alergias conhecidas"></textarea></div>
+      <div class="campo"><label>CPF</label><input id="pf-cpf" type="text" placeholder="000.000.000-00"></div>
+      <div class="campo"><label>Cartão SUS</label><input id="pf-sus" type="text" placeholder="Número do cartão SUS"></div>
+      <div class="campo"><label>Convênio</label><input id="pf-convenio" type="text" placeholder="Nome do convênio"></div>
+      <div class="campo"><label>Contato de emergência</label><input id="pf-contato" type="text" placeholder="Nome do contato"></div>
+      <div class="campo"><label>Telefone de emergência</label><input id="pf-tel" type="tel" placeholder="(00) 00000-0000"></div>
+      <button class="btn btn-verde btn-block" onclick="salvarPerfil()">💾 Salvar perfil</button>
+      <button class="btn btn-cinza btn-block" onclick="navegarPara('mais')">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- ── TEA ── -->
+  <div id="pag-tea" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#0369a1,#0ea5e9,#38bdf8)">
+      <h1>🧩 Módulo TEA</h1>
+      <p>Rotina visual e acompanhamento</p>
+    </div>
+    <div class="curva"></div>
+
+    <div style="padding:0 16px 8px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;z-index:2">
+      <button class="btn-aba ativa" id="aba-tea-rotina" onclick="trocarAbaTEAAdmin('rotina')">📋 Rotina</button>
+      <button class="btn-aba" id="aba-tea-humor" onclick="trocarAbaTEAAdmin('humor')">😊 Humor</button>
+      <button class="btn-aba" id="aba-tea-crises" onclick="trocarAbaTEAAdmin('crises')">⚡ Crises</button>
+    </div>
+
+    <div id="tea-admin-rotina">
+      <div class="secao" style="padding-top:8px">
+        <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-rotina')">+ Adicionar atividade</button>
+      </div>
+      <div class="secao">
+        <div class="secao-titulo">Rotina de hoje</div>
+        <div id="lista-rotina-admin"></div>
+      </div>
+    </div>
+
+    <div id="tea-admin-humor" style="display:none">
+      <div class="secao" style="padding-top:8px">
+        <div class="secao-titulo">Histórico de humor</div>
+        <div id="lista-humor-tea"></div>
+      </div>
+    </div>
+
+    <div id="tea-admin-crises" style="display:none">
+      <div class="secao" style="padding-top:8px">
+        <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-crise')">+ Registrar crise</button>
+      </div>
+      <div class="secao">
+        <div id="lista-crises-tea"></div>
+      </div>
+    </div>
+
+    <div class="secao">
+      <button class="btn btn-cinza btn-block" onclick="navegarPara('home')">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- ── HISTÓRICO ── -->
+  <div id="pag-historico" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#134e4a,#0f766e,#14b8a6)">
+      <h1>🏥 Histórico de Saúde</h1>
+      <p>Doenças, tratamentos e internações</p>
+    </div>
+    <div class="curva"></div>
+
+    <div style="padding:0 16px 8px 16px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;z-index:2;">
+      <button class="btn-aba ativa" id="aba-doencas" onclick="trocarAba('doencas')">🦠 Doenças</button>
+      <button class="btn-aba" id="aba-tratamentos" onclick="trocarAba('tratamentos')">💉 Tratamentos</button>
+      <button class="btn-aba" id="aba-internacoes" onclick="trocarAba('internacoes')">🏨 Internações</button>
+    </div>
+
+    <div id="conteudo-doencas" class="aba-conteudo">
+      <div class="secao" style="padding-top:8px">
+        <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-doenca')">+ Adicionar doença</button>
+      </div>
+      <div class="secao"><div id="lista-doencas"></div></div>
+    </div>
+
+    <div id="conteudo-tratamentos" class="aba-conteudo" style="display:none">
+      <div class="secao" style="padding-top:8px">
+        <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-tratamento')">+ Adicionar tratamento</button>
+      </div>
+      <div class="secao"><div id="lista-tratamentos"></div></div>
+    </div>
+
+    <div id="conteudo-internacoes" class="aba-conteudo" style="display:none">
+      <div class="secao" style="padding-top:8px">
+        <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-internacao')">+ Adicionar internação</button>
+      </div>
+      <div class="secao"><div id="lista-internacoes"></div></div>
+    </div>
+
+    <div class="secao">
+      <button class="btn btn-cinza btn-block" onclick="navegarPara('home')">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- ── NAV BOTTOM ── -->
+  <nav class="nav-bottom">
+    <button class="nav-item ativo" data-nav="home" onclick="navegarPara('home')">
+      <span class="nav-icone">🏠</span>
+      <span class="nav-label">Início</span>
+    </button>
+    <button class="nav-item" data-nav="remedios" onclick="navegarPara('remedios')">
+      <span class="nav-icone">💊</span>
+      <span class="nav-label">Remédios</span>
+    </button>
+    <button class="nav-item" data-nav="saude" onclick="navegarPara('saude')">
+      <span class="nav-icone">❤️</span>
+      <span class="nav-label">Saúde</span>
+    </button>
+    <button class="nav-item" data-nav="chat" onclick="navegarPara('chat')">
+      <span class="nav-icone">💬</span>
+      <span class="nav-label">Família</span>
+    </button>
+    <button class="nav-item" data-nav="mais" onclick="navegarPara('mais')">
+      <span class="nav-icone">⚙️</span>
+      <span class="nav-label">Mais</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- ══ ALARME OVERLAY ══ -->
+<div id="alarme-overlay" class="alarme-overlay">
+  <div class="alarme-icone">💊</div>
+  <div class="alarme-titulo" id="alarme-nome"></div>
+  <div class="alarme-dose" id="alarme-dose"></div>
+  <div class="alarme-botoes">
+    <button class="btn btn-verde" onclick="confirmarDose('tomado')" style="font-size:16px;padding:18px">✅ Tomei agora!</button>
+    <button class="btn btn-cinza" onclick="lembrarDepois()" style="font-size:16px;padding:18px">⏰ Lembrar em 15 min</button>
+    <button class="btn btn-outline" onclick="confirmarDose('pulado')" style="font-size:16px;padding:18px;color:white;border-color:rgba(255,255,255,0.4)">⏭️ Vou pular essa dose</button>
+  </div>
+</div>
+
+<!-- ══ MODAIS ══ -->
+
+<!-- Modal Criar Família -->
+<div id="modal-criar" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🏠 Criar família</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Nome da família</label><input id="inp-nome-familia" type="text" placeholder="Ex: Família Silva"></div>
+      <div class="campo"><label>Seu nome</label><input id="inp-nome-membro" type="text" placeholder="Seu nome completo"></div>
+      <div class="campo"><label>Seu papel</label>
+        <select id="inp-tipo-membro">
+          <option value="administrador">Administrador</option>
+          <option value="cuidador">Cuidador</option>
+          <option value="idoso">Idoso</option>
+        </select>
+      </div>
+      <button class="btn btn-verde btn-block" onclick="criarFamilia()">Criar família</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-criar')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Entrar em Família -->
+<div id="modal-entrar" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">👨‍👩‍👧 Entrar em família</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Código da família</label><input id="inp-codigo-familia" type="text" placeholder="Ex: BARR9598" style="text-transform:uppercase"></div>
+      <div class="campo"><label>Seu nome</label><input id="inp-nome-entrar" type="text" placeholder="Seu nome completo"></div>
+      <div class="campo"><label>Seu papel</label>
+        <select id="inp-tipo-entrar">
+          <option value="cuidador">Cuidador</option>
+          <option value="administrador">Administrador</option>
+          <option value="idoso">Idoso</option>
+          <option value="crianca">Criança</option>
+        </select>
+      </div>
+      <button class="btn btn-verde btn-block" onclick="entrarFamilia()">Entrar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-entrar')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Recuperar Acesso -->
+<div id="modal-recuperar" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🔑 Recuperar acesso</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Seu ID pessoal</label><input id="inp-id-pessoal" type="text" placeholder="Ex: AND-HP4RS" style="text-transform:uppercase"></div>
+      <button class="btn btn-verde btn-block" onclick="recuperarAcesso()">Recuperar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-recuperar')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Medicamento -->
+<div id="modal-add-med" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">💊 Novo medicamento</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Nome</label><input id="med-nome" type="text" placeholder="Ex: Losartana"></div>
+      <div class="campo"><label>Dosagem</label><input id="med-dosagem" type="text" placeholder="Ex: 50mg"></div>
+      <div class="campo">
+        <label>Horários</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="med-horario-novo" type="time" style="flex:1;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+          <button onclick="adicionarHorarioMed()" type="button" style="background:var(--verde);color:white;border:none;border-radius:12px;padding:12px 16px;font-size:18px;cursor:pointer">+</button>
+        </div>
+        <div id="horarios-tags" style="display:flex;flex-wrap:wrap;gap:8px;min-height:32px"></div>
+        <input type="hidden" id="med-horarios">
+      </div>
+      <div class="campo"><label>Via de administração</label>
+        <select id="med-via">
+          <option>Oral</option><option>Sublingual</option><option>Injetável</option>
+          <option>Tópica</option><option>Inalatória</option><option>Outra</option>
+        </select>
+      </div>
+      <div class="campo"><label>Estoque (comprimidos)</label><input id="med-estoque" type="number" placeholder="0"></div>
+      <button class="btn btn-verde btn-block" onclick="salvarMedicamento()">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-med')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Evento -->
+<div id="modal-add-evento" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">📅 Novo evento</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Título</label><input id="ev-titulo" type="text" placeholder="Ex: Consulta cardiologista"></div>
+      <div class="campo"><label>Data</label><input id="ev-data" type="date"></div>
+      <div class="campo"><label>Hora</label><input id="ev-hora" type="time"></div>
+      <div class="campo"><label>Tipo</label>
+        <select id="ev-tipo">
+          <option>Consulta</option><option>Exame</option><option>Medicamento</option>
+          <option>Família</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="campo"><label>Local</label><input id="ev-local" type="text" placeholder="Ex: Hospital São Lucas"></div>
+      <button class="btn btn-verde btn-block" onclick="salvarEvento()">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-evento')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Vacina -->
+<div id="modal-add-vacina" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">💉 Nova vacina</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Nome da vacina</label><input id="vac-nome" type="text" placeholder="Ex: Gripe"></div>
+      <div class="campo"><label>Data</label><input id="vac-data" type="date"></div>
+      <div class="campo"><label>Total de doses</label><input id="vac-doses-total" type="number" value="1" min="1"></div>
+      <div class="campo"><label>Doses tomadas</label><input id="vac-doses-tomadas" type="number" value="1" min="0"></div>
+      <div class="campo"><label>Status</label>
+        <select id="vac-status">
+          <option>Completo</option><option>Incompleto</option><option>Pendente</option>
+        </select>
+      </div>
+      <button class="btn btn-verde btn-block" onclick="salvarVacina()">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-vacina')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Gasto -->
+<div id="modal-add-gasto" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">💰 Novo gasto</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Descrição</label><input id="gas-desc" type="text" placeholder="Ex: Remédio Losartana"></div>
+      <div class="campo"><label>Valor (R$)</label><input id="gas-valor" type="number" step="0.01" placeholder="0,00"></div>
+      <div class="campo"><label>Categoria</label>
+        <select id="gas-cat">
+          <option>Medicamentos</option><option>Consultas</option><option>Exames</option>
+          <option>Cuidador</option><option>Equipamentos</option><option>Outros</option>
+        </select>
+      </div>
+      <div class="campo"><label>Responsável</label><input id="gas-resp" type="text" placeholder="Nome de quem pagou"></div>
+      <button class="btn btn-verde btn-block" onclick="salvarGasto()">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-gasto')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Tarefa -->
+<div id="modal-add-tarefa" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">✅ Nova tarefa</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Tarefa</label><input id="tar-nome" type="text" placeholder="Ex: Dar banho"></div>
+      <button class="btn btn-verde btn-block" onclick="salvarTarefa()">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-tarefa')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Escala -->
+<div id="modal-add-escala" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">📋 Novo turno</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Dia da semana</label>
+        <select id="esc-dia">
+          <option>Segunda</option><option>Terça</option><option>Quarta</option>
+          <option>Quinta</option><option>Sexta</option><option>Sábado</option><option>Domingo</option>
+        </select>
+      </div>
+      <div class="campo"><label>Turno</label>
+        <select id="esc-turno">
+          <option>Manhã</option><option>Tarde</option><option>Noite</option>
+        </select>
+      </div>
+      <div class="campo"><label>Tarefas</label><textarea id="esc-tarefas" placeholder="Descreva as tarefas do turno"></textarea></div>
+      <button class="btn btn-verde btn-block" onclick="salvarEscala()">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-escala')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pressão -->
+<div id="modal-pressao" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🩺 Pressão Arterial</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Sistólica (mmHg)</label><input id="pr-sist" type="number" placeholder="Ex: 120"></div>
+      <div class="campo"><label>Diastólica (mmHg)</label><input id="pr-diast" type="number" placeholder="Ex: 80"></div>
+      <div class="campo"><label>Observações</label><input id="pr-obs" type="text" placeholder="Opcional"></div>
+      <button class="btn btn-verde btn-block" onclick="salvarSinal('pressao', 'pr-sist', 'pr-diast', 'mmHg', 'pr-obs')">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-pressao')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Glicemia -->
+<div id="modal-glicemia" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🩸 Glicemia</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Valor (mg/dL)</label><input id="gl-valor" type="number" placeholder="Ex: 100"></div>
+      <div class="campo"><label>Momento</label>
+        <select id="gl-momento">
+          <option>Em jejum</option><option>Pós-prandial</option><option>Aleatório</option>
+        </select>
+      </div>
+      <button class="btn btn-verde btn-block" onclick="salvarSinalSimples('glicemia', 'gl-valor', 'mg/dL')">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-glicemia')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Peso -->
+<div id="modal-peso" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">⚖️ Peso</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Peso (kg)</label><input id="pe-valor" type="number" step="0.1" placeholder="Ex: 70.5"></div>
+      <button class="btn btn-verde btn-block" onclick="salvarSinalSimples('peso', 'pe-valor', 'kg')">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-peso')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Oximetria -->
+<div id="modal-oximetria" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">💨 Oximetria</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Saturação (%)</label><input id="ox-valor" type="number" placeholder="Ex: 98"></div>
+      <button class="btn btn-verde btn-block" onclick="salvarSinalSimples('oximetria', 'ox-valor', '%')">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-oximetria')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal Add Rotina TEA -->
+<div id="modal-add-rotina" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">📋 Nova atividade</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Emoji</label><input id="rot-emoji" type="text" placeholder="Ex: 🍽️" maxlength="2" style="font-size:24px;text-align:center"></div>
+      <div class="campo"><label>Atividade</label><input id="rot-atividade" type="text" placeholder="Ex: Tomar café da manhã"></div>
+      <div class="campo"><label>Hora (opcional)</label><input id="rot-hora" type="time"></div>
+      <div class="campo"><label>Ordem</label><input id="rot-ordem" type="number" placeholder="1, 2, 3..." min="1"></div>
+      <button class="btn btn-verde btn-block" onclick="salvarRotinaTEA()">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-rotina')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Crise TEA -->
+<div id="modal-add-crise" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">⚡ Registrar crise</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Data e hora</label><input id="crise-data" type="datetime-local"></div>
+      <div class="campo"><label>Duração (minutos)</label><input id="crise-duracao" type="number" placeholder="Ex: 15"></div>
+      <div class="campo"><label>Gatilho</label><input id="crise-gatilho" type="text" placeholder="Ex: Muito barulho, mudança de rotina"></div>
+      <div class="campo"><label>O que ajudou</label><textarea id="crise-ajudou" placeholder="Ex: Música calma, espaço quieto"></textarea></div>
+      <div class="campo"><label>Observações</label><textarea id="crise-obs" placeholder="Detalhes adicionais"></textarea></div>
+      <button class="btn btn-verde btn-block" onclick="salvarCriseTEA()">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-crise')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmar Autismo -->
+<div id="modal-autismo" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🧩 Esta criança é autista?</div>
+    <p style="font-size:14px;color:var(--cinza);margin-bottom:24px">Isso define qual interface ela vai usar no app.</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <button class="btn btn-verde btn-block" onclick="confirmarTipoCrianca('tea')">
+        🧩 Sim, é autista — Interface TEA
+      </button>
+      <button class="btn btn-outline btn-block" onclick="confirmarTipoCrianca('crianca')">
+        👶 Não — Interface Kids padrão
+      </button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-autismo')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Membro -->
+<div id="modal-add-membro" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">👤 Novo membro</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Nome</label><input id="add-mem-nome" type="text" placeholder="Nome completo"></div>
+      <div class="campo"><label>Papel</label>
+        <select id="add-mem-tipo">
+          <option value="cuidador">Cuidador</option>
+          <option value="administrador">Administrador</option>
+          <option value="idoso">Idoso</option>
+          <option value="crianca">Criança</option>
+        </select>
+      </div>
+      <button class="btn btn-verde btn-block" onclick="adicionarMembro()">Adicionar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-membro')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Doença -->
+<div id="modal-add-doenca" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🦠 Nova doença</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Nome da doença</label><input id="doe-nome" type="text" placeholder="Ex: Diabetes tipo 2"></div>
+      <div class="campo"><label>CID (opcional)</label><input id="doe-cid" type="text" placeholder="Ex: E11"></div>
+      <div class="campo"><label>Data do diagnóstico</label><input id="doe-data" type="date"></div>
+      <div class="campo"><label>Status</label>
+        <select id="doe-status">
+          <option>Ativo</option><option>Controlado</option><option>Curado</option><option>Em investigação</option>
+        </select>
+      </div>
+      <div class="campo"><label>Observações</label><textarea id="doe-obs" placeholder="Detalhes adicionais"></textarea></div>
+      <button class="btn btn-verde btn-block" onclick="salvarDoenca()">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-doenca')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Tratamento -->
+<div id="modal-add-tratamento" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">💉 Novo tratamento</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Tipo</label>
+        <select id="tra-tipo">
+          <option>Medicamento</option><option>Cirurgia</option><option>Fisioterapia</option>
+          <option>Quimioterapia</option><option>Radioterapia</option><option>Psicoterapia</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="campo"><label>Descrição</label><input id="tra-desc" type="text" placeholder="Ex: Insulina NPH 10ui"></div>
+      <div class="campo"><label>Data início</label><input id="tra-inicio" type="date"></div>
+      <div class="campo"><label>Data fim (opcional)</label><input id="tra-fim" type="date"></div>
+      <div class="campo"><label>Status</label>
+        <select id="tra-status">
+          <option>Em andamento</option><option>Concluído</option><option>Suspenso</option>
+        </select>
+      </div>
+      <div class="campo"><label>Observações</label><textarea id="tra-obs" placeholder="Detalhes adicionais"></textarea></div>
+      <button class="btn btn-verde btn-block" onclick="salvarTratamento()">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-tratamento')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Internação -->
+<div id="modal-add-internacao" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🏨 Nova internação</div>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>Hospital</label><input id="int-hospital" type="text" placeholder="Ex: Hospital São Lucas"></div>
+      <div class="campo"><label>Motivo</label><input id="int-motivo" type="text" placeholder="Ex: Pneumonia"></div>
+      <div class="campo"><label>Data de entrada</label><input id="int-entrada" type="date"></div>
+      <div class="campo"><label>Data de saída</label><input id="int-saida" type="date"></div>
+      <div class="campo"><label>Observações</label><textarea id="int-obs" placeholder="Detalhes adicionais"></textarea></div>
+      <div class="campo">
+        <label>📋 Prontuários (opcional)</label>
+        <input id="int-fotos" type="file" accept="image/*,application/pdf" multiple
+          style="width:100%;padding:10px;border:1.5px dashed #e5e7eb;border-radius:12px;font-size:13px;color:var(--cinza)"
+          onchange="previewFotosInternacao(this)">
+        <div id="int-fotos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+      </div>
+      <button class="btn btn-verde btn-block" onclick="salvarInternacao()">Salvar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-internacao')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Prontuários -->
+<div id="modal-prontuarios" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">📋 Prontuários</div>
+    <div id="prontuarios-lista" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px"></div>
+    <div class="campo">
+      <label>Adicionar fotos</label>
+      <input id="pront-input" type="file" accept="image/*" multiple capture="environment"
+        style="width:100%;padding:10px;border:1.5px dashed #e5e7eb;border-radius:12px;font-size:13px"
+        onchange="previewProntuarios(this)">
+    </div>
+    <div id="pront-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0"></div>
+    <button class="btn btn-verde btn-block" id="btn-salvar-pront" onclick="salvarProntuarios()" style="display:none">📤 Enviar fotos</button>
+    <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-prontuarios')">Fechar</button>
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/modulos.js"></script>
+</body>
+</html>
