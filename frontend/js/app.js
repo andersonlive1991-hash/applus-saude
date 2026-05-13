@@ -83,14 +83,27 @@ async function registrarSW() {
         if (e.data && e.data.tipo === 'tocar-alarme') iniciarSomAlarme();
         if (e.data && e.data.tipo === 'parar-alarme') pararSomAlarme();
         if (e.data && e.data.tipo === 'alarme-push') {
-          pararSomAlarme();
           const dados = e.data.dados;
           if (dados && dados.medicamento) {
-            api('GET', '/api/medicamentos/' + APP.familiaId + '?membro_id=' + APP.membroId)
-              .then(meds => {
-                const med = meds.find(m => (dados.medId && m.id == dados.medId) || (dados.corpo && dados.corpo.includes(m.nome))) || meds[0];
-                if (med) dispararAlarme(med);
-              }).catch(() => {});
+            // Aguarda o app carregar completamente antes de disparar
+            const tentarDisparar = (tentativas) => {
+              if (tentativas <= 0) return;
+              if (APP.familiaId && APP.membroId) {
+                api('GET', '/api/medicamentos/' + APP.familiaId + '?membro_id=' + APP.membroId)
+                  .then(meds => {
+                    const med = meds.find(m => (dados.medId && m.id == dados.medId) || (dados.corpo && dados.corpo.includes(m.nome))) || meds[0];
+                    if (med) {
+                      navegarPara('remedios');
+                      setTimeout(() => {
+                        dispararAlarme(med);
+                      }, 500);
+                    }
+                  }).catch(() => {});
+              } else {
+                setTimeout(() => tentarDisparar(tentativas - 1), 500);
+              }
+            };
+            tentarDisparar(10);
           }
         }
       });
@@ -523,6 +536,7 @@ function dispararAlarme(med) {
   document.getElementById('alarme-nome').textContent = med.nome;
   document.getElementById('alarme-dose').textContent = med.dosagem || '';
   overlay.classList.add('ativo');
+  iniciarSomAlarme();
 
   // Voz
   falarAlarme(`Atenção! Está na hora de tomar ${med.nome}. A dose é ${med.dosagem || 'conforme prescrito'}. Por favor tome o seu medicamento agora.`);
