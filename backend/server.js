@@ -67,6 +67,7 @@ setInterval(async () => {
     const agora = new Date();
     const horaAtual = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
 
+    console.log('[Agendador] Verificando:', horaAtual);
     const meds = await pool.query('SELECT * FROM medicamentos WHERE horarios IS NOT NULL');
 
     for (const med of meds.rows) {
