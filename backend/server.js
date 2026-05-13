@@ -67,24 +67,27 @@ setInterval(async () => {
     const agora = new Date();
     const horaAtual = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
 
-    const meds = await pool.query('SELECT m.*, ps.subscription FROM medicamentos m JOIN push_subscriptions ps ON ps.membro_id = m.membro_id WHERE m.horarios IS NOT NULL');
+    const meds = await pool.query('SELECT * FROM medicamentos WHERE horarios IS NOT NULL');
 
     for (const med of meds.rows) {
       const horarios = typeof med.horarios === 'string' ? JSON.parse(med.horarios) : med.horarios;
-      if (!Array.isArray(horarios)) continue;
+      if (!Array.isArray(horarios) || !horarios.includes(horaAtual)) continue;
 
-      if (horarios.includes(horaAtual)) {
-        const sub = typeof med.subscription === 'string' ? JSON.parse(med.subscription) : med.subscription;
-        const payload = JSON.stringify({
-          titulo: `💊 Hora do remédio!`,
-          corpo: `Hora de tomar: ${med.nome} ${med.dosagem || ''}`,
-          url: '/',
-          medicamento: true
-        });
-        webpush.sendNotification(sub, payload).catch(() => {});
-      }
+      const subRes = await pool.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [med.membro_id]);
+      if (!subRes.rows.length) continue;
+
+      const sub = typeof subRes.rows[0].subscription === 'string' ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
+      const payload = JSON.stringify({
+        titulo: '💊 Hora do medicamento!',
+        corpo: `${med.nome}${med.dosagem ? ' — ' + med.dosagem : ''} · ${horaAtual}`,
+        url: '/#remedios',
+        medicamento: true,
+        medId: med.id,
+        medNome: med.nome
+      });
+      webpush.sendNotification(sub, payload).catch(e => console.log('Erro push:', e.message));
     }
   } catch(e) {
-    console.log('Erro push automático:', e.message);
+    console.log('Erro agendador:', e.message);
   }
 }, 60000);
