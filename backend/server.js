@@ -76,6 +76,16 @@ app.get("/ping", (req, res) => {
   res.json({ status: "ok", uptime: Math.floor(process.uptime()) + "s", hora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) });
 });
 
+
+// Autoping — mantém o servidor acordado
+setInterval(async () => {
+  try {
+    const http = require("http");
+    http.get("http://localhost:" + (process.env.PORT || 3000) + "/ping", (r) => {
+      console.log("[Keep-alive] ping ok -", new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }));
+    });
+  } catch(e) { console.log("[Keep-alive] erro:", e.message); }
+}, 4 * 60 * 1000);
 server.listen(PORT, () => console.log(`AP+ Saúde rodando na porta ${PORT}`));
 
 // ── VERIFICAR HORÁRIOS DE MEDICAMENTOS A CADA MINUTO ──
