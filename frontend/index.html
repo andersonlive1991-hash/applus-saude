@@ -598,6 +598,57 @@
   </div>
 </div>
 
+<!-- Modal Perfil Cuidador -->
+<div id="modal-perfil-cuidador" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">👨‍⚕️ Perfil do Cuidador</div>
+    <p style="color:#666;font-size:0.9rem;margin-bottom:1rem">Preencha seus dados profissionais para que a família possa conhecer melhor você.</p>
+    <div class="form" style="padding:0">
+      <div class="campo"><label>CPF</label><input id="cuid-cpf" type="text" placeholder="000.000.000-00"></div>
+      <div class="campo"><label>Data de nascimento</label><input id="cuid-nascimento" type="date"></div>
+      <div class="campo"><label>Telefone / WhatsApp</label><input id="cuid-telefone" type="tel" placeholder="(21) 99999-9999"></div>
+      <div class="campo"><label>Tipo de cuidador</label>
+        <select id="cuid-tipo">
+          <option value="informal">Cuidador informal (familiar)</option>
+          <option value="profissional">Cuidador profissional</option>
+          <option value="tecnico">Técnico de enfermagem</option>
+          <option value="enfermeiro">Enfermeiro</option>
+        </select>
+      </div>
+      <div class="campo"><label>Experiência</label>
+        <select id="cuid-experiencia">
+          <option value="iniciante">Iniciante (menos de 1 ano)</option>
+          <option value="1-3anos">1 a 3 anos</option>
+          <option value="3-5anos">3 a 5 anos</option>
+          <option value="5+anos">Mais de 5 anos</option>
+        </select>
+      </div>
+      <div class="campo"><label>Especialidades</label>
+        <select id="cuid-especialidades">
+          <option value="geral">Cuidado geral</option>
+          <option value="alzheimer">Alzheimer / Demência</option>
+          <option value="parkinson">Parkinson</option>
+          <option value="tea">TEA / Autismo</option>
+          <option value="acamado">Paciente acamado</option>
+          <option value="pos-cirurgico">Pós-cirúrgico</option>
+        </select>
+      </div>
+      <div class="campo"><label>Turno de trabalho</label>
+        <select id="cuid-turno">
+          <option value="manha">Manhã</option>
+          <option value="tarde">Tarde</option>
+          <option value="noite">Noite</option>
+          <option value="integral">Integral (24h)</option>
+          <option value="plantao">Plantão</option>
+        </select>
+      </div>
+      <div class="campo"><label>Observações</label><textarea id="cuid-observacoes" placeholder="Informações adicionais sobre sua experiência..." rows="3" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:1rem"></textarea></div>
+      <button class="btn btn-verde btn-block" onclick="salvarPerfilCuidador()">Salvar e entrar</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-perfil-cuidador');entrarNoApp()">Pular por agora</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Entrar em Família -->
 <div id="modal-entrar" class="modal-overlay">
   <div class="modal">

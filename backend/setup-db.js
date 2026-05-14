@@ -152,6 +152,21 @@ async function setup() {
         data DATE DEFAULT CURRENT_DATE,
         criado_em TIMESTAMP DEFAULT NOW()
       );
+
+      CREATE TABLE IF NOT EXISTS perfil_cuidador (
+        id SERIAL PRIMARY KEY,
+        membro_id INTEGER UNIQUE REFERENCES membros(id) ON DELETE CASCADE,
+        cpf VARCHAR(20),
+        data_nascimento DATE,
+        telefone VARCHAR(20),
+        tipo_cuidador VARCHAR(50),
+        experiencia VARCHAR(50),
+        especialidades TEXT,
+        turno VARCHAR(50),
+        dias_disponiveis TEXT,
+        observacoes TEXT,
+        atualizado_em TIMESTAMP DEFAULT NOW()
+      );
     `);
     console.log('✅ Todas as tabelas criadas com sucesso!');
     process.exit(0);

@@ -251,9 +251,39 @@ async function criarFamilia() {
     APP.nomeFamilia = resFam.nome;
     salvarSessaoFamilia();
     fecharModal('modal-criar');
-    mostrarSelecaoPerfil();
+    verificarPerfilCuidador(tipo, resMem.id);
   } catch (e) {
     alerta('Erro ao criar família: ' + e.message);
+  }
+}
+
+async function salvarPerfilCuidador() {
+  const dados = {
+    membro_id: APP.membroAtivo?.id,
+    cpf: document.getElementById('cuid-cpf').value.trim(),
+    data_nascimento: document.getElementById('cuid-nascimento').value,
+    telefone: document.getElementById('cuid-telefone').value.trim(),
+    tipo_cuidador: document.getElementById('cuid-tipo').value,
+    experiencia: document.getElementById('cuid-experiencia').value,
+    especialidades: document.getElementById('cuid-especialidades').value,
+    turno: document.getElementById('cuid-turno').value,
+    observacoes: document.getElementById('cuid-observacoes').value.trim()
+  };
+  try {
+    await api('POST', '/api/perfil-cuidador/salvar', dados);
+    fecharModal('modal-perfil-cuidador');
+    mostrarSelecaoPerfil();
+  } catch (e) {
+    alerta('Erro ao salvar perfil: ' + e.message);
+  }
+}
+
+function verificarPerfilCuidador(tipo, membroId) {
+  if (tipo === 'cuidador') {
+    APP.membroAtivo = { id: membroId };
+    abrirModal('modal-perfil-cuidador');
+  } else {
+    mostrarSelecaoPerfil();
   }
 }
 
@@ -276,7 +306,7 @@ async function entrarFamilia() {
     APP.nomeFamilia = fam.nome;
     salvarSessaoFamilia();
     fecharModal('modal-entrar');
-    mostrarSelecaoPerfil();
+    verificarPerfilCuidador(tipo, mem.id);
   } catch (e) {
     alerta('Família não encontrada');
   }
