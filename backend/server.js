@@ -71,6 +71,11 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 10000;
+
+app.get("/ping", (req, res) => {
+  res.json({ status: "ok", uptime: Math.floor(process.uptime()) + "s", hora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) });
+});
+
 server.listen(PORT, () => console.log(`AP+ Saúde rodando na porta ${PORT}`));
 
 // ── VERIFICAR HORÁRIOS DE MEDICAMENTOS A CADA MINUTO ──
