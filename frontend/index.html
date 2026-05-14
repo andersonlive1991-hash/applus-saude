@@ -28,7 +28,7 @@
       <button class="login-opcao" onclick="abrirModal('modal-criar')">
         <span class="login-opcao-icone">🏠</span>
         <div>
-          <div class="login-opcao-titulo">Criar família</div>
+          <div class="login-opcao-titulo">Criar perfil</div>
           <div class="login-opcao-sub">Primeira vez usando o app</div>
         </div>
       </button>
@@ -581,18 +581,18 @@
 <!-- Modal Criar Família -->
 <div id="modal-criar" class="modal-overlay">
   <div class="modal">
-    <div class="modal-titulo">🏠 Criar família</div>
+    <div class="modal-titulo">🏠 Criar perfil</div>
     <div class="form" style="padding:0">
-      <div class="campo"><label>Nome da família</label><input id="inp-nome-familia" type="text" placeholder="Ex: Família Silva"></div>
+      <div class="campo"><label>Seu nome e sobrenome</label><input id="inp-nome-familia" type="text" placeholder="Ex: Anderson Barros"></div>
       <div class="campo"><label>Seu nome</label><input id="inp-nome-membro" type="text" placeholder="Seu nome completo"></div>
       <div class="campo"><label>Seu papel</label>
         <select id="inp-tipo-membro">
-          <option value="administrador">Administrador</option>
+          <option value="administrador">Próprio</option>
           <option value="cuidador">Cuidador</option>
           <option value="idoso">Idoso</option>
         </select>
       </div>
-      <button class="btn btn-verde btn-block" onclick="criarFamilia()">Criar família</button>
+      <button class="btn btn-verde btn-block" onclick="criarFamilia()">Criar perfil</button>
       <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-criar')">Cancelar</button>
     </div>
   </div>
@@ -608,7 +608,7 @@
       <div class="campo"><label>Seu papel</label>
         <select id="inp-tipo-entrar">
           <option value="cuidador">Cuidador</option>
-          <option value="administrador">Administrador</option>
+          <option value="administrador">Próprio</option>
           <option value="idoso">Idoso</option>
           <option value="crianca">Criança</option>
         </select>
@@ -869,7 +869,7 @@
       <div class="campo"><label>Papel</label>
         <select id="add-mem-tipo">
           <option value="cuidador">Cuidador</option>
-          <option value="administrador">Administrador</option>
+          <option value="administrador">Próprio</option>
           <option value="idoso">Idoso</option>
           <option value="crianca">Criança</option>
         </select>
