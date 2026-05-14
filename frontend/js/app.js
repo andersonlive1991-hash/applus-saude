@@ -827,7 +827,7 @@ function trocarPerfil() {
 
 function sair() {
   localStorage.clear();
-  window.location.href = '/cadastro.html';
+  window.location.href = '/';
 }
 
 // ── PUSH ──
