@@ -338,6 +338,49 @@ async function verificarPerfilCuidador(tipo, membroId) {
   }
 }
 
+function trocarAbaEntrar(aba) {
+  const familiar = document.getElementById('form-entrar-familiar');
+  const cuidador = document.getElementById('form-entrar-cuidador');
+  const btnFamiliar = document.getElementById('aba-familiar');
+  const btnCuidador = document.getElementById('aba-cuidador');
+  if (aba === 'familiar') {
+    familiar.style.display = 'block';
+    cuidador.style.display = 'none';
+    btnFamiliar.style.background = '#1a9e6e';
+    btnFamiliar.style.color = 'white';
+    btnCuidador.style.background = 'white';
+    btnCuidador.style.color = '#1a9e6e';
+  } else {
+    familiar.style.display = 'none';
+    cuidador.style.display = 'block';
+    btnCuidador.style.background = '#1a9e6e';
+    btnCuidador.style.color = 'white';
+    btnFamiliar.style.background = 'white';
+    btnFamiliar.style.color = '#1a9e6e';
+  }
+}
+
+async function entrarComoCuidador() {
+  const codigo = document.getElementById('inp-codigo-cuidador').value.trim().toUpperCase();
+  const idCuidador = document.getElementById('inp-id-cuidador').value.trim().toUpperCase();
+  if (!codigo || !idCuidador) return alerta('Preencha o código da família e o ID do cuidador');
+  try {
+    const fam = await api('GET', '/api/familias/' + codigo);
+    const mem = await api('GET', '/api/membros/id/' + idCuidador);
+    if (String(mem.familia_id) !== String(fam.id)) return alerta('ID do cuidador não pertence a esta família');
+    if (mem.tipo !== 'cuidador') return alerta('Este ID não é de um cuidador');
+    APP.familiaId = String(fam.id);
+    APP.codigoFamilia = fam.codigo;
+    APP.nomeFamilia = fam.nome;
+    salvarSessaoFamilia();
+    localStorage.setItem('membroAtivoId', mem.id_pessoal);
+    fecharModal('modal-entrar');
+    mostrarSelecaoPerfil();
+  } catch(e) {
+    alerta('Família ou ID do cuidador não encontrado');
+  }
+}
+
 async function entrarFamilia() {
   const codigo = document.getElementById('inp-codigo-familia').value.trim().toUpperCase();
   const membro = document.getElementById('inp-nome-entrar').value.trim();

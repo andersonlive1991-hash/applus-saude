@@ -677,17 +677,40 @@
   <div class="modal">
     <div class="modal-titulo">👨‍👩‍👧 Entrar em família</div>
     <div class="form" style="padding:0">
-      <div class="campo"><label>Código da família</label><input id="inp-codigo-familia" type="text" placeholder="Ex: BARR9598" style="text-transform:uppercase"></div>
-      <div class="campo"><label>Seu nome</label><input id="inp-nome-entrar" type="text" placeholder="Seu nome completo"></div>
-      <div class="campo"><label>Seu papel</label>
-        <select id="inp-tipo-entrar">
-          <option value="cuidador">Cuidador</option>
-          <option value="administrador">Próprio</option>
-          <option value="idoso">Idoso</option>
-          <option value="crianca">Criança</option>
-        </select>
+
+      <!-- Abas -->
+      <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+        <button id="aba-familiar" onclick="trocarAbaEntrar('familiar')"
+          style="flex:1;padding:0.6rem;border-radius:8px;border:2px solid #1a9e6e;background:#1a9e6e;color:white;font-weight:bold;cursor:pointer">
+          👨‍👩‍👧 Familiar
+        </button>
+        <button id="aba-cuidador" onclick="trocarAbaEntrar('cuidador')"
+          style="flex:1;padding:0.6rem;border-radius:8px;border:2px solid #1a9e6e;background:white;color:#1a9e6e;font-weight:bold;cursor:pointer">
+          👨‍⚕️ Cuidador
+        </button>
       </div>
-      <button class="btn btn-verde btn-block" onclick="entrarFamilia()">Entrar</button>
+
+      <!-- Aba Familiar -->
+      <div id="form-entrar-familiar">
+        <div class="campo"><label>Código da família</label><input id="inp-codigo-familia" type="text" placeholder="Ex: BARR9598" style="text-transform:uppercase"></div>
+        <div class="campo"><label>Seu nome</label><input id="inp-nome-entrar" type="text" placeholder="Seu nome completo"></div>
+        <div class="campo"><label>Seu papel</label>
+          <select id="inp-tipo-entrar">
+            <option value="administrador">Próprio</option>
+            <option value="idoso">Idoso</option>
+            <option value="crianca">Criança</option>
+          </select>
+        </div>
+        <button class="btn btn-verde btn-block" onclick="entrarFamilia()">Entrar</button>
+      </div>
+
+      <!-- Aba Cuidador -->
+      <div id="form-entrar-cuidador" style="display:none">
+        <div class="campo"><label>Código da família</label><input id="inp-codigo-cuidador" type="text" placeholder="Ex: BARR9598" style="text-transform:uppercase"></div>
+        <div class="campo"><label>ID do cuidador</label><input id="inp-id-cuidador" type="text" placeholder="Ex: CAM-XK92B" style="text-transform:uppercase"></div>
+        <button class="btn btn-verde btn-block" onclick="entrarComoCuidador()">Entrar</button>
+      </div>
+
       <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-entrar')">Cancelar</button>
     </div>
   </div>
