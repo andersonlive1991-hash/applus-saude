@@ -233,9 +233,10 @@ async function _salvarMembro(nome, tipo) {
 
 async function criarFamilia() {
   const nome = document.getElementById('inp-nome-familia').value.trim();
-  const membro = document.getElementById('inp-nome-membro').value.trim();
+  const sobrenome = document.getElementById('inp-nome-membro').value.trim();
+  const membro = nome + ' ' + sobrenome;
   const tipo = document.getElementById('inp-tipo-membro').value;
-  if (!nome || !membro) return alerta('Preencha todos os campos');
+  if (!nome || !sobrenome) return alerta('Preencha nome e sobrenome');
 
   try {
     const resFam = await api('POST', '/api/familias', { nome });
