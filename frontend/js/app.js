@@ -1030,7 +1030,10 @@ async function atualizarDropdown() {
     if (nomeEl) nomeEl.textContent = APP.membroNome.split(' ')[0];
 
     if (lista) {
-      lista.innerHTML = membros.map(m => `
+      const ehCuidador = APP.membroTipo === 'cuidador';
+      const membrosVisiveis = ehCuidador ? membros.filter(m => m.id == APP.membroId) : membros;
+
+      lista.innerHTML = membrosVisiveis.map(m => `
         <button class="dropdown-item ${m.id == APP.membroId ? 'ativo' : ''}"
           onclick="trocarParaPerfil(${m.id}, '${m.nome}', '${m.tipo}', '${m.id_pessoal}')">
           <div class="av">${avatarMembro(m.nome, m.tipo)}</div>
@@ -1039,7 +1042,13 @@ async function atualizarDropdown() {
             <div class="dt">${m.tipo}</div>
           </div>
           ${m.id == APP.membroId ? '<span style="color:var(--verde);font-size:14px">✓</span>' : ''}
-        </button>`).join('');
+        </button>`).join('') + (ehCuidador ? '' : `
+        <button class="dropdown-item" onclick="fecharDropdown();abrirModal('modal-add-membro')">
+          <div class="av" style="background:var(--cinza-claro);color:var(--cinza);font-size:20px">+</div>
+          <div class="dropdown-item-info">
+            <div class="dn">Adicionar membro</div>
+          </div>
+        </button>`);
     }
   } catch (e) {
     console.log('Erro dropdown:', e);
