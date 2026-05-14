@@ -207,7 +207,29 @@ async function adicionarMembro() {
     return;
   }
 
+  // Se for cuidador, abrir perfil do cuidador
+  if (tipo === 'cuidador') {
+    APP._membroNomePendente = nome;
+    APP._membroTipoPendente = tipo;
+    fecharModal('modal-add-membro');
+    await _criarMembroCuidador(nome, tipo);
+    return;
+  }
+
   await _salvarMembro(nome, tipo);
+}
+
+async function _criarMembroCuidador(nome, tipo) {
+  try {
+    const mem = await api('POST', '/api/membros', {
+      familia_id: APP.familiaId,
+      nome, tipo, relacao: tipo
+    });
+    APP.membroAtivo = mem;
+    abrirModal('modal-perfil-cuidador');
+  } catch(e) {
+    alerta('Erro ao criar cuidador: ' + e.message);
+  }
 }
 
 async function confirmarTipoCrianca(tipo) {
