@@ -51,3 +51,13 @@ router.get('/familia/:familia_id', async (req, res) => {
 });
 
 module.exports = router;
+
+// Excluir membro
+router.delete('/:id', async (req, res) => {
+  try {
+    await db.query('DELETE FROM membros WHERE id=$1', [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});

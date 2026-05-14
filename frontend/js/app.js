@@ -376,9 +376,8 @@ async function entrarComoCuidador() {
     APP.membroNome = mem.nome;
     APP.membroTipo = mem.tipo;
     APP.idPessoal = mem.id_pessoal;
-    salvarSessaoFamilia();
-    salvarSessaoMembro();
     localStorage.setItem('membroAtivoId', mem.id_pessoal);
+    salvarSessaoMembro();
     fecharModal('modal-entrar');
     iniciarApp();
   } catch(e) {
@@ -953,6 +952,53 @@ function trocarPerfil() {
   APP.idPessoal = null;
   localStorage.removeItem('applus_sessao');
   mostrarSelecaoPerfil();
+}
+
+async function excluirPerfil() {
+  try {
+    const membros = await api('GET', `/api/membros/familia/${APP.familiaId}`);
+    const lista = document.getElementById('lista-excluir-perfis');
+    lista.innerHTML = membros.map(m => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;border:1px solid #eee;border-radius:8px;margin-bottom:0.5rem">
+        <div>
+          <strong>${m.nome.split(' ')[0]}</strong>
+          <span style="font-size:0.8rem;color:#999;margin-left:0.5rem">${m.tipo}</span>
+        </div>
+        <button onclick="confirmarExcluirMembro(${m.id}, '${m.nome.split(' ')[0]}')"
+          style="background:#fff0f0;color:#e74c3c;border:1px solid #e74c3c;border-radius:6px;padding:0.3rem 0.7rem;cursor:pointer">
+          Excluir
+        </button>
+      </div>`).join('');
+    abrirModal('modal-excluir-perfil');
+  } catch(e) {
+    alerta('Erro ao carregar perfis');
+  }
+}
+
+async function confirmarExcluirMembro(membroId, nome) {
+  if (!confirm('Tem certeza que deseja excluir o perfil de ' + nome + '? Esta ação não pode ser desfeita.')) return;
+  try {
+    await api('DELETE', '/api/membros/' + membroId);
+    fecharModal('modal-excluir-perfil');
+    alerta('Perfil de ' + nome + ' excluído com sucesso!');
+    // Se excluiu o próprio perfil, sair
+    if (membroId == APP.membroId) {
+      sair();
+    }
+  } catch(e) {
+    alerta('Erro ao excluir perfil: ' + e.message);
+  }
+}
+
+async function confirmarExcluirTodos() {
+  if (!confirm('Tem certeza que deseja excluir TODOS os perfis da família? Esta ação não pode ser desfeita.')) return;
+  try {
+    await api('DELETE', '/api/familias/' + APP.familiaId);
+    fecharModal('modal-excluir-perfil');
+    sair();
+  } catch(e) {
+    alerta('Erro ao excluir família: ' + e.message);
+  }
 }
 
 function sair() {

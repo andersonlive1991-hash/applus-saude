@@ -32,3 +32,13 @@ router.get('/:codigo', async (req, res) => {
 });
 
 module.exports = router;
+
+// Excluir familia completa
+router.delete('/:id', async (req, res) => {
+  try {
+    await db.query('DELETE FROM familias WHERE id=$1', [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
