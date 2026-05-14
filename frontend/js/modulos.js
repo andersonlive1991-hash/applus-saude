@@ -809,6 +809,7 @@ async function atenderChamadaSOS() {
 }
 
 function encerrarChamadaSOS() {
+  if (!_sosPC && !_sosStream) { fecharTelaChamada(); return; }
   if (_sosPC) { _sosPC.close(); _sosPC = null; }
   if (_sosStream) { _sosStream.getTracks().forEach(t => t.stop()); _sosStream = null; }
   if (_sosTimer) { clearInterval(_sosTimer); _sosTimer = null; }
@@ -874,7 +875,10 @@ function registrarEventosSOS() {
     }
   });
   APP.socket.on('sos-encerrado', () => {
-    encerrarChamadaSOS();
-    alerta('Chamada encerrada');
+    if (_sosPC) { _sosPC.close(); _sosPC = null; }
+    if (_sosStream) { _sosStream.getTracks().forEach(t => t.stop()); _sosStream = null; }
+    if (_sosTimer) { clearInterval(_sosTimer); _sosTimer = null; }
+    fecharTelaChamada();
+    _sosChamando = false;
   });
 }
