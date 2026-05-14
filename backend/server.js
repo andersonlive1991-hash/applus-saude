@@ -6,6 +6,24 @@ const { Server } = require('socket.io');
 const path = require('path');
 const pool = require('./db');
 
+// Criar tabela perfil_cuidador se não existir
+pool.query(`
+  CREATE TABLE IF NOT EXISTS perfil_cuidador (
+    id SERIAL PRIMARY KEY,
+    membro_id INTEGER UNIQUE REFERENCES membros(id) ON DELETE CASCADE,
+    cpf VARCHAR(20),
+    data_nascimento DATE,
+    telefone VARCHAR(20),
+    tipo_cuidador VARCHAR(50),
+    experiencia VARCHAR(50),
+    especialidades TEXT,
+    turno VARCHAR(50),
+    dias_disponiveis TEXT,
+    observacoes TEXT,
+    atualizado_em TIMESTAMP DEFAULT NOW()
+  );
+`).then(() => console.log('✅ Tabela perfil_cuidador OK')).catch(e => console.log('Tabela perfil_cuidador:', e.message));
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
@@ -29,6 +47,7 @@ app.use('/api/ia', require('./routes/ia'));
 app.use('/api/escala', require('./routes/escala'));
 app.use('/api/perfil', require('./routes/perfil'));
 app.use('/api/perfil-cuidador', require('./routes/perfil_cuidador'));
+app.use('/api/qrcode', require('./routes/qrcode'));
 app.use('/api/historico', require('./routes/saude_historico'));
 app.use('/api/prontuarios', require('./routes/prontuarios'));
 app.use('/api/rotina-tea', require('./routes/rotina_tea'));

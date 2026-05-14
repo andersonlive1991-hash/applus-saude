@@ -649,6 +649,29 @@
   </div>
 </div>
 
+<!-- Modal QR Code Cuidador -->
+<div id="modal-qrcode-cuidador" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">✅ Perfil criado!</div>
+    <p style="color:#666;font-size:0.9rem;margin-bottom:1rem;text-align:center">Compartilhe o QR Code abaixo com o cuidador para ele acessar o app diretamente.</p>
+    <div style="display:flex;justify-content:center;margin-bottom:1rem">
+      <canvas id="qrcode-cuidador-canvas" style="border-radius:12px;border:3px solid #1a9e6e"></canvas>
+    </div>
+    <div style="background:#f0faf5;border-radius:12px;padding:1rem;margin-bottom:1rem">
+      <div style="margin-bottom:0.5rem">
+        <span style="font-size:0.8rem;color:#666">CÓDIGO DA FAMÍLIA</span><br>
+        <strong id="qr-codigo-familia" style="font-size:1.2rem;color:#1a9e6e;letter-spacing:2px"></strong>
+      </div>
+      <div>
+        <span style="font-size:0.8rem;color:#666">ID DO CUIDADOR</span><br>
+        <strong id="qr-id-cuidador" style="font-size:1.2rem;color:#1a9e6e;letter-spacing:2px"></strong>
+      </div>
+    </div>
+    <p style="font-size:0.8rem;color:#999;text-align:center;margin-bottom:1rem">O cuidador escaneia o QR Code e entra direto na sua família.</p>
+    <button class="btn btn-verde btn-block" onclick="fecharModal('modal-qrcode-cuidador');mostrarSelecaoPerfil()">Entrar no app</button>
+  </div>
+</div>
+
 <!-- Modal Entrar em Família -->
 <div id="modal-entrar" class="modal-overlay">
   <div class="modal">

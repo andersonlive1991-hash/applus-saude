@@ -272,15 +272,44 @@ async function salvarPerfilCuidador() {
   try {
     await api('POST', '/api/perfil-cuidador/salvar', dados);
     fecharModal('modal-perfil-cuidador');
-    mostrarSelecaoPerfil();
+    mostrarQRCodeCuidador();
   } catch (e) {
     alerta('Erro ao salvar perfil: ' + e.message);
   }
 }
 
-function verificarPerfilCuidador(tipo, membroId) {
+async function mostrarQRCodeCuidador() {
+  const codigoFamilia = APP.codigoFamilia;
+  const idCuidador = APP.membroAtivo?.id_pessoal || '';
+  const link = 'https://applus-saude.onrender.com?familia=' + codigoFamilia + '&cuidador=' + idCuidador;
+  document.getElementById('qr-codigo-familia').textContent = codigoFamilia;
+  document.getElementById('qr-id-cuidador').textContent = idCuidador;
+  abrirModal('modal-qrcode-cuidador');
+  // Gerar QR Code via API do servidor
+  try {
+    const res = await api('POST', '/api/qrcode', { texto: link });
+    const canvas = document.getElementById('qrcode-cuidador-canvas');
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+    };
+    img.src = res.qrcode;
+  } catch (e) {
+    console.log('QR Code erro:', e);
+  }
+}
+
+async function verificarPerfilCuidador(tipo, membroId) {
   if (tipo === 'cuidador') {
-    APP.membroAtivo = { id: membroId };
+    try {
+      const membros = await api('GET', '/api/membros/' + APP.familiaId);
+      const mem = membros.find(m => m.id === membroId) || { id: membroId };
+      APP.membroAtivo = mem;
+    } catch(e) {
+      APP.membroAtivo = { id: membroId };
+    }
     abrirModal('modal-perfil-cuidador');
   } else {
     mostrarSelecaoPerfil();
