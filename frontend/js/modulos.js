@@ -763,3 +763,118 @@ function formatarDataHoraTEA(dt) {
   if (!dt) return '';
   return new Date(dt).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
 }
+
+// ── CHAMADA SOS WEBRTC ──
+let _sosPC = null;
+let _sosStream = null;
+let _sosTimer = null;
+let _sosChamando = false;
+
+async function iniciarChamadaSOS() {
+  try {
+    _sosStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    _sosPC = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    _sosStream.getTracks().forEach(t => _sosPC.addTrack(t, _sosStream));
+    _sosPC.onicecandidate = (e) => {
+      if (e.candidate) APP.socket.emit('sos-ice', { familiaId: APP.familiaId, candidate: e.candidate });
+    };
+    _sosPC.ontrack = (e) => {
+      document.getElementById('audio-remoto').srcObject = e.streams[0];
+    };
+    const offer = await _sosPC.createOffer();
+    await _sosPC.setLocalDescription(offer);
+    APP.socket.emit('sos-chamar', { familiaId: APP.familiaId, nome: APP.membroNome, offer });
+    mostrarTelaChamada('chamando');
+    _sosChamando = true;
+  } catch(e) {
+    alerta('Erro ao acessar microfone: ' + e.message);
+  }
+}
+
+async function atenderChamadaSOS() {
+  try {
+    _sosStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    _sosPC.ontrack = (e) => {
+      document.getElementById('audio-remoto').srcObject = e.streams[0];
+    };
+    _sosStream.getTracks().forEach(t => _sosPC.addTrack(t, _sosStream));
+    const answer = await _sosPC.createAnswer();
+    await _sosPC.setLocalDescription(answer);
+    APP.socket.emit('sos-answer', { familiaId: APP.familiaId, answer });
+    mostrarTelaChamada('conectado');
+    iniciarTimerChamada();
+  } catch(e) {
+    alerta('Erro ao atender: ' + e.message);
+  }
+}
+
+function encerrarChamadaSOS() {
+  if (_sosPC) { _sosPC.close(); _sosPC = null; }
+  if (_sosStream) { _sosStream.getTracks().forEach(t => t.stop()); _sosStream = null; }
+  if (_sosTimer) { clearInterval(_sosTimer); _sosTimer = null; }
+  APP.socket.emit('sos-encerrar', { familiaId: APP.familiaId });
+  fecharTelaChamada();
+  _sosChamando = false;
+}
+
+function mostrarTelaChamada(estado) {
+  const tela = document.getElementById('tela-chamada-sos');
+  tela.style.display = 'flex';
+  if (estado === 'chamando') {
+    document.getElementById('chamada-titulo').textContent = '🚨 Chamada SOS';
+    document.getElementById('chamada-sub').textContent = 'Chamando familiares...';
+    document.getElementById('btn-atender').style.display = 'none';
+  } else if (estado === 'recebendo') {
+    document.getElementById('chamada-titulo').textContent = '🚨 SOS de ' + (window._sosNomeQuemChamou || 'familiar');
+    document.getElementById('chamada-sub').textContent = 'Toque para atender';
+    document.getElementById('btn-atender').style.display = 'flex';
+  } else if (estado === 'conectado') {
+    document.getElementById('chamada-titulo').textContent = '📞 Chamada ativa';
+    document.getElementById('chamada-sub').textContent = 'Conectado';
+    document.getElementById('btn-atender').style.display = 'none';
+  }
+}
+
+function fecharTelaChamada() {
+  document.getElementById('tela-chamada-sos').style.display = 'none';
+  document.getElementById('chamada-timer').textContent = '';
+}
+
+function iniciarTimerChamada() {
+  let seg = 0;
+  _sosTimer = setInterval(() => {
+    seg++;
+    const m = String(Math.floor(seg/60)).padStart(2,'0');
+    const s = String(seg%60).padStart(2,'0');
+    document.getElementById('chamada-timer').textContent = m + ':' + s;
+  }, 1000);
+}
+
+// Eventos Socket.io para chamada SOS
+function registrarEventosSOS() {
+  APP.socket.on('sos-recebendo', async (data) => {
+    window._sosNomeQuemChamou = data.nome;
+    _sosPC = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    _sosPC.onicecandidate = (e) => {
+      if (e.candidate) APP.socket.emit('sos-ice', { familiaId: APP.familiaId, candidate: e.candidate });
+    };
+    await _sosPC.setRemoteDescription(new RTCSessionDescription(data.offer));
+    mostrarTelaChamada('recebendo');
+  });
+  APP.socket.on('sos-answer', async (data) => {
+    if (_sosPC) {
+      await _sosPC.setRemoteDescription(new RTCSessionDescription(data.answer));
+      mostrarTelaChamada('conectado');
+      iniciarTimerChamada();
+    }
+  });
+  APP.socket.on('sos-ice', async (data) => {
+    if (_sosPC && data.candidate) {
+      await _sosPC.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+  });
+  APP.socket.on('sos-encerrado', () => {
+    encerrarChamadaSOS();
+    alerta('Chamada encerrada');
+  });
+}

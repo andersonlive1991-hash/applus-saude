@@ -790,6 +790,7 @@ function conectarSocket() {
   if (typeof io === 'undefined') return;
   APP.socket = io();
   APP.socket.emit('entrar-familia', APP.familiaId);
+  registrarEventosSOS();
 
   APP.socket.on('nova-mensagem', (msg) => {
     if (msg.autor_id !== APP.idPessoal) {

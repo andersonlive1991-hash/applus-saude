@@ -64,23 +64,6 @@ io.on('connection', (socket) => {
   socket.on('emergencia', (data) => {
     io.to(data.familiaId).emit('alerta-emergencia', data);
   });
-  // WebRTC — sinalização de chamada SOS
-  socket.on('sos-chamar', (data) => {
-    socket.to(String(data.familiaId)).emit('sos-recebendo', data);
-  });
-  socket.on('sos-offer', (data) => {
-    socket.to(String(data.familiaId)).emit('sos-offer', data);
-  });
-  socket.on('sos-answer', (data) => {
-    socket.to(String(data.familiaId)).emit('sos-answer', data);
-  });
-  socket.on('sos-ice', (data) => {
-    socket.to(String(data.familiaId)).emit('sos-ice', data);
-  });
-  socket.on('sos-encerrar', (data) => {
-    socket.to(String(data.familiaId)).emit('sos-encerrado', data);
-  });
-
   socket.on('mensagem', (data) => {
     const sala = String(data.familiaId || data.familia_id);
     io.to(sala).emit('nova-mensagem', data);
