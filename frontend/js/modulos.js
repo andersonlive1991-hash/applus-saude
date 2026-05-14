@@ -779,7 +779,9 @@ async function iniciarChamadaSOS() {
       if (e.candidate) APP.socket.emit('sos-ice', { familiaId: APP.familiaId, candidate: e.candidate });
     };
     _sosPC.ontrack = (e) => {
-      document.getElementById('audio-remoto').srcObject = e.streams[0];
+      const audio = document.getElementById('audio-remoto');
+      audio.srcObject = e.streams[0];
+      audio.play().catch(err => console.log('audio play erro:', err));
     };
     const offer = await _sosPC.createOffer();
     await _sosPC.setLocalDescription(offer);
@@ -795,7 +797,9 @@ async function atenderChamadaSOS() {
   try {
     _sosStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     _sosPC.ontrack = (e) => {
-      document.getElementById('audio-remoto').srcObject = e.streams[0];
+      const audio = document.getElementById('audio-remoto');
+      audio.srcObject = e.streams[0];
+      audio.play().catch(err => console.log('audio play erro:', err));
     };
     _sosStream.getTracks().forEach(t => _sosPC.addTrack(t, _sosStream));
     const answer = await _sosPC.createAnswer();

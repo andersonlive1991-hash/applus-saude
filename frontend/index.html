@@ -367,7 +367,7 @@
     <div style="font-size:60px;margin-bottom:16px">🚨</div>
     <div id="chamada-titulo" style="font-size:22px;font-weight:700;margin-bottom:8px">Chamada SOS</div>
     <div id="chamada-sub" style="font-size:15px;opacity:0.8;margin-bottom:40px">Conectando...</div>
-    <audio id="audio-remoto" autoplay></audio>
+    <audio id="audio-remoto" autoplay playsinline webkit-playsinline style="display:none"></audio>
     <div style="display:flex;gap:24px">
       <button id="btn-atender" onclick="atenderChamadaSOS()" style="display:none;width:72px;height:72px;border-radius:50%;background:#22c55e;border:none;font-size:28px;cursor:pointer">📞</button>
       <button onclick="encerrarChamadaSOS()" style="width:72px;height:72px;border-radius:50%;background:#ef4444;border:none;font-size:28px;cursor:pointer;color:#fff">📵</button>
