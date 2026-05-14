@@ -455,6 +455,19 @@ function navegarPara(pagina) {
   if (pagina === 'chat') carregarChat();
   if (pagina === 'mais') carregarMais();
   if (pagina === 'historico') { carregarDoencas(); }
+  if (pagina === 'cuidados') {
+    if (APP.membroTipo === 'cuidador') {
+      // Cuidador vê formulários para registrar
+      document.getElementById('cuidados-view-cuidador').style.display = 'block';
+      document.getElementById('cuidados-view-familia').style.display = 'none';
+      trocarAbaCuidados('atividades');
+    } else {
+      // Família vê feed em tempo real
+      document.getElementById('cuidados-view-cuidador').style.display = 'none';
+      document.getElementById('cuidados-view-familia').style.display = 'block';
+      carregarFeedCuidados();
+    }
+  }
   if (pagina === 'tea') {
     // Buscar membro TEA da família
     api('GET', `/api/membros/familia/${APP.familiaId}`).then(membros => {
@@ -1364,4 +1377,104 @@ async function carregarIntercorrencias() {
         <div style="font-size:0.75rem;color:#999">${new Date(i.criado_em).toLocaleString('pt-BR')}</div>
       </div>`).join('');
   } catch(e) { console.log('Erro intercorrencias:', e); }
+}
+
+// ── FEED CUIDADOS — Visão da família ──
+async function carregarFeedCuidados() {
+  const el = document.getElementById('feed-cuidados');
+  el.innerHTML = '<p style="text-align:center;color:#999">Carregando...</p>';
+  try {
+    const [atividades, humor, refeicoes, intercorrencias, hidratacao] = await Promise.all([
+      api('GET', `/api/cuidados/atividades/${APP.familiaId}`),
+      api('GET', `/api/cuidados/humor/${APP.familiaId}`),
+      api('GET', `/api/cuidados/refeicoes/${APP.familiaId}`),
+      api('GET', `/api/cuidados/intercorrencias/${APP.familiaId}`),
+      api('GET', `/api/cuidados/hidratacao/${APP.familiaId}`)
+    ]);
+
+    let html = '';
+
+    // Intercorrências primeiro — mais urgente
+    if (intercorrencias.length) {
+      html += `<div style="background:#fff0f0;border-radius:16px;padding:1rem;margin-bottom:1rem;border-left:4px solid #e74c3c">
+        <div style="font-weight:700;color:#e74c3c;margin-bottom:0.5rem">🚨 Intercorrências</div>
+        ${intercorrencias.slice(0,3).map(i => `
+          <div style="margin-bottom:0.5rem;padding-bottom:0.5rem;border-bottom:1px solid #fecaca">
+            <div style="font-weight:600">${i.tipo} ${i.hora ? '— ' + i.hora : ''}</div>
+            <div style="font-size:0.85rem;color:#666">${i.obs}</div>
+            <div style="font-size:0.75rem;color:#999">${new Date(i.criado_em).toLocaleString('pt-BR')}</div>
+          </div>`).join('')}
+      </div>`;
+    }
+
+    // Hidratação
+    html += `<div style="background:white;border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:1rem">
+      <div style="font-size:2.5rem">💧</div>
+      <div>
+        <div style="font-weight:600">Hidratação hoje</div>
+        <div style="font-size:1.5rem;font-weight:bold;color:#2563eb">${hidratacao.total || 0} copos</div>
+      </div>
+    </div>`;
+
+    // Humor
+    if (humor.length) {
+      const emojis = { otimo:'😄', bem:'🙂', regular:'😐', mal:'😔', pessimo:'😢' };
+      const h = humor[0];
+      html += `<div style="background:white;border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:1rem">
+        <div style="font-size:2.5rem">${emojis[h.humor] || '😐'}</div>
+        <div>
+          <div style="font-weight:600">Humor do idoso</div>
+          <div style="text-transform:capitalize;color:#1a9e6e;font-weight:600">${h.humor}</div>
+          <div style="font-size:0.85rem;color:#666">${h.obs || ''}</div>
+        </div>
+      </div>`;
+    }
+
+    // Atividades
+    if (atividades.length) {
+      html += `<div style="background:white;border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+        <div style="font-weight:700;margin-bottom:0.75rem">📝 Atividades de hoje</div>
+        ${atividades.map(a => `
+          <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid #f5f5f5">
+            <div style="font-size:1.5rem">${iconeAtividade(a.tipo)}</div>
+            <div>
+              <div style="font-weight:600">${a.tipo} ${a.hora ? '— ' + a.hora : ''}</div>
+              <div style="font-size:0.8rem;color:#666">${a.obs || ''}</div>
+              <div style="font-size:0.75rem;color:#999">${a.cuidador_nome || ''}</div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    }
+
+    // Refeições
+    if (refeicoes.length) {
+      const cores = { 'Tudo':'#e8f5e9','Metade':'#fff8e1','Pouco':'#fff3e0','Recusou':'#fff0f0' };
+      html += `<div style="background:white;border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+        <div style="font-weight:700;margin-bottom:0.75rem">🍽️ Refeições de hoje</div>
+        ${refeicoes.map(r => `
+          <div style="background:${cores[r.quantidade]||'#f9f9f9'};border-radius:8px;padding:0.5rem;margin-bottom:0.5rem">
+            <div style="font-weight:600">${r.tipo} — ${r.quantidade}</div>
+            <div style="font-size:0.85rem;color:#666">${r.obs || ''}</div>
+          </div>`).join('')}
+      </div>`;
+    }
+
+    if (!html) {
+      html = '<div style="text-align:center;padding:2rem;color:#999"><div style="font-size:3rem">📋</div><p>Nenhum registro hoje ainda.</p><p style="font-size:0.85rem">O cuidador ainda não registrou atividades.</p></div>';
+    }
+
+    el.innerHTML = html;
+
+    // Atualizar em tempo real via Socket.io
+    if (window.socket) {
+      socket.off('cuidado-registrado');
+      socket.on('cuidado-registrado', (dados) => {
+        if (String(dados.familia_id) === String(APP.familiaId)) {
+          carregarFeedCuidados();
+        }
+      });
+    }
+  } catch(e) {
+    el.innerHTML = '<p style="text-align:center;color:#999">Erro ao carregar registros.</p>';
+  }
 }

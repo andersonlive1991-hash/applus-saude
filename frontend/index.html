@@ -524,6 +524,19 @@
     </div>
     <div class="curva"></div>
     <div class="conteudo">
+
+      <!-- VIEW FAMÍLIA — Feed em tempo real -->
+      <div id="cuidados-view-familia" style="display:none">
+        <div style="background:#e8f5e9;border-radius:12px;padding:1rem;margin-bottom:1rem;text-align:center">
+          <div style="font-size:1.5rem">👨‍👩‍👧</div>
+          <div style="font-weight:600;color:#1a9e6e">Acompanhamento em tempo real</div>
+          <div style="font-size:0.85rem;color:#666">Veja tudo que o cuidador está fazendo</div>
+        </div>
+        <div id="feed-cuidados"></div>
+      </div>
+
+      <!-- VIEW CUIDADOR — Formulários -->
+      <div id="cuidados-view-cuidador">
       <!-- Abas -->
       <div style="display:flex;gap:0.4rem;overflow-x:auto;margin-bottom:1rem;padding-bottom:0.5rem">
         <button class="btn-aba ativa" id="aba-cuid-atividades" onclick="trocarAbaCuidados('atividades')">📝 Atividades</button>
@@ -598,6 +611,7 @@
         <button class="btn btn-block" onclick="abrirModal('modal-nova-intercorrencia')" style="background:#fff0f0;color:#e74c3c;border:2px solid #e74c3c;margin-bottom:1rem">🚨 Registrar intercorrência</button>
         <div id="lista-intercorrencias"></div>
       </div>
+      </div><!-- fim cuidados-view-cuidador -->
     </div>
   </div>
 
