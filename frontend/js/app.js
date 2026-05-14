@@ -826,9 +826,8 @@ function trocarPerfil() {
 }
 
 function sair() {
-  if (!confirm('Sair do app? Seu ID pessoal é ' + APP.idPessoal + ' — guarde-o!')) return;
-  localStorage.removeItem('applus_sessao');
-  location.reload();
+  localStorage.clear();
+  window.location.href = '/cadastro.html';
 }
 
 // ── PUSH ──
