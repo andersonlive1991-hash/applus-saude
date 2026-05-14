@@ -372,10 +372,15 @@ async function entrarComoCuidador() {
     APP.familiaId = String(fam.id);
     APP.codigoFamilia = fam.codigo;
     APP.nomeFamilia = fam.nome;
+    APP.membroId = mem.id;
+    APP.membroNome = mem.nome;
+    APP.membroTipo = mem.tipo;
+    APP.idPessoal = mem.id_pessoal;
     salvarSessaoFamilia();
+    salvarSessaoMembro();
     localStorage.setItem('membroAtivoId', mem.id_pessoal);
     fecharModal('modal-entrar');
-    mostrarSelecaoPerfil();
+    iniciarApp();
   } catch(e) {
     alerta('Família ou ID do cuidador não encontrado');
   }
