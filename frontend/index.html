@@ -141,6 +141,11 @@
         <div class="card-titulo">Histórico</div>
         <div class="card-sub">Doenças e tratamentos</div>
       </div>
+      <div class="card" onclick="navegarPara('cuidados')">
+        <div class="card-icone">📋</div>
+        <div class="card-titulo">Cuidados</div>
+        <div class="card-sub">Registro do plantão</div>
+      </div>
       <div class="card" id="card-tea" onclick="navegarPara('tea')" style="display:none">
         <div class="card-icone">🧩</div>
         <div class="card-titulo">TEA</div>
@@ -511,6 +516,190 @@
   </div>
 
   <!-- ── HISTÓRICO ── -->
+  <!-- ── CUIDADOS ── -->
+  <div id="pag-cuidados" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#1e3a5f,#2563eb,#3b82f6)">
+      <h1>📋 Cuidados</h1>
+      <p>Registro do plantão</p>
+    </div>
+    <div class="curva"></div>
+    <div class="conteudo">
+      <!-- Abas -->
+      <div style="display:flex;gap:0.4rem;overflow-x:auto;margin-bottom:1rem;padding-bottom:0.5rem">
+        <button class="btn-aba ativa" id="aba-cuid-atividades" onclick="trocarAbaCuidados('atividades')">📝 Atividades</button>
+        <button class="btn-aba" id="aba-cuid-humor" onclick="trocarAbaCuidados('humor')">😊 Humor</button>
+        <button class="btn-aba" id="aba-cuid-alimentacao" onclick="trocarAbaCuidados('alimentacao')">🍽️ Alimentação</button>
+        <button class="btn-aba" id="aba-cuid-hidratacao" onclick="trocarAbaCuidados('hidratacao')">💧 Hidratação</button>
+        <button class="btn-aba" id="aba-cuid-sono" onclick="trocarAbaCuidados('sono')">😴 Sono</button>
+        <button class="btn-aba" id="aba-cuid-intercorrencias" onclick="trocarAbaCuidados('intercorrencias')">🚨 Intercorrências</button>
+      </div>
+
+      <!-- Atividades -->
+      <div id="cuid-atividades">
+        <button class="btn btn-verde btn-block" onclick="abrirModal('modal-nova-atividade')">+ Registrar atividade</button>
+        <div id="lista-atividades" style="margin-top:1rem"></div>
+      </div>
+
+      <!-- Humor -->
+      <div id="cuid-humor" style="display:none">
+        <div style="background:white;border-radius:16px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+          <p style="font-weight:600;margin-bottom:1rem;text-align:center">Como o idoso está hoje?</p>
+          <div style="display:flex;justify-content:space-around;margin-bottom:1rem">
+            <div onclick="selecionarHumorIdoso('otimo')" class="emoji-humor" data-valor="otimo" style="text-align:center;cursor:pointer;padding:0.5rem;border-radius:8px">
+              <div style="font-size:2.5rem">😄</div><div style="font-size:0.75rem">Ótimo</div>
+            </div>
+            <div onclick="selecionarHumorIdoso('bem')" class="emoji-humor" data-valor="bem" style="text-align:center;cursor:pointer;padding:0.5rem;border-radius:8px">
+              <div style="font-size:2.5rem">🙂</div><div style="font-size:0.75rem">Bem</div>
+            </div>
+            <div onclick="selecionarHumorIdoso('regular')" class="emoji-humor" data-valor="regular" style="text-align:center;cursor:pointer;padding:0.5rem;border-radius:8px">
+              <div style="font-size:2.5rem">😐</div><div style="font-size:0.75rem">Regular</div>
+            </div>
+            <div onclick="selecionarHumorIdoso('mal')" class="emoji-humor" data-valor="mal" style="text-align:center;cursor:pointer;padding:0.5rem;border-radius:8px">
+              <div style="font-size:2.5rem">😔</div><div style="font-size:0.75rem">Mal</div>
+            </div>
+            <div onclick="selecionarHumorIdoso('pessimo')" class="emoji-humor" data-valor="pessimo" style="text-align:center;cursor:pointer;padding:0.5rem;border-radius:8px">
+              <div style="font-size:2.5rem">😢</div><div style="font-size:0.75rem">Péssimo</div>
+            </div>
+          </div>
+          <textarea id="obs-humor-idoso" placeholder="Observações sobre o humor..." rows="2" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem"></textarea>
+          <button class="btn btn-verde btn-block" style="margin-top:0.75rem" onclick="salvarHumorIdoso()">💾 Salvar humor</button>
+        </div>
+        <div id="lista-humor-idoso"></div>
+      </div>
+
+      <!-- Alimentação -->
+      <div id="cuid-alimentacao" style="display:none">
+        <button class="btn btn-verde btn-block" onclick="abrirModal('modal-nova-refeicao')">+ Registrar refeição</button>
+        <div id="lista-refeicoes" style="margin-top:1rem"></div>
+      </div>
+
+      <!-- Hidratação -->
+      <div id="cuid-hidratacao" style="display:none">
+        <div style="background:white;border-radius:16px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+          <p style="font-weight:600;text-align:center;margin-bottom:0.5rem">Água consumida hoje</p>
+          <div style="text-align:center;font-size:3rem;font-weight:bold;color:#2563eb" id="total-hidratacao">0</div>
+          <div style="text-align:center;color:#666;margin-bottom:1rem">copos (meta: <span id="meta-hidratacao">8</span>)</div>
+          <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap">
+            <button onclick="registrarAgua(1)" class="btn btn-verde">+ 1 copo</button>
+            <button onclick="registrarAgua(2)" class="btn btn-verde">+ 2 copos</button>
+            <button onclick="registrarAgua(-1)" class="btn" style="background:#fff0f0;color:#e74c3c;border:1px solid #e74c3c">- 1 copo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sono -->
+      <div id="cuid-sono" style="display:none">
+        <button class="btn btn-verde btn-block" onclick="abrirModal('modal-novo-sono')">+ Registrar sono</button>
+        <div id="lista-sono" style="margin-top:1rem"></div>
+      </div>
+
+      <!-- Intercorrências -->
+      <div id="cuid-intercorrencias" style="display:none">
+        <button class="btn btn-block" onclick="abrirModal('modal-nova-intercorrencia')" style="background:#fff0f0;color:#e74c3c;border:2px solid #e74c3c;margin-bottom:1rem">🚨 Registrar intercorrência</button>
+        <div id="lista-intercorrencias"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Nova Atividade -->
+  <div id="modal-nova-atividade" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-titulo">📝 Nova atividade</div>
+      <div class="form" style="padding:0">
+        <div class="campo"><label>Atividade</label>
+          <select id="ativ-tipo">
+            <option value="Banho">🛁 Banho</option>
+            <option value="Alimentação">🍽️ Alimentação</option>
+            <option value="Medicamento">💊 Medicamento</option>
+            <option value="Fisioterapia">🏃 Fisioterapia</option>
+            <option value="Passeio">🌳 Passeio</option>
+            <option value="Consulta">🏥 Consulta</option>
+            <option value="Higiene">🧹 Higiene</option>
+            <option value="Outro">📌 Outro</option>
+          </select>
+        </div>
+        <div class="campo"><label>Hora</label><input id="ativ-hora" type="time"></div>
+        <div class="campo"><label>Observações</label><textarea id="ativ-obs" rows="2" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem" placeholder="Detalhes da atividade..."></textarea></div>
+        <button class="btn btn-verde btn-block" onclick="salvarAtividade()">Salvar</button>
+        <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-nova-atividade')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Nova Refeição -->
+  <div id="modal-nova-refeicao" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-titulo">🍽️ Nova refeição</div>
+      <div class="form" style="padding:0">
+        <div class="campo"><label>Refeição</label>
+          <select id="ref-tipo">
+            <option value="Café da manhã">☕ Café da manhã</option>
+            <option value="Almoço">🍱 Almoço</option>
+            <option value="Lanche">🥪 Lanche</option>
+            <option value="Jantar">🍽️ Jantar</option>
+            <option value="Ceia">🌙 Ceia</option>
+          </select>
+        </div>
+        <div class="campo"><label>Quantidade consumida</label>
+          <select id="ref-quantidade">
+            <option value="Tudo">✅ Tudo</option>
+            <option value="Metade">🔶 Metade</option>
+            <option value="Pouco">⚠️ Pouco</option>
+            <option value="Recusou">❌ Recusou</option>
+          </select>
+        </div>
+        <div class="campo"><label>Observações</label><textarea id="ref-obs" rows="2" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem" placeholder="O que foi servido, reações..."></textarea></div>
+        <button class="btn btn-verde btn-block" onclick="salvarRefeicao()">Salvar</button>
+        <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-nova-refeicao')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Novo Sono -->
+  <div id="modal-novo-sono" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-titulo">😴 Registro de sono</div>
+      <div class="form" style="padding:0">
+        <div class="campo"><label>Dormiu às</label><input id="sono-inicio" type="time"></div>
+        <div class="campo"><label>Acordou às</label><input id="sono-fim" type="time"></div>
+        <div class="campo"><label>Qualidade</label>
+          <select id="sono-qualidade">
+            <option value="Ótima">😴 Ótima</option>
+            <option value="Boa">🙂 Boa</option>
+            <option value="Regular">😐 Regular</option>
+            <option value="Ruim">😔 Ruim</option>
+          </select>
+        </div>
+        <div class="campo"><label>Observações</label><textarea id="sono-obs" rows="2" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem" placeholder="Acordou várias vezes, pesadelos..."></textarea></div>
+        <button class="btn btn-verde btn-block" onclick="salvarSono()">Salvar</button>
+        <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-novo-sono')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Nova Intercorrência -->
+  <div id="modal-nova-intercorrencia" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-titulo" style="color:#e74c3c">🚨 Intercorrência</div>
+      <div class="form" style="padding:0">
+        <div class="campo"><label>Tipo</label>
+          <select id="inter-tipo">
+            <option value="Queda">🤕 Queda</option>
+            <option value="Recusa de medicamento">💊 Recusa de medicamento</option>
+            <option value="Agitação">😤 Agitação</option>
+            <option value="Dor">😣 Dor</option>
+            <option value="Vômito">🤢 Vômito</option>
+            <option value="Outro">⚠️ Outro</option>
+          </select>
+        </div>
+        <div class="campo"><label>Hora</label><input id="inter-hora" type="time"></div>
+        <div class="campo"><label>O que aconteceu</label><textarea id="inter-obs" rows="3" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem" placeholder="Descreva o que aconteceu e como foi tratado..."></textarea></div>
+        <button class="btn btn-block" onclick="salvarIntercorrencia()" style="background:#e74c3c;color:white">🚨 Registrar e alertar família</button>
+        <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-nova-intercorrencia')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="pag-historico" class="pagina">
     <div class="header-verde" style="background:linear-gradient(145deg,#134e4a,#0f766e,#14b8a6)">
       <h1>🏥 Histórico de Saúde</h1>

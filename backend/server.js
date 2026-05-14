@@ -48,6 +48,7 @@ app.use('/api/escala', require('./routes/escala'));
 app.use('/api/perfil', require('./routes/perfil'));
 app.use('/api/perfil-cuidador', require('./routes/perfil_cuidador'));
 app.use('/api/qrcode', require('./routes/qrcode'));
+app.use('/api/cuidados', require('./routes/cuidados'));
 app.use('/api/historico', require('./routes/saude_historico'));
 app.use('/api/prontuarios', require('./routes/prontuarios'));
 app.use('/api/rotina-tea', require('./routes/rotina_tea'));

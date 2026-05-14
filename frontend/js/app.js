@@ -1151,3 +1151,217 @@ function gerarQRCodeTEA(idPessoal) {
   if (img) img.src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(url)}&color=0ea5e9&bgcolor=f0f9ff`;
   if (idEl) idEl.textContent = idPessoal;
 }
+// ── CUIDADOS ──
+
+function trocarAbaCuidados(aba) {
+  ['atividades','humor','alimentacao','hidratacao','sono','intercorrencias'].forEach(a => {
+    document.getElementById('cuid-' + a).style.display = a === aba ? 'block' : 'none';
+    const btn = document.getElementById('aba-cuid-' + a);
+    if (btn) btn.classList.toggle('ativa', a === aba);
+  });
+  if (aba === 'atividades') carregarAtividades();
+  if (aba === 'humor') carregarHumorIdoso();
+  if (aba === 'alimentacao') carregarRefeicoes();
+  if (aba === 'hidratacao') carregarHidratacao();
+  if (aba === 'sono') carregarSono();
+  if (aba === 'intercorrencias') carregarIntercorrencias();
+}
+
+// ATIVIDADES
+async function salvarAtividade() {
+  const tipo = document.getElementById('ativ-tipo').value;
+  const hora = document.getElementById('ativ-hora').value;
+  const obs = document.getElementById('ativ-obs').value.trim();
+  try {
+    await api('POST', '/api/cuidados/atividade', {
+      familia_id: APP.familiaId,
+      membro_id: APP.membroId,
+      tipo, hora, obs
+    });
+    fecharModal('modal-nova-atividade');
+    carregarAtividades();
+    // Alertar familia via socket
+    if (window.socket) socket.emit('cuidado-registrado', {
+      familia_id: APP.familiaId,
+      cuidador: APP.membroNome,
+      tipo, hora
+    });
+  } catch(e) { alerta('Erro ao salvar: ' + e.message); }
+}
+
+async function carregarAtividades() {
+  try {
+    const lista = await api('GET', `/api/cuidados/atividades/${APP.familiaId}`);
+    const el = document.getElementById('lista-atividades');
+    if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhuma atividade registrada hoje.</p>'; return; }
+    el.innerHTML = lista.map(a => `
+      <div style="background:white;border-radius:12px;padding:1rem;margin-bottom:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:0.75rem">
+        <div style="font-size:2rem">${iconeAtividade(a.tipo)}</div>
+        <div style="flex:1">
+          <div style="font-weight:600">${a.tipo}</div>
+          <div style="font-size:0.85rem;color:#666">${a.hora || ''} ${a.obs ? '— ' + a.obs : ''}</div>
+          <div style="font-size:0.75rem;color:#999">${a.cuidador_nome || ''}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) { console.log('Erro atividades:', e); }
+}
+
+function iconeAtividade(tipo) {
+  const icones = { 'Banho':'🛁','Alimentação':'🍽️','Medicamento':'💊','Fisioterapia':'🏃','Passeio':'🌳','Consulta':'🏥','Higiene':'🧹' };
+  return icones[tipo] || '📌';
+}
+
+// HUMOR
+let humorSelecionado = null;
+function selecionarHumorIdoso(valor) {
+  humorSelecionado = valor;
+  document.querySelectorAll('.emoji-humor').forEach(el => {
+    el.style.background = el.dataset.valor === valor ? '#e8f5e9' : '';
+    el.style.border = el.dataset.valor === valor ? '2px solid #1a9e6e' : '2px solid transparent';
+  });
+}
+
+async function salvarHumorIdoso() {
+  if (!humorSelecionado) return alerta('Selecione o humor do idoso');
+  const obs = document.getElementById('obs-humor-idoso').value.trim();
+  try {
+    await api('POST', '/api/cuidados/humor', {
+      familia_id: APP.familiaId,
+      membro_id: APP.membroId,
+      humor: humorSelecionado, obs
+    });
+    alerta('Humor registrado!');
+    carregarHumorIdoso();
+  } catch(e) { alerta('Erro: ' + e.message); }
+}
+
+async function carregarHumorIdoso() {
+  try {
+    const lista = await api('GET', `/api/cuidados/humor/${APP.familiaId}`);
+    const el = document.getElementById('lista-humor-idoso');
+    const emojis = { otimo:'😄', bem:'🙂', regular:'😐', mal:'😔', pessimo:'😢' };
+    if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhum humor registrado.</p>'; return; }
+    el.innerHTML = lista.map(h => `
+      <div style="background:white;border-radius:12px;padding:1rem;margin-bottom:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:0.75rem">
+        <div style="font-size:2.5rem">${emojis[h.humor] || '😐'}</div>
+        <div>
+          <div style="font-weight:600;text-transform:capitalize">${h.humor}</div>
+          <div style="font-size:0.85rem;color:#666">${h.obs || ''}</div>
+          <div style="font-size:0.75rem;color:#999">${new Date(h.criado_em).toLocaleString('pt-BR')}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) { console.log('Erro humor:', e); }
+}
+
+// ALIMENTAÇÃO
+async function salvarRefeicao() {
+  const tipo = document.getElementById('ref-tipo').value;
+  const quantidade = document.getElementById('ref-quantidade').value;
+  const obs = document.getElementById('ref-obs').value.trim();
+  try {
+    await api('POST', '/api/cuidados/refeicao', {
+      familia_id: APP.familiaId, membro_id: APP.membroId,
+      tipo, quantidade, obs
+    });
+    fecharModal('modal-nova-refeicao');
+    carregarRefeicoes();
+  } catch(e) { alerta('Erro: ' + e.message); }
+}
+
+async function carregarRefeicoes() {
+  try {
+    const lista = await api('GET', `/api/cuidados/refeicoes/${APP.familiaId}`);
+    const el = document.getElementById('lista-refeicoes');
+    const cores = { 'Tudo':'#e8f5e9', 'Metade':'#fff8e1', 'Pouco':'#fff3e0', 'Recusou':'#fff0f0' };
+    if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhuma refeição registrada hoje.</p>'; return; }
+    el.innerHTML = lista.map(r => `
+      <div style="background:${cores[r.quantidade]||'white'};border-radius:12px;padding:1rem;margin-bottom:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+        <div style="font-weight:600">${r.tipo} — ${r.quantidade}</div>
+        <div style="font-size:0.85rem;color:#666">${r.obs || ''}</div>
+        <div style="font-size:0.75rem;color:#999">${new Date(r.criado_em).toLocaleString('pt-BR')}</div>
+      </div>`).join('');
+  } catch(e) { console.log('Erro refeicoes:', e); }
+}
+
+// HIDRATAÇÃO
+async function registrarAgua(copos) {
+  try {
+    await api('POST', '/api/cuidados/hidratacao', {
+      familia_id: APP.familiaId, membro_id: APP.membroId, copos
+    });
+    carregarHidratacao();
+  } catch(e) { alerta('Erro: ' + e.message); }
+}
+
+async function carregarHidratacao() {
+  try {
+    const dados = await api('GET', `/api/cuidados/hidratacao/${APP.familiaId}`);
+    document.getElementById('total-hidratacao').textContent = dados.total || 0;
+  } catch(e) { console.log('Erro hidratacao:', e); }
+}
+
+// SONO
+async function salvarSono() {
+  const inicio = document.getElementById('sono-inicio').value;
+  const fim = document.getElementById('sono-fim').value;
+  const qualidade = document.getElementById('sono-qualidade').value;
+  const obs = document.getElementById('sono-obs').value.trim();
+  try {
+    await api('POST', '/api/cuidados/sono', {
+      familia_id: APP.familiaId, membro_id: APP.membroId,
+      inicio, fim, qualidade, obs
+    });
+    fecharModal('modal-novo-sono');
+    carregarSono();
+  } catch(e) { alerta('Erro: ' + e.message); }
+}
+
+async function carregarSono() {
+  try {
+    const lista = await api('GET', `/api/cuidados/sono/${APP.familiaId}`);
+    const el = document.getElementById('lista-sono');
+    if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhum sono registrado.</p>'; return; }
+    el.innerHTML = lista.map(s => `
+      <div style="background:white;border-radius:12px;padding:1rem;margin-bottom:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+        <div style="font-weight:600">😴 ${s.qualidade}</div>
+        <div style="font-size:0.85rem;color:#666">Dormiu: ${s.inicio || '--'} | Acordou: ${s.fim || '--'}</div>
+        <div style="font-size:0.85rem;color:#666">${s.obs || ''}</div>
+      </div>`).join('');
+  } catch(e) { console.log('Erro sono:', e); }
+}
+
+// INTERCORRÊNCIAS
+async function salvarIntercorrencia() {
+  const tipo = document.getElementById('inter-tipo').value;
+  const hora = document.getElementById('inter-hora').value;
+  const obs = document.getElementById('inter-obs').value.trim();
+  if (!obs) return alerta('Descreva o que aconteceu');
+  try {
+    await api('POST', '/api/cuidados/intercorrencia', {
+      familia_id: APP.familiaId, membro_id: APP.membroId,
+      tipo, hora, obs
+    });
+    fecharModal('modal-nova-intercorrencia');
+    carregarIntercorrencias();
+    // Alertar família imediatamente
+    if (window.socket) socket.emit('emergencia', {
+      familia_id: APP.familiaId,
+      tipo: 'Intercorrência: ' + tipo,
+      mensagem: obs
+    });
+  } catch(e) { alerta('Erro: ' + e.message); }
+}
+
+async function carregarIntercorrencias() {
+  try {
+    const lista = await api('GET', `/api/cuidados/intercorrencias/${APP.familiaId}`);
+    const el = document.getElementById('lista-intercorrencias');
+    if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhuma intercorrência registrada.</p>'; return; }
+    el.innerHTML = lista.map(i => `
+      <div style="background:#fff0f0;border-radius:12px;padding:1rem;margin-bottom:0.75rem;border-left:4px solid #e74c3c">
+        <div style="font-weight:600;color:#e74c3c">🚨 ${i.tipo}</div>
+        <div style="font-size:0.85rem;color:#666">${i.hora || ''} — ${i.obs}</div>
+        <div style="font-size:0.75rem;color:#999">${new Date(i.criado_em).toLocaleString('pt-BR')}</div>
+      </div>`).join('');
+  } catch(e) { console.log('Erro intercorrencias:', e); }
+}
