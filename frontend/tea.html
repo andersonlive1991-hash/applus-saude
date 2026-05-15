@@ -325,10 +325,58 @@ body {
   0%, 100% { box-shadow: 0 8px 32px rgba(220,38,38,0.4); }
   50% { box-shadow: 0 8px 48px rgba(220,38,38,0.7); transform: scale(1.02); }
 }
+
+/* ── MODO CALMO ── */
+.modo-calmo-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 999;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  cursor: pointer;
+  display: none;
+}
+.tea-home.ativo .modo-calmo-btn { display: flex; align-items: center; justify-content: center; }
+body.calmo { background: #0f172a !important; }
+body.calmo .tea-header { background: #1e293b !important; }
+body.calmo .tea-content { background: #0f172a !important; }
+body.calmo .tea-aba { background: #1e293b !important; color: #94a3b8 !important; font-size: 13px !important; }
+body.calmo .tea-aba.ativa { background: #334155 !important; color: #e2e8f0 !important; }
+body.calmo .pict-btn { background: #1e293b !important; border-color: #334155 !important; }
+body.calmo .pict-emoji { font-size: 28px !important; }
+body.calmo .pict-label { color: #94a3b8 !important; font-size: 11px !important; }
+body.calmo * { animation: none !important; transition: none !important; }
+body.calmo .humor-btn { background: #1e293b !important; }
+body.calmo .rotina-item { background: #1e293b !important; color: #e2e8f0 !important; }
+.calmo-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #0f172a;
+  z-index: 9998;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+.calmo-overlay.ativo { display: flex; }
+.calmo-overlay .calmo-emoji { font-size: 80px; }
+.calmo-overlay .calmo-texto { color: #e2e8f0; font-size: 24px; font-weight: 300; }
+.calmo-overlay .calmo-fechar { background: #334155; color: #e2e8f0; border: none; border-radius: 16px; padding: 16px 40px; font-size: 18px; cursor: pointer; margin-top: 16px; }
 </style>
 </head>
 <body>
 <div class="app">
+  <div class="calmo-overlay" id="calmo-overlay">
+    <div class="calmo-emoji">🌙</div>
+    <div class="calmo-texto">Modo Calmo ativado</div>
+    <button class="calmo-fechar" onclick="desativarModoCalmo()">Voltar ☀️</button>
+  </div>
 
   <!-- ── LOGIN TEA ── -->
   <div class="login-tea" id="login-tea">
@@ -344,6 +392,7 @@ body {
 
   <!-- ── HOME TEA ── -->
   <div class="tea-home" id="tea-home">
+    <button class="modo-calmo-btn" onclick="toggleModoCalmo()" id="btn-calmo" title="Modo Calmo">🌙</button>
     <div class="tea-header">
       <div class="tea-avatar">🧩</div>
       <div class="tea-ola" id="tea-nome">Olá!</div>
@@ -433,7 +482,33 @@ body {
 
 </div>
 
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js">
+// ── MODO CALMO ──
+let modoCalmoAtivo = false;
+function toggleModoCalmo() {
+  if (modoCalmoAtivo) {
+    desativarModoCalmo();
+  } else {
+    ativarModoCalmo();
+  }
+}
+function ativarModoCalmo() {
+  modoCalmoAtivo = true;
+  document.body.classList.add('calmo');
+  document.getElementById('calmo-overlay').classList.add('ativo');
+  document.getElementById('btn-calmo').textContent = '☀️';
+  setTimeout(() => {
+    document.getElementById('calmo-overlay').classList.remove('ativo');
+  }, 2000);
+}
+function desativarModoCalmo() {
+  modoCalmoAtivo = false;
+  document.body.classList.remove('calmo');
+  document.getElementById('calmo-overlay').classList.remove('ativo');
+  document.getElementById('btn-calmo').textContent = '🌙';
+}
+
+</script>
 <script>
 const TEA = {
   membroId: null,
