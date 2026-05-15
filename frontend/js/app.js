@@ -1065,7 +1065,7 @@ async function inscreverPush() {
       subscription: sub
     });
   } catch (e) {
-    console.log('Push não disponível:', e);
+    console.log('Push não disponível:', e); try { await api("POST", "/api/push/erro-log", { erro: e.message, membro_id: APP.membroId, familia_id: APP.familiaId }); } catch(_) {}
   }
 }
 

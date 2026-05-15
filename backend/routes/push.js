@@ -75,4 +75,12 @@ router.get('/gerar-vapid', (req, res) => {
 });
 
 
+
+// Log de erro push do frontend
+router.post('/erro-log', async (req, res) => {
+  const { erro, membro_id, familia_id } = req.body;
+  console.log('[Push Frontend Erro]', membro_id, familia_id, erro);
+  res.json({ ok: true });
+});
+
 module.exports = router;
