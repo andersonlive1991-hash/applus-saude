@@ -594,6 +594,17 @@ async function salvarMedicamento() {
       nome, dosagem, horarios, via,
       estoque: estoque || 0
     });
+    // Verificar interações após salvar
+    api('POST', '/api/interacoes/verificar', { membro_id: APP.membroId, nome_novo: nome })
+      .then(interacao => {
+        if (interacao && interacao.alerta) {
+          setTimeout(() => alert('⚠️ Alerta de Interação Medicamentosa
+
+' + interacao.alerta + '
+
+Consulte o médico responsável.'), 800);
+        }
+      }).catch(() => {});
     fecharModal('modal-add-med');
     limparFormMed();
     carregarMedicamentos();
