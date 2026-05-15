@@ -101,7 +101,7 @@ router.post('/', async (req, res) => {
       const sub = typeof row.subscription === 'string'
         ? JSON.parse(row.subscription)
         : row.subscription;
-      webpush.sendNotification(sub, payload).catch(() => null);
+      webpush.sendNotification(sub, payload).catch(e => console.log("[Push Sinal] Erro:", e.message));
     });
 
   } catch (e) {
