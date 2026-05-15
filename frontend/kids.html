@@ -375,7 +375,143 @@ body {
 
 </div>
 
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js">
+// ── CHAMADA SOS WEBRTC KIDS ──
+let _kidsPC = null;
+let _kidsStream = null;
+let _kidsTimer = null;
+
+async function iniciarChamadaKids() {
+  try {
+    _kidsStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    _kidsPC = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    _kidsStream.getTracks().forEach(t => _kidsPC.addTrack(t, _kidsStream));
+    _kidsPC.onicecandidate = (e) => {
+      if (e.candidate) KIDS.socket.emit('sos-ice', { familiaId: KIDS.familiaId, candidate: e.candidate });
+    };
+    _kidsPC.ontrack = (e) => {
+      const audio = document.getElementById('audio-remoto-kids');
+      if (e.streams && e.streams[0]) {
+        audio.srcObject = e.streams[0];
+        audio.play().catch(err => console.log('audio erro:', err));
+      }
+    };
+    const offer = await _kidsPC.createOffer();
+    await _kidsPC.setLocalDescription(offer);
+    KIDS.socket.emit('sos-chamar', { familiaId: KIDS.familiaId, nome: KIDS.membroNome, offer });
+    mostrarTelaChamadaKids('chamando');
+  } catch(e) {
+    console.log('Erro microfone:', e.message);
+  }
+}
+
+async function atenderChamadaKids() {
+  try {
+    _kidsStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    _kidsStream.getTracks().forEach(t => _kidsPC.addTrack(t, _kidsStream));
+    _kidsPC.ontrack = (e) => {
+      const audio = document.getElementById('audio-remoto-kids');
+      if (e.streams && e.streams[0]) {
+        audio.srcObject = e.streams[0];
+        audio.play().catch(err => console.log('audio erro:', err));
+      }
+    };
+    const answer = await _kidsPC.createAnswer();
+    await _kidsPC.setLocalDescription(answer);
+    KIDS.socket.emit('sos-answer', { familiaId: KIDS.familiaId, answer });
+    mostrarTelaChamadaKids('conectado');
+    iniciarTimerKids();
+  } catch(e) {
+    console.log('Erro atender:', e.message);
+  }
+}
+
+function encerrarChamadaKids() {
+  if (!_kidsPC && !_kidsStream) { fecharTelaChamadaKids(); return; }
+  if (_kidsPC) { _kidsPC.close(); _kidsPC = null; }
+  if (_kidsStream) { _kidsStream.getTracks().forEach(t => t.stop()); _kidsStream = null; }
+  if (_kidsTimer) { clearInterval(_kidsTimer); _kidsTimer = null; }
+  KIDS.socket.emit('sos-encerrar', { familiaId: KIDS.familiaId });
+  fecharTelaChamadaKids();
+}
+
+function mostrarTelaChamadaKids(estado) {
+  const tela = document.getElementById('tela-chamada-kids');
+  tela.style.display = 'flex';
+  if (estado === 'chamando') {
+    document.getElementById('kids-chamada-titulo').textContent = '🚨 Chamando família...';
+    document.getElementById('kids-chamada-sub').textContent = 'Aguarde atender';
+    document.getElementById('kids-btn-atender').style.display = 'none';
+  } else if (estado === 'recebendo') {
+    document.getElementById('kids-chamada-titulo').textContent = '📞 Chamada chegando!';
+    document.getElementById('kids-chamada-sub').textContent = 'Toque para atender';
+    document.getElementById('kids-btn-atender').style.display = 'flex';
+  } else if (estado === 'conectado') {
+    document.getElementById('kids-chamada-titulo').textContent = '📞 Chamada ativa';
+    document.getElementById('kids-chamada-sub').textContent = 'Conectado';
+    document.getElementById('kids-btn-atender').style.display = 'none';
+  }
+}
+
+function fecharTelaChamadaKids() {
+  document.getElementById('tela-chamada-kids').style.display = 'none';
+  document.getElementById('kids-timer').textContent = '';
+}
+
+function iniciarTimerKids() {
+  let seg = 0;
+  _kidsTimer = setInterval(() => {
+    seg++;
+    const m = String(Math.floor(seg/60)).padStart(2,'0');
+    const s = String(seg%60).padStart(2,'0');
+    document.getElementById('kids-timer').textContent = m + ':' + s;
+  }, 1000);
+}
+
+function registrarEventosSOSKids() {
+  KIDS.socket.on('sos-recebendo', async (data) => {
+    _kidsPC = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    _kidsPC.onicecandidate = (e) => {
+      if (e.candidate) KIDS.socket.emit('sos-ice', { familiaId: KIDS.familiaId, candidate: e.candidate });
+    };
+    _kidsPC.ontrack = (e) => {
+      const audio = document.getElementById('audio-remoto-kids');
+      if (e.streams && e.streams[0]) {
+        audio.srcObject = e.streams[0];
+        audio.play().catch(err => console.log('audio erro:', err));
+      }
+    };
+    await _kidsPC.setRemoteDescription(new RTCSessionDescription(data.offer));
+    mostrarTelaChamadaKids('recebendo');
+  });
+  KIDS.socket.on('sos-answer', async (data) => {
+    if (_kidsPC) {
+      await _kidsPC.setRemoteDescription(new RTCSessionDescription(data.answer));
+      mostrarTelaChamadaKids('conectado');
+      iniciarTimerKids();
+    }
+  });
+  KIDS.socket.on('sos-ice', async (data) => {
+    if (_kidsPC && data.candidate) {
+      await _kidsPC.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+  });
+  KIDS.socket.on('sos-encerrado', () => {
+    if (_kidsPC) { _kidsPC.close(); _kidsPC = null; }
+    if (_kidsStream) { _kidsStream.getTracks().forEach(t => t.stop()); _kidsStream = null; }
+    if (_kidsTimer) { clearInterval(_kidsTimer); _kidsTimer = null; }
+    fecharTelaChamadaKids();
+  });
+}
+
+// Modificar enviarSOS para também iniciar chamada
+const _enviarSOSOriginal = enviarSOS;
+enviarSOS = async function() {
+  await _enviarSOSOriginal();
+  await iniciarChamadaKids();
+};
+
+</script>
 <script>
 const KIDS = {
   membroId: null,
@@ -432,6 +568,7 @@ function conectarSocketKids() {
   KIDS.socket = io({ reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: Infinity });
   KIDS.socket.on("reconnect", () => { KIDS.socket.emit("entrar-familia", KIDS.familiaId); });
   KIDS.socket.emit('entrar-familia', KIDS.familiaId);
+  registrarEventosSOSKids();
 
   KIDS.socket.on('nova-mensagem', (msg) => {
     if (msg.autor_id !== KIDS.idPessoal) {
@@ -536,5 +673,18 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.activeElement.id === 'kids-id-input') entrarKids();
 });
 </script>
+  <!-- TELA CHAMADA SOS KIDS -->
+  <div id="tela-chamada-kids" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#7f1d1d;z-index:9999;flex-direction:column;align-items:center;justify-content:center;color:#fff">
+    <div style="font-size:60px;margin-bottom:16px">🚨</div>
+    <div id="kids-chamada-titulo" style="font-size:22px;font-weight:700;margin-bottom:8px">Chamada SOS</div>
+    <div id="kids-chamada-sub" style="font-size:15px;opacity:0.8;margin-bottom:40px">Conectando...</div>
+    <audio id="audio-remoto-kids" autoplay playsinline style="display:none"></audio>
+    <div style="display:flex;gap:24px">
+      <button id="kids-btn-atender" onclick="atenderChamadaKids()" style="display:none;width:72px;height:72px;border-radius:50%;background:#22c55e;border:none;font-size:28px;cursor:pointer">📞</button>
+      <button onclick="encerrarChamadaKids()" style="width:72px;height:72px;border-radius:50%;background:#ef4444;border:none;font-size:28px;cursor:pointer;color:#fff">📵</button>
+    </div>
+    <div id="kids-timer" style="margin-top:24px;font-size:13px;opacity:0.7"></div>
+  </div>
+
 </body>
 </html>
