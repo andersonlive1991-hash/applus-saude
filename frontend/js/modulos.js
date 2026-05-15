@@ -865,6 +865,13 @@ function registrarEventosSOS() {
     _sosPC.onicecandidate = (e) => {
       if (e.candidate) APP.socket.emit('sos-ice', { familiaId: APP.familiaId, candidate: e.candidate });
     };
+    _sosPC.ontrack = (e) => {
+      const audio = document.getElementById('audio-remoto');
+      if (e.streams && e.streams[0]) {
+        audio.srcObject = e.streams[0];
+        audio.play().catch(err => console.log('audio play erro:', err));
+      }
+    };
     await _sosPC.setRemoteDescription(new RTCSessionDescription(data.offer));
     mostrarTelaChamada('recebendo');
   });
