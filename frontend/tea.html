@@ -503,10 +503,16 @@ window.addEventListener('DOMContentLoaded', () => {
 function carregarPictogramas() {
   const grid = document.getElementById('pict-grid');
   grid.innerHTML = PICTOGRAMAS.map(p => `
-    <button class="pict-btn" onclick="falarPictograma('${p.emoji}', '${p.texto}')">
-      <span class="pict-emoji">${p.emoji}</span>
-      <span class="pict-texto">${p.texto}</span>
-    </button>`).join('');
+    <div style="display:flex;gap:6px;width:100%;margin-bottom:6px">
+      <button class="pict-btn" style="flex:1;border:3px solid #22c55e;background:#f0fdf4" onclick="falarPictograma('${p.emoji}', '${p.texto}')">
+        <span class="pict-emoji">${p.emoji}</span>
+        <span class="pict-texto">${p.texto}</span>
+      </button>
+      <button class="pict-btn" style="flex:1;border:3px solid #ef4444;background:#fef2f2" onclick="falarPictograma('${p.emojiNao}', '${p.textoNao}')">
+        <span class="pict-emoji">${p.emojiNao}</span>
+        <span class="pict-texto" style="color:#ef4444">${p.textoNao}</span>
+      </button>
+    </div>`).join('');
 }
 
 async function entrarTEA() {
