@@ -528,8 +528,27 @@ window.addEventListener('DOMContentLoaded', () => {
   if (id) {
     document.getElementById('kids-id-input').value = id.toUpperCase();
     entrarKids();
+  } else {
+    recuperarSessaoKids();
   }
 });
+
+function recuperarSessaoKids() {
+  try {
+    const sessao = localStorage.getItem('kids_sessao');
+    if (!sessao) return;
+    const s = JSON.parse(sessao);
+    KIDS.membroId = s.membroId;
+    KIDS.membroNome = s.membroNome;
+    KIDS.familiaId = s.familiaId;
+    KIDS.idPessoal = s.idPessoal;
+    document.getElementById('login-kids').style.display = 'none';
+    document.getElementById('kids-home').style.display = 'flex';
+    document.getElementById('kids-nome').textContent = 'Olá, ' + s.membroNome.split(' ')[0] + '! 👋';
+    conectarSocketKids();
+    carregarMsgsKids();
+  } catch(e) { localStorage.removeItem('kids_sessao'); }
+}
 
 async function entrarKids() {
   const id = document.getElementById('kids-id-input').value.trim().toUpperCase();
@@ -540,7 +559,7 @@ async function entrarKids() {
     if (!res.ok) throw new Error('ID não encontrado');
     const mem = await res.json();
 
-    if (mem.tipo !== 'crianca' && mem.tipo !== 'tea') {
+    if (mem.tipo !== 'crianca' && mem.tipo !== 'tea' && mem.tipo !== 'criança' && mem.tipo !== 'child') {
       return (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('Este ID não é de uma criança!');
     }
     if (mem.tipo === 'tea') {
@@ -557,6 +576,7 @@ async function entrarKids() {
     document.getElementById('kids-home').style.display = 'flex';
     document.getElementById('kids-nome').textContent = `Olá, ${mem.nome.split(' ')[0]}! 👋`;
 
+    localStorage.setItem('kids_sessao', JSON.stringify({ membroId: mem.id, membroNome: mem.nome, familiaId: String(mem.familia_id), idPessoal: mem.id_pessoal }));
     conectarSocketKids();
     carregarMsgsKids();
   } catch (e) {
