@@ -55,38 +55,7 @@ router.post('/', async (req, res) => {
       'INSERT INTO medicamentos (familia_id, membro_id, nome, dosagem, horarios, via, estoque, validade, observacoes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
       [familia_id, membro_id, nome, dosagem, JSON.stringify(horarios), via, estoque, validade, observacoes]
     );
-    const med = result.rows[0];
-
-    // Verificar interações — não bloqueia o cadastro se falhar
-    let alerta_interacao = null;
-    try {
-      const outrosMeds = await db.query(
-        'SELECT nome FROM medicamentos WHERE membro_id = $1 AND id != $2',
-        [membro_id, med.id]
-      );
-      if (outrosMeds.rows.length > 0) {
-        const outros = outrosMeds.rows.map(m => m.nome).join(', ');
-        // Consultar Gemini
-        const prompt = `Você é um farmacêutico especialista. A família cadastrou o medicamento '${nome}' para um paciente que já usa: ${outros}. Verifique se há interações medicamentosas relevantes entre '${nome}' e qualquer um dos outros medicamentos. Responda em português brasileiro, de forma clara e direta para leigos. Se houver interação grave ou moderada, explique o risco em 2-3 frases. Se não houver interação relevante, responda apenas: SEM_INTERACAO. Não use formatação markdown.`;
-        const geminiRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-          }
-        );
-        const geminiData = await geminiRes.json();
-        const resposta = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          alerta_interacao = resposta.trim();
-          console.log('[Interacao]', nome, '->', alerta_interacao.substring(0, 100));
-        }
-      }
-    } catch (errInteracao) {
-      console.log('[Interacao] Erro na verificacao (nao critico):', errInteracao.message);
-    }
-
-    res.json({ ...med, alerta_interacao });
+    res.json(result.rows[0]);
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }
