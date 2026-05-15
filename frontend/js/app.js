@@ -588,7 +588,7 @@ async function salvarMedicamento() {
   if (!nome || !horarios.length) return alerta('Preencha nome e horários');
 
   try {
-    await api('POST', '/api/medicamentos', {
+    const novoMed = await api('POST', '/api/medicamentos', {
       familia_id: APP.familiaId,
       membro_id: APP.membroId,
       nome, dosagem, horarios, via,
@@ -598,6 +598,15 @@ async function salvarMedicamento() {
     limparFormMed();
     carregarMedicamentos();
     iniciarAlarmes();
+    if (novoMed && novoMed.alerta_interacao) {
+      setTimeout(() => {
+        alert('⚠️ Alerta de Interação Medicamentosa
+
+' + novoMed.alerta_interacao + '
+
+Consulte o médico responsável.');
+      }, 500);
+    }
   } catch (e) {
     alerta('Erro ao salvar: ' + e.message);
   }
