@@ -895,3 +895,27 @@ function registrarEventosSOS() {
     _sosChamando = false;
   });
 }
+
+// ── SOS COMPLETO — um toque dispara tudo ──
+async function iniciarSOSCompleto() {
+  // 1. Dispara alerta para família
+  if (APP.socket) {
+    APP.socket.emit('emergencia', {
+      familiaId: APP.familiaId,
+      nome: APP.membroNome || 'Familiar',
+      tipo: 'SOS',
+      mensagem: '🚨 EMERGÊNCIA! ' + (APP.membroNome || 'Familiar') + ' precisa de ajuda!'
+    });
+  }
+  // 2. Envia push para família
+  try {
+    await api('POST', '/api/push/enviar-familia', {
+      familia_id: APP.familiaId,
+      titulo: '🚨 EMERGÊNCIA!',
+      corpo: (APP.membroNome || 'Familiar') + ' precisa de ajuda imediata!',
+      url: '/#emergencia'
+    });
+  } catch(e) { console.log('Push erro:', e); }
+  // 3. Inicia chamada de voz automaticamente
+  await iniciarChamadaSOS();
+}
