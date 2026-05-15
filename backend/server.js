@@ -65,8 +65,25 @@ io.on('connection', (socket) => {
     io.to(data.familiaId).emit('alerta-emergencia', data);
   });
   // WebRTC — sinalização de chamada SOS
-  socket.on('sos-chamar', (data) => {
+  socket.on('sos-chamar', async (data) => {
     socket.to(String(data.familiaId)).emit('sos-recebendo', data);
+    // Push notification para toda a família
+    try {
+      const subs = await pool.query(
+        'SELECT subscription FROM push_subscriptions WHERE familia_id = $1',
+        [data.familiaId]
+      );
+      const payload = JSON.stringify({
+        titulo: '🚨 EMERGÊNCIA — Chamada SOS!',
+        corpo: (data.nome || 'Familiar') + ' está ligando agora. Toque para atender!',
+        url: '/#emergencia',
+        urgente: true
+      });
+      for (const row of subs.rows) {
+        const sub = typeof row.subscription === 'string' ? JSON.parse(row.subscription) : row.subscription;
+        webpush.sendNotification(sub, payload).catch(e => console.log('Push SOS erro:', e.message));
+      }
+    } catch(e) { console.log('Erro push SOS:', e.message); }
   });
   socket.on('sos-offer', (data) => {
     socket.to(String(data.familiaId)).emit('sos-offer', data);
