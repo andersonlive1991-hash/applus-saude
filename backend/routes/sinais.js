@@ -70,7 +70,7 @@ router.post('/', async (req, res) => {
   try {
     const result = await db.query(
       'INSERT INTO sinais_vitais (membro_id, tipo, valor, valor2, unidade, observacoes) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-      [membro_id, tipo, valor, valor2, unidade, observacoes]
+      [membro_id, tipo, valor, valor2 === "" ? null : valor2, unidade, observacoes]
     );
     res.json(result.rows[0]);
 
