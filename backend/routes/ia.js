@@ -37,6 +37,7 @@ Pergunta: ${pergunta}`;
     );
 
     const data = await response.json();
+    console.log("[IA] Resposta Gemini:", JSON.stringify(data).substring(0, 300));
     const resposta = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Não consegui responder agora.';
     res.json({ resposta });
   } catch (e) {
