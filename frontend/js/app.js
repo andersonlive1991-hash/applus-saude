@@ -798,6 +798,19 @@ function conectarSocket() {
     }
   });
 
+  APP.socket.on('tea-comunicou', (data) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:16px 24px;background:#0ea5e9;color:#fff;font-size:15px;font-weight:600;z-index:99999;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center';
+    div.innerHTML = data.emoji + ' <b>' + data.nome + '</b> disse: ' + data.texto + '<br><small>' + data.hora + '</small>';
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 8000);
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(data.nome + ' disse: ' + data.texto);
+      u.lang = 'pt-BR';
+      speechSynthesis.speak(u);
+    }
+  });
   APP.socket.on('alerta-emergencia', (data) => {
     mostrarAlertaEmergencia(data);
   });

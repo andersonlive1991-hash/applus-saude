@@ -722,6 +722,29 @@ function falarPictograma(emoji, texto) {
     utterance.rate = 0.8;
     speechSynthesis.speak(utterance);
   }
+
+  // Notificar família em tempo real
+  if (TEA.socket) {
+    TEA.socket.emit('tea-comunicou', {
+      familiaId: TEA.familiaId,
+      nome: TEA.membroNome,
+      emoji: emoji,
+      texto: texto,
+      hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    });
+  }
+
+  // Push para família
+  fetch('/api/push/enviar-familia', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      familia_id: TEA.familiaId,
+      titulo: emoji + ' ' + TEA.membroNome + ' comunicou',
+      corpo: TEA.membroNome + ' disse: ' + texto,
+      url: '/'
+    })
+  }).catch(e => console.log('push tea erro:', e));
 }
 
 function fecharVoz() {

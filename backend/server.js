@@ -98,6 +98,9 @@ io.on('connection', (socket) => {
     socket.to(String(data.familiaId)).emit('sos-encerrado', data);
   });
 
+  socket.on('tea-comunicou', (data) => {
+    io.to(String(data.familiaId)).emit('tea-comunicou', data);
+  });
   socket.on('mensagem', (data) => {
     const sala = String(data.familiaId || data.familia_id);
     io.to(sala).emit('nova-mensagem', data);
