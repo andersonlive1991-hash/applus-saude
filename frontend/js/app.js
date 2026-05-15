@@ -461,6 +461,7 @@ function navegarPara(pagina) {
   if (pagina === 'chat') carregarChat();
   if (pagina === 'mais') carregarMais();
   if (pagina === 'checklist') carregarChecklist();
+  if (pagina === 'escala') carregarEscala();
   if (pagina === 'historico') { carregarDoencas(); }
   if (pagina === 'cuidados') {
     if (APP.membroTipo === 'cuidador') {
@@ -1136,6 +1137,56 @@ async function toggleTarefa(id, concluida) {
 async function excluirTarefa(id) {
   await api('DELETE', '/api/checklist/' + id);
   carregarChecklist();
+}
+
+
+// ── ESCALA DE CUIDADO ──
+async function carregarEscala() {
+  try {
+    const turnos = await api('GET', '/api/escala/' + APP.familiaId);
+    const lista = document.getElementById('lista-escala');
+    if (!lista) return;
+    if (!turnos.length) {
+      lista.innerHTML = '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhum turno cadastrado</p>';
+      return;
+    }
+    const dias = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+    let html = '';
+    dias.forEach(dia => {
+      const dodia = turnos.filter(t => t.dia_semana === dia);
+      if (!dodia.length) return;
+      html += '<div style="font-weight:600;color:var(--verde);padding:8px 0 4px">' + dia + '</div>';
+      dodia.forEach(t => {
+        html += '<div class="item-lista" style="display:flex;align-items:flex-start;gap:12px">' +
+          '<div style="font-size:22px">' + (t.turno === 'Manhã' ? '🌅' : t.turno === 'Tarde' ? '☀️' : '🌙') + '</div>' +
+          '<div class="item-info" style="flex:1">' +
+          '<div class="item-nome">' + t.turno + ' — ' + (t.membro_nome || 'Sem responsável') + '</div>' +
+          '<div style="font-size:12px;color:var(--cinza);margin-top:2px">' + (t.tarefas || '') + '</div>' +
+          '</div>' +
+          '<button onclick="excluirTurno(' + t.id + ')" style="background:none;border:none;font-size:18px;cursor:pointer;color:#ef4444">🗑</button>' +
+          '</div>';
+      });
+    });
+    lista.innerHTML = html;
+  } catch (e) { console.log('Erro escala:', e); }
+}
+
+async function salvarEscala() {
+  const dia_semana = document.getElementById('esc-dia').value;
+  const turno = document.getElementById('esc-turno').value;
+  const tarefas = document.getElementById('esc-tarefas').value.trim();
+  try {
+    await api('POST', '/api/escala', { familia_id: APP.familiaId, membro_id: APP.membroId, dia_semana, turno, tarefas });
+    document.getElementById('esc-tarefas').value = '';
+    fecharModal('modal-add-escala');
+    carregarEscala();
+  } catch (e) { alerta('Erro ao salvar turno'); }
+}
+
+async function excluirTurno(id) {
+  if (!confirm('Excluir turno?')) return;
+  await api('DELETE', '/api/escala/' + id);
+  carregarEscala();
 }
 
 // ── MODAIS ──
