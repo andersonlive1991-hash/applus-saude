@@ -397,7 +397,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 async function entrarKids() {
   const id = document.getElementById('kids-id-input').value.trim().toUpperCase();
-  if (!id) return alert('Digite seu ID!');
+  if (!id) return (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#f59e0b;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('Digite seu ID!');
 
   try {
     const res = await fetch(`/api/membros/id/${id}`);
@@ -405,7 +405,7 @@ async function entrarKids() {
     const mem = await res.json();
 
     if (mem.tipo !== 'crianca' && mem.tipo !== 'tea') {
-      return alert('Este ID não é de uma criança!');
+      return (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('Este ID não é de uma criança!');
     }
     if (mem.tipo === 'tea') {
       window.location.href = `/tea.html?id=${id}`;
@@ -424,7 +424,7 @@ async function entrarKids() {
     conectarSocketKids();
     carregarMsgsKids();
   } catch (e) {
-    alert('ID não encontrado. Tenta de novo!');
+    (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('ID não encontrado. Tenta de novo!');
   }
 }
 
@@ -523,7 +523,7 @@ async function enviarSOS() {
 
     document.getElementById('sos-enviado').classList.add('ativo');
   } catch (e) {
-    alert('Erro ao enviar socorro!');
+    (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('Erro ao enviar socorro!');
   }
 }
 

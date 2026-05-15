@@ -878,8 +878,11 @@ async function dispararEmergencia(tipo) {
 }
 
 function mostrarAlertaEmergencia(data) {
-  const msg = `🚨 EMERGÊNCIA!\n${data.autor} reportou: ${data.tipo}\nÀs ${data.hora}`;
-  alert(msg);
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;top:0;left:0;width:100%;padding:20px;background:#ef4444;color:#fff;font-size:16px;font-weight:700;z-index:99999;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.3)';
+  div.innerHTML = '🚨 EMERGÊNCIA! ' + (data.autor || 'Familiar') + ' precisa de ajuda!';
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 8000);
 }
 
 // ── ASSISTENTE IA ──
@@ -1062,8 +1065,13 @@ function fecharModal(id) {
 }
 
 // ── UTILITÁRIOS ──
-function alerta(msg) {
-  alert(msg);
+function alerta(msg, tipo) {
+  const div = document.createElement('div');
+  const bg = tipo === 'erro' ? '#ef4444' : tipo === 'aviso' ? '#f59e0b' : '#1a9e6e';
+  div.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:' + bg + ';color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center';
+  div.textContent = msg;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 4000);
 }
 
 function formatarData(data) {

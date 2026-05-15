@@ -370,7 +370,7 @@ async function acessarPortal() {
   const crm = document.getElementById('med-crm').value.trim();
   const idPaciente = document.getElementById('med-id-paciente').value.trim().toUpperCase();
 
-  if (!nome || !crm || !idPaciente) return alert('Preencha todos os campos');
+  if (!nome || !crm || !idPaciente) return (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#f59e0b;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('Preencha todos os campos');
 
   try {
     const res = await fetch(`/api/membros/id/${idPaciente}`);
@@ -401,7 +401,7 @@ async function acessarPortal() {
 
     await carregarHistorico(membro);
   } catch (e) {
-    alert('ID do paciente não encontrado. Verifique e tente novamente.');
+    (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('ID do paciente não encontrado. Verifique e tente novamente.');
   }
 }
 
@@ -610,7 +610,7 @@ async function verProntuarioMedico(id) {
     const win = window.open('', '_blank');
     win.document.write(`<img src="${data.dados}" style="max-width:100%;height:auto">`);
   } catch(e) {
-    alert('Erro ao abrir prontuário');
+    (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('Erro ao abrir prontuário');
   }
 }
 
