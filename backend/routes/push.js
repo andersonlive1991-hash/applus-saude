@@ -15,7 +15,6 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 // Salvar inscrição push
 router.post('/inscrever', async (req, res) => {
   const { membro_id, familia_id, subscription } = req.body;
-  console.log("[Push] Recebido:", membro_id, familia_id, subscription ? "sub ok" : "sem sub");
   try {
     await db.query(
       'INSERT INTO push_subscriptions (membro_id, familia_id, subscription) VALUES ($1,$2,$3) ON CONFLICT (membro_id) DO UPDATE SET subscription = $3',
@@ -79,7 +78,6 @@ router.get('/gerar-vapid', (req, res) => {
 // Log de erro push do frontend
 router.post('/erro-log', async (req, res) => {
   const { erro, membro_id, familia_id } = req.body;
-  console.log('[Push Frontend Erro]', membro_id, familia_id, erro);
   res.json({ ok: true });
 });
 
