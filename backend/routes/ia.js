@@ -41,7 +41,7 @@ Pergunta: ${pergunta}`;
     const resposta = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Não consegui responder agora.';
     res.json({ resposta });
   } catch (e) {
-    res.status(500).json({ erro: e.message });
+    console.log("[IA Catch Erro]", e.message); res.status(500).json({ erro: e.message });
   }
 });
 
