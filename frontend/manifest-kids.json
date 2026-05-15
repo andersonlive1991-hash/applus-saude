@@ -1,0 +1,22 @@
+{
+  "name": "AP+ Kids",
+  "short_name": "AP+ Kids",
+  "description": "Interface infantil AP+ Saúde",
+  "start_url": "/kids.html",
+  "display": "standalone",
+  "background_color": "#fff7ed",
+  "theme_color": "#f97316",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-kids-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-kids-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
