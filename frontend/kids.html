@@ -580,7 +580,9 @@ async function entrarKids() {
     conectarSocketKids();
     carregarMsgsKids();
   } catch (e) {
-    (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('ID não encontrado. Tenta de novo!');
+    console.log('Erro login kids:', e.message);
+    const msg = e.message || 'Erro desconhecido';
+    const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent='Erro: ' + msg; document.body.appendChild(d); setTimeout(()=>d.remove(),6000);
   }
 }
 
