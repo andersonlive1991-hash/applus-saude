@@ -598,6 +598,11 @@ async function salvarMedicamento() {
     limparFormMed();
     carregarMedicamentos();
     iniciarAlarmes();
+    const nomeVerif = nome;
+    const membroVerif = APP.membroId;
+    api('POST', '/api/interacoes/verificar', { membro_id: membroVerif, nome_novo: nomeVerif }).then(r => { if (r && r.alerta) alert('⚠️ Interação Medicamentosa
+
+' + r.alerta); }).catch(() => {});
   } catch (e) {
     alerta('Erro ao salvar: ' + e.message);
   }
