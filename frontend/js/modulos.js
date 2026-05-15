@@ -796,12 +796,14 @@ async function iniciarChamadaSOS() {
 async function atenderChamadaSOS() {
   try {
     _sosStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    _sosStream.getTracks().forEach(t => _sosPC.addTrack(t, _sosStream));
     _sosPC.ontrack = (e) => {
       const audio = document.getElementById('audio-remoto');
-      audio.srcObject = e.streams[0];
-      audio.play().catch(err => console.log('audio play erro:', err));
+      if (e.streams && e.streams[0]) {
+        audio.srcObject = e.streams[0];
+        audio.play().catch(err => console.log('audio play erro:', err));
+      }
     };
-    _sosStream.getTracks().forEach(t => _sosPC.addTrack(t, _sosStream));
     const answer = await _sosPC.createAnswer();
     await _sosPC.setLocalDescription(answer);
     APP.socket.emit('sos-answer', { familiaId: APP.familiaId, answer });
