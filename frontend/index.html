@@ -503,6 +503,7 @@
       <button class="btn-aba ativa" id="aba-tea-rotina" onclick="trocarAbaTEAAdmin('rotina')">📋 Rotina</button>
       <button class="btn-aba" id="aba-tea-humor" onclick="trocarAbaTEAAdmin('humor')">😊 Humor</button>
       <button class="btn-aba" id="aba-tea-crises" onclick="trocarAbaTEAAdmin('crises')">⚡ Crises</button>
+      <button class="btn-aba" id="aba-tea-comunicar" onclick="trocarAbaTEAAdmin('comunicar')">🗣️ Comunicar</button>
     </div>
 
     <div id="tea-admin-rotina">
@@ -519,6 +520,21 @@
       <div class="secao" style="padding-top:8px">
         <div class="secao-titulo">Histórico de humor</div>
         <div id="lista-humor-tea"></div>
+      </div>
+    </div>
+
+    <div id="tea-admin-comunicar" style="display:none">
+      <div class="secao" style="padding-top:8px">
+        <div class="secao-titulo">Adicionar pictograma personalizado</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input id="picto-emoji" type="text" placeholder="Emoji 🎯" style="width:70px;padding:10px;border-radius:10px;border:1px solid #ddd;font-size:20px;text-align:center">
+          <input id="picto-frase" type="text" placeholder="Ex: Quero ver Peppa Pig" style="flex:1;padding:10px;border-radius:10px;border:1px solid #ddd;font-size:14px">
+        </div>
+        <button class="btn btn-verde btn-block" onclick="adicionarPictoPersonalizado()">+ Adicionar pictograma</button>
+      </div>
+      <div class="secao">
+        <div class="secao-titulo">Pictogramas personalizados</div>
+        <div id="lista-pictos-personalizados"><p style="color:#999;font-size:13px;text-align:center">Nenhum pictograma personalizado ainda</p></div>
       </div>
     </div>
 

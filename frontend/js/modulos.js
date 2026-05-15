@@ -639,13 +639,14 @@ let membroTEAId = null;
 Object.defineProperty(window, "membroTEAId", { get: () => membroTEAId, set: v => { membroTEAId = v; } });
 
 function trocarAbaTEAAdmin(aba) {
-  ['rotina','humor','crises'].forEach(a => {
+  ['rotina','humor','crises','comunicar'].forEach(a => {
     document.getElementById(`tea-admin-${a}`).style.display = a === aba ? 'block' : 'none';
     document.getElementById(`aba-tea-${a}`).classList.toggle('ativa', a === aba);
   });
   if (aba === 'rotina') carregarRotinaAdmin();
   if (aba === 'humor') carregarHumorTEA();
   if (aba === 'crises') carregarCrisesTEA();
+  if (aba === 'comunicar') carregarPictosPersonalizados();
 }
 
 async function carregarRotinaAdmin() {
@@ -918,4 +919,66 @@ async function iniciarSOSCompleto() {
   } catch(e) { console.log('Push erro:', e); }
   // 3. Inicia chamada de voz automaticamente
   await iniciarChamadaSOS();
+}
+
+// ── PICTOGRAMAS PERSONALIZADOS TEA ──
+async function adicionarPictoPersonalizado() {
+  const emoji = document.getElementById('picto-emoji').value.trim();
+  const frase = document.getElementById('picto-frase').value.trim();
+  if (!emoji || !frase) {
+    alerta('Preencha o emoji e a frase!', 'aviso');
+    return;
+  }
+  try {
+    await api('POST', '/api/pictos-tea', {
+      membro_id: membroTEAId || APP.membroId,
+      familia_id: APP.familiaId,
+      emoji: emoji,
+      texto: frase
+    });
+    document.getElementById('picto-emoji').value = '';
+    document.getElementById('picto-frase').value = '';
+    alerta('Pictograma adicionado!');
+    carregarPictosPersonalizados();
+    // Avisar o TEA em tempo real
+    if (APP.socket) {
+      APP.socket.emit('pictos-atualizados', { familiaId: APP.familiaId, membroId: membroTEAId || APP.membroId });
+    }
+  } catch(e) {
+    alerta('Erro ao adicionar pictograma', 'erro');
+  }
+}
+
+async function carregarPictosPersonalizados() {
+  const id = membroTEAId || APP.membroId;
+  try {
+    const lista = await api('GET', '/api/pictos-tea/' + id);
+    const div = document.getElementById('lista-pictos-personalizados');
+    if (!lista || !lista.length) {
+      div.innerHTML = '<p style="color:#999;font-size:13px;text-align:center">Nenhum pictograma personalizado ainda</p>';
+      return;
+    }
+    div.innerHTML = lista.map(p => `
+      <div class="item-lista" style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:28px">${p.emoji}</span>
+        <span style="flex:1;font-size:14px">${p.texto}</span>
+        <button onclick="excluirPictoPersonalizado(${p.id})" style="background:#fef2f2;border:1px solid #fecaca;color:#ef4444;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer">Excluir</button>
+      </div>
+    `).join('');
+  } catch(e) {
+    console.log('Erro carregar pictos:', e);
+  }
+}
+
+async function excluirPictoPersonalizado(id) {
+  try {
+    await api('DELETE', '/api/pictos-tea/' + id);
+    alerta('Pictograma removido!');
+    carregarPictosPersonalizados();
+    if (APP.socket) {
+      APP.socket.emit('pictos-atualizados', { familiaId: APP.familiaId, membroId: membroTEAId || APP.membroId });
+    }
+  } catch(e) {
+    alerta('Erro ao excluir', 'erro');
+  }
 }

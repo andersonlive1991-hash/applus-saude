@@ -98,6 +98,9 @@ io.on('connection', (socket) => {
     socket.to(String(data.familiaId)).emit('sos-encerrado', data);
   });
 
+  socket.on('pictos-atualizados', (data) => {
+    io.to(String(data.familiaId)).emit('pictos-atualizados', data);
+  });
   socket.on('tea-comunicou', (data) => {
     io.to(String(data.familiaId)).emit('tea-comunicou', data);
   });
@@ -123,6 +126,47 @@ setInterval(async () => {
     });
   } catch(e) { console.log("[Keep-alive] erro:", e.message); }
 }, 4 * 60 * 1000);
+
+// ── PICTOGRAMAS PERSONALIZADOS TEA ──
+pool.query(`
+  CREATE TABLE IF NOT EXISTS pictos_tea (
+    id SERIAL PRIMARY KEY,
+    membro_id INTEGER,
+    familia_id INTEGER,
+    emoji TEXT,
+    texto TEXT,
+    criado_em TIMESTAMP DEFAULT NOW()
+  )
+`).catch(e => console.log('Tabela pictos_tea:', e.message));
+
+app.get('/api/pictos-tea/:membro_id', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM pictos_tea WHERE membro_id = $1 ORDER BY criado_em ASC',
+      [req.params.membro_id]
+    );
+    res.json(result.rows);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.post('/api/pictos-tea', async (req, res) => {
+  const { membro_id, familia_id, emoji, texto } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO pictos_tea (membro_id, familia_id, emoji, texto) VALUES ($1,$2,$3,$4) RETURNING *',
+      [membro_id, familia_id, emoji, texto]
+    );
+    res.json(result.rows[0]);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.delete('/api/pictos-tea/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM pictos_tea WHERE id = $1', [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 server.listen(PORT, () => console.log(`AP+ Saúde rodando na porta ${PORT}`));
 
 // ── VERIFICAR HORÁRIOS DE MEDICAMENTOS A CADA MINUTO ──

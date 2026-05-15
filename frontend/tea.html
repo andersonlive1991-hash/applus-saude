@@ -500,6 +500,23 @@ window.addEventListener('DOMContentLoaded', () => {
   carregarPictogramas();
 });
 
+async function carregarPictosNoTEA() {
+  try {
+    const pictos = await fetch('/api/pictos-tea/' + TEA.membroId).then(r => r.json());
+    const grid = document.getElementById('pict-grid');
+    if (!pictos || !pictos.length) return;
+    const html = pictos.map(p => `
+      <div style="display:flex;gap:6px;width:100%;margin-bottom:6px">
+        <button class="pict-btn" style="flex:1;border:3px solid #7c3aed;background:#f5f3ff" onclick="falarPictograma('${p.emoji}', '${p.texto}')">
+          <span class="pict-emoji">${p.emoji}</span>
+          <span class="pict-texto" style="color:#7c3aed">${p.texto}</span>
+        </button>
+      </div>
+    `).join('');
+    grid.innerHTML = '<div style="font-size:11px;color:#7c3aed;font-weight:600;margin-bottom:8px;text-align:center">⭐ PERSONALIZADOS</div>' + html + '<div style="font-size:11px;color:#999;font-weight:600;margin:12px 0 8px;text-align:center">── PADRÕES ──</div>' + grid.innerHTML;
+  } catch(e) { console.log('Erro pictos personalizados:', e); }
+}
+
 function carregarPictogramas() {
   const grid = document.getElementById('pict-grid');
   grid.innerHTML = PICTOGRAMAS.map(p => `
@@ -547,7 +564,11 @@ async function entrarTEA() {
 function conectarSocketTEA() {
   TEA.socket = io();
   TEA.socket.emit('entrar-familia', TEA.familiaId);
+  carregarPictosNoTEA();
   TEA.socket.on('tea-comunicou', () => {});
+  TEA.socket.on('pictos-atualizados', (data) => {
+    if (String(data.membroId) === String(TEA.membroId)) carregarPictosNoTEA();
+  });
 }
 
 async function carregarRotinaTEA() {
