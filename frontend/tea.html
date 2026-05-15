@@ -392,8 +392,8 @@ body.calmo .rotina-item { background: #1e293b !important; color: #e2e8f0 !import
 
   <!-- ── HOME TEA ── -->
   <div class="tea-home" id="tea-home">
-    <button class="modo-calmo-btn" onclick="toggleModoCalmo()" id="btn-calmo" title="Modo Calmo">🌙</button>
-    <div class="tea-header">
+    <div class="tea-header" style="position:relative">
+      <button onclick="toggleModoCalmo()" id="btn-calmo" style="position:absolute;top:10px;right:10px;z-index:99999;background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:44px;height:44px;font-size:22px;cursor:pointer">🌙</button>
       <div class="tea-avatar">🧩</div>
       <div class="tea-ola" id="tea-nome">Olá!</div>
     </div>
