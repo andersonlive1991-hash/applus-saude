@@ -506,7 +506,6 @@ function registrarEventosSOSKids() {
 
 
 
-
 const KIDS = {
   membroId: null,
   membroNome: null,
@@ -516,17 +515,6 @@ const KIDS = {
 };
 
 // Verificar se veio com ID na URL
-window.addEventListener('DOMContentLoaded', () => {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
-  if (id) {
-    document.getElementById('kids-id-input').value = id.toUpperCase();
-    entrarKids();
-  } else {
-    recuperarSessaoKids();
-  }
-});
-
 function recuperarSessaoKids() {
   try {
     const sessao = localStorage.getItem('kids_sessao');
@@ -544,6 +532,17 @@ function recuperarSessaoKids() {
   } catch(e) { localStorage.removeItem('kids_sessao'); }
 }
 
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (id) {
+    document.getElementById('kids-id-input').value = id.toUpperCase();
+    entrarKids();
+  } else {
+    recuperarSessaoKids();
+  }
+});
+
 async function entrarKids() {
   const id = document.getElementById('kids-id-input').value.trim().toUpperCase();
   if (!id) return (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#f59e0b;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('Digite seu ID!');
@@ -553,7 +552,7 @@ async function entrarKids() {
     if (!res.ok) throw new Error('ID não encontrado');
     const mem = await res.json();
 
-    if (mem.tipo !== 'crianca' && mem.tipo !== 'tea' && mem.tipo !== 'criança' && mem.tipo !== 'child') {
+    if (mem.tipo !== 'crianca' && mem.tipo !== 'tea') {
       return (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('Este ID não é de uma criança!');
     }
     if (mem.tipo === 'tea') {
@@ -574,9 +573,7 @@ async function entrarKids() {
     conectarSocketKids();
     carregarMsgsKids();
   } catch (e) {
-    console.log('Erro login kids:', e.message);
-    const msg = e.message || 'Erro desconhecido';
-    const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent='Erro: ' + msg; document.body.appendChild(d); setTimeout(()=>d.remove(),6000);
+    (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('ID não encontrado. Tenta de novo!');
   }
 }
 
@@ -690,18 +687,5 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.activeElement.id === 'kids-id-input') entrarKids();
 });
 </script>
-  <!-- TELA CHAMADA SOS KIDS -->
-  <div id="tela-chamada-kids" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#7f1d1d;z-index:9999;flex-direction:column;align-items:center;justify-content:center;color:#fff">
-    <div style="font-size:60px;margin-bottom:16px">🚨</div>
-    <div id="kids-chamada-titulo" style="font-size:22px;font-weight:700;margin-bottom:8px">Chamada SOS</div>
-    <div id="kids-chamada-sub" style="font-size:15px;opacity:0.8;margin-bottom:40px">Conectando...</div>
-    <audio id="audio-remoto-kids" autoplay playsinline style="display:none"></audio>
-    <div style="display:flex;gap:24px">
-      <button id="kids-btn-atender" onclick="atenderChamadaKids()" style="display:none;width:72px;height:72px;border-radius:50%;background:#22c55e;border:none;font-size:28px;cursor:pointer">📞</button>
-      <button onclick="encerrarChamadaKids()" style="width:72px;height:72px;border-radius:50%;background:#ef4444;border:none;font-size:28px;cursor:pointer;color:#fff">📵</button>
-    </div>
-    <div id="kids-timer" style="margin-top:24px;font-size:13px;opacity:0.7"></div>
-  </div>
-
 </body>
 </html>
