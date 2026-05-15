@@ -434,6 +434,10 @@ function iniciarApp() {
   iniciarAlarmes();
   if (Notification.permission === 'granted') {
     inscreverPush();
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(perm => {
+      if (perm === 'granted') inscreverPush();
+    });
   }
   atualizarDropdown();
   navegarPara('home');
