@@ -74,16 +74,4 @@ router.get('/gerar-vapid', (req, res) => {
 });
 
 
-// Limpar todas as inscrições (temporário)
-router.delete('/limpar-todas', async (req, res) => {
-  const { senha } = req.body;
-  if (senha !== 'applus2026') return res.status(403).json({ erro: 'Negado' });
-  try {
-    const r = await db.query('DELETE FROM push_subscriptions');
-    res.json({ ok: true, deletados: r.rowCount });
-  } catch (e) {
-    res.status(500).json({ erro: e.message });
-  }
-});
-
 module.exports = router;
