@@ -432,9 +432,7 @@ function iniciarApp() {
   mostrarApp();
   conectarSocket();
   iniciarAlarmes();
-  if (Notification.permission === 'granted') {
-    inscreverPush();
-  }
+  inscreverPush();
   atualizarDropdown();
   navegarPara('home');
 }
@@ -1043,23 +1041,21 @@ async function inscreverPush() {
   if (!('PushManager' in window)) return;
   try {
     const reg = await navigator.serviceWorker.ready;
+
+    // Usar a chave pública fixa do servidor
     const VAPID_PUBLIC_KEY = 'BO6JXBRmtjSjiM9OAa7NSy2CtZS6x_caWM582FMie8idIzpapx8McDuQl62PChqMHxQAELiE1ja1kHDmK91nLGE';
-    // Reutilizar inscrição existente — não recriar a cada carregamento
-    let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      });
-      console.log('Push: nova inscrição criada');
-    } else {
-      console.log('Push: inscrição existente reutilizada');
-    }
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+
     await api('POST', '/api/push/inscrever', {
       membro_id: APP.membroId,
       familia_id: APP.familiaId,
       subscription: sub
     });
+    console.log('Push inscrito com sucesso!');
   } catch (e) {
     console.log('Push não disponível:', e);
   }
@@ -1070,27 +1066,6 @@ function urlBase64ToUint8Array(base64String) {
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
-}
-
-
-// ── ATIVAR PUSH MANUALMENTE ──
-async function ativarNotificacoes() {
-  if (Notification.permission === 'granted') {
-    await inscreverPush();
-    alerta('Notificações já estão ativas!', 'ok');
-    return;
-  }
-  if (Notification.permission === 'denied') {
-    alerta('Notificações bloqueadas. Libere nas configurações do Chrome.', 'erro');
-    return;
-  }
-  const perm = await Notification.requestPermission();
-  if (perm === 'granted') {
-    await inscreverPush();
-    alerta('Notificações ativadas com sucesso!', 'ok');
-  } else {
-    alerta('Permissão negada. As notificações não funcionarão.', 'erro');
-  }
 }
 
 // ── MODAIS ──
