@@ -434,6 +434,155 @@ body {
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
+
+// ── CHAMADA SOS WEBRTC TEA ──
+let _teaPC = null;
+let _teaStream = null;
+let _teaTimer = null;
+
+async function iniciarChamadaTEA() {
+  try {
+    _teaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    _teaPC = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    _teaStream.getTracks().forEach(t => _teaPC.addTrack(t, _teaStream));
+    _teaPC.onicecandidate = (e) => {
+      if (e.candidate) TEA.socket.emit('sos-ice', { familiaId: TEA.familiaId, candidate: e.candidate });
+    };
+    _teaPC.ontrack = (e) => {
+      const audio = document.getElementById('audio-remoto-tea');
+      if (e.streams && e.streams[0]) {
+        audio.srcObject = e.streams[0];
+        audio.play().catch(err => console.log('audio erro:', err));
+      }
+    };
+    const offer = await _teaPC.createOffer();
+    await _teaPC.setLocalDescription(offer);
+    TEA.socket.emit('sos-chamar', { familiaId: TEA.familiaId, nome: TEA.membroNome, offer });
+    mostrarTelaChamadaTEA('chamando');
+  } catch(e) {
+    console.log('Erro microfone TEA:', e.message);
+  }
+}
+
+async function atenderChamadaTEA() {
+  try {
+    _teaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    _teaStream.getTracks().forEach(t => _teaPC.addTrack(t, _teaStream));
+    _teaPC.ontrack = (e) => {
+      const audio = document.getElementById('audio-remoto-tea');
+      if (e.streams && e.streams[0]) {
+        audio.srcObject = e.streams[0];
+        audio.play().catch(err => console.log('audio erro:', err));
+      }
+    };
+    const answer = await _teaPC.createAnswer();
+    await _teaPC.setLocalDescription(answer);
+    TEA.socket.emit('sos-answer', { familiaId: TEA.familiaId, answer });
+    mostrarTelaChamadaTEA('conectado');
+    iniciarTimerTEA();
+  } catch(e) {
+    console.log('Erro atender TEA:', e.message);
+  }
+}
+
+function encerrarChamadaTEA() {
+  if (!_teaPC && !_teaStream) { fecharTelaChamadaTEA(); return; }
+  if (_teaPC) { _teaPC.close(); _teaPC = null; }
+  if (_teaStream) { _teaStream.getTracks().forEach(t => t.stop()); _teaStream = null; }
+  if (_teaTimer) { clearInterval(_teaTimer); _teaTimer = null; }
+  TEA.socket.emit('sos-encerrar', { familiaId: TEA.familiaId });
+  fecharTelaChamadaTEA();
+}
+
+function mostrarTelaChamadaTEA(estado) {
+  const tela = document.getElementById('tela-chamada-tea');
+  tela.style.display = 'flex';
+  if (estado === 'chamando') {
+    document.getElementById('tea-chamada-titulo').textContent = '🚨 Chamando família...';
+    document.getElementById('tea-chamada-sub').textContent = 'Aguarde atender';
+    document.getElementById('tea-btn-atender').style.display = 'none';
+  } else if (estado === 'recebendo') {
+    document.getElementById('tea-chamada-titulo').textContent = '📞 Chamada chegando!';
+    document.getElementById('tea-chamada-sub').textContent = 'Toque para atender';
+    document.getElementById('tea-btn-atender').style.display = 'flex';
+  } else if (estado === 'conectado') {
+    document.getElementById('tea-chamada-titulo').textContent = '📞 Chamada ativa';
+    document.getElementById('tea-chamada-sub').textContent = 'Conectado';
+    document.getElementById('tea-btn-atender').style.display = 'none';
+  }
+}
+
+function fecharTelaChamadaTEA() {
+  document.getElementById('tela-chamada-tea').style.display = 'none';
+  document.getElementById('tea-timer').textContent = '';
+}
+
+function iniciarTimerTEA() {
+  let seg = 0;
+  _teaTimer = setInterval(() => {
+    seg++;
+    const m = String(Math.floor(seg/60)).padStart(2,'0');
+    const s = String(seg%60).padStart(2,'0');
+    document.getElementById('tea-timer').textContent = m + ':' + s;
+  }, 1000);
+}
+
+function registrarEventosSOSTEA() {
+  TEA.socket.on('sos-recebendo', async (data) => {
+    _teaPC = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    _teaPC.onicecandidate = (e) => {
+      if (e.candidate) TEA.socket.emit('sos-ice', { familiaId: TEA.familiaId, candidate: e.candidate });
+    };
+    _teaPC.ontrack = (e) => {
+      const audio = document.getElementById('audio-remoto-tea');
+      if (e.streams && e.streams[0]) {
+        audio.srcObject = e.streams[0];
+        audio.play().catch(err => console.log('audio erro:', err));
+      }
+    };
+    await _teaPC.setRemoteDescription(new RTCSessionDescription(data.offer));
+    mostrarTelaChamadaTEA('recebendo');
+  });
+  TEA.socket.on('sos-answer', async (data) => {
+    if (_teaPC) {
+      await _teaPC.setRemoteDescription(new RTCSessionDescription(data.answer));
+      mostrarTelaChamadaTEA('conectado');
+      iniciarTimerTEA();
+    }
+  });
+  TEA.socket.on('sos-ice', async (data) => {
+    if (_teaPC && data.candidate) {
+      await _teaPC.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+  });
+  TEA.socket.on('sos-encerrado', () => {
+    if (_teaPC) { _teaPC.close(); _teaPC = null; }
+    if (_teaStream) { _teaStream.getTracks().forEach(t => t.stop()); _teaStream = null; }
+    if (_teaTimer) { clearInterval(_teaTimer); _teaTimer = null; }
+    fecharTelaChamadaTEA();
+  });
+}
+
+// Sessão persistente
+function recuperarSessaoTEA() {
+  try {
+    const sessao = localStorage.getItem('tea_sessao');
+    if (!sessao) return;
+    const s = JSON.parse(sessao);
+    TEA.membroId = s.membroId;
+    TEA.membroNome = s.membroNome;
+    TEA.familiaId = s.familiaId;
+    TEA.idPessoal = s.idPessoal;
+    document.getElementById('login-tea').style.display = 'none';
+    document.getElementById('tea-home').style.display = 'flex';
+    document.getElementById('tea-nome').textContent = 'Olá, ' + s.membroNome.split(' ')[0] + '! 👋';
+    localStorage.setItem('tea_sessao', JSON.stringify({ membroId: TEA.membroId, membroNome: TEA.membroNome, familiaId: TEA.familiaId, idPessoal: TEA.idPessoal }));
+    conectarSocketTEA();
+  } catch(e) { localStorage.removeItem('tea_sessao'); }
+}
+
+
+
 const TEA = {
   membroId: null,
   membroNome: null,
@@ -463,6 +612,8 @@ window.addEventListener('DOMContentLoaded', () => {
   if (id) {
     document.getElementById('tea-id-input').value = id.toUpperCase();
     entrarTEA();
+  } else {
+    recuperarSessaoTEA();
   }
   carregarPictogramas();
 });
@@ -508,6 +659,7 @@ async function entrarTEA() {
 function conectarSocketTEA() {
   TEA.socket = io();
   TEA.socket.emit('entrar-familia', TEA.familiaId);
+  registrarEventosSOSTEA();
 }
 
 async function carregarRotinaTEA() {
@@ -623,6 +775,7 @@ async function enviarSOSTea() {
       });
     }
     document.getElementById('sos-overlay').classList.add('ativo');
+    iniciarChamadaTEA();
   } catch(e) {
     (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('Erro ao enviar socorro!');
   }
@@ -632,5 +785,18 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.activeElement.id === 'tea-id-input') entrarTEA();
 });
 </script>
+  <!-- TELA CHAMADA SOS TEA -->
+  <div id="tela-chamada-tea" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#7f1d1d;z-index:9999;flex-direction:column;align-items:center;justify-content:center;color:#fff">
+    <div style="font-size:60px;margin-bottom:16px">🚨</div>
+    <div id="tea-chamada-titulo" style="font-size:22px;font-weight:700;margin-bottom:8px">Chamada SOS</div>
+    <div id="tea-chamada-sub" style="font-size:15px;opacity:0.8;margin-bottom:40px">Conectando...</div>
+    <audio id="audio-remoto-tea" autoplay playsinline style="display:none"></audio>
+    <div style="display:flex;gap:24px">
+      <button id="tea-btn-atender" onclick="atenderChamadaTEA()" style="display:none;width:72px;height:72px;border-radius:50%;background:#22c55e;border:none;font-size:28px;cursor:pointer">📞</button>
+      <button onclick="encerrarChamadaTEA()" style="width:72px;height:72px;border-radius:50%;background:#ef4444;border:none;font-size:28px;cursor:pointer;color:#fff">📵</button>
+    </div>
+    <div id="tea-timer" style="margin-top:24px;font-size:13px;opacity:0.7"></div>
+  </div>
+
 </body>
 </html>
