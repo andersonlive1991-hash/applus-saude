@@ -982,3 +982,23 @@ async function excluirPictoPersonalizado(id) {
     alerta('Erro ao excluir', 'erro');
   }
 }
+
+// ── ENVIAR FRASE DA FAMÍLIA PARA O TEA ──
+async function enviarFraseTEA() {
+  const texto = document.getElementById('frase-tea-texto').value.trim();
+  if (!texto) {
+    alerta('Digite uma frase para enviar!', 'aviso');
+    return;
+  }
+  const membroId = membroTEAId || APP.membroId;
+  if (APP.socket) {
+    APP.socket.emit('familia-frase-tea', {
+      familiaId: APP.familiaId,
+      membroId: membroId,
+      nome: APP.membroNome,
+      texto: texto
+    });
+  }
+  document.getElementById('frase-tea-texto').value = '';
+  alerta('Mensagem enviada para a crianca!');
+}

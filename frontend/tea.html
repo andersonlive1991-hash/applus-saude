@@ -566,6 +566,20 @@ function conectarSocketTEA() {
   TEA.socket.emit('entrar-familia', TEA.familiaId);
   carregarPictosNoTEA();
   TEA.socket.on('tea-comunicou', () => {});
+  TEA.socket.on('familia-frase-tea', (data) => {
+    if (String(data.membroId) !== String(TEA.membroId)) return;
+    const overlay = document.getElementById('voz-overlay');
+    document.getElementById('voz-emoji').textContent = '💬';
+    document.getElementById('voz-texto').textContent = data.texto;
+    overlay.classList.add('ativo');
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(data.texto);
+      u.lang = 'pt-BR';
+      u.rate = 0.8;
+      speechSynthesis.speak(u);
+    }
+  });
   TEA.socket.on('pictos-atualizados', (data) => {
     if (String(data.membroId) === String(TEA.membroId)) carregarPictosNoTEA();
   });

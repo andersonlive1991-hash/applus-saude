@@ -101,6 +101,9 @@ io.on('connection', (socket) => {
   socket.on('pictos-atualizados', (data) => {
     io.to(String(data.familiaId)).emit('pictos-atualizados', data);
   });
+  socket.on('familia-frase-tea', (data) => {
+    io.to(String(data.familiaId)).emit('familia-frase-tea', data);
+  });
   socket.on('tea-comunicou', (data) => {
     io.to(String(data.familiaId)).emit('tea-comunicou', data);
   });
