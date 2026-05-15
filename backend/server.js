@@ -38,6 +38,7 @@ app.use('/api/familias', require('./routes/familias'));
 app.use('/api/membros', require('./routes/membros'));
 app.use('/api/medicamentos', require('./routes/medicamentos'));
 app.use('/api/interacoes', require('./routes/interacoes'));
+app.use('/api/checklist', require('./routes/checklist'));
 app.use('/api/eventos', require('./routes/eventos'));
 app.use('/api/sinais', require('./routes/sinais'));
 app.use('/api/vacinas', require('./routes/vacinas'));

@@ -460,6 +460,7 @@ function navegarPara(pagina) {
   if (pagina === 'agenda') carregarAgenda();
   if (pagina === 'chat') carregarChat();
   if (pagina === 'mais') carregarMais();
+  if (pagina === 'checklist') carregarChecklist();
   if (pagina === 'historico') { carregarDoencas(); }
   if (pagina === 'cuidados') {
     if (APP.membroTipo === 'cuidador') {
@@ -1096,6 +1097,45 @@ async function ativarNotificacoes() {
   } else {
     alerta('Permissão negada. As notificações não funcionarão.', 'erro');
   }
+}
+
+
+// ── CHECKLIST ──
+async function carregarChecklist() {
+  try {
+    const hoje = new Date().toISOString().split('T')[0];
+    const tarefas = await api('GET', '/api/checklist/' + APP.familiaId + '?data=' + hoje);
+    const lista = document.getElementById('lista-checklist');
+    if (!lista) return;
+    if (!tarefas.length) {
+      lista.innerHTML = '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhuma tarefa para hoje</p>';
+      return;
+    }
+    lista.innerHTML = tarefas.map(t => '<div class="item-lista" style="display:flex;align-items:center;gap:12px;opacity:' + (t.concluida ? 0.5 : 1) + '"><input type="checkbox" ' + (t.concluida ? 'checked' : '') + ' onchange="toggleTarefa(' + t.id + ', this.checked)" style="width:20px;height:20px;cursor:pointer"><div class="item-info" style="flex:1;text-decoration:' + (t.concluida ? 'line-through' : 'none') + '"><div class="item-nome">' + t.tarefa + '</div></div><button onclick="excluirTarefa(' + t.id + ')" style="background:none;border:none;font-size:18px;cursor:pointer;color:#ef4444">🗑</button></div>').join('');
+  } catch (e) { console.log('Erro checklist:', e); }
+}
+
+async function salvarTarefa() {
+  const tarefa = document.getElementById('tar-nome').value.trim();
+  if (!tarefa) return alerta('Digite a tarefa');
+  try {
+    await api('POST', '/api/checklist', { familia_id: APP.familiaId, membro_id: APP.membroId, tarefa });
+    document.getElementById('tar-nome').value = '';
+    fecharModal('modal-add-tarefa');
+    carregarChecklist();
+  } catch (e) { alerta('Erro ao salvar tarefa'); }
+}
+
+async function toggleTarefa(id, concluida) {
+  try {
+    await api('PUT', '/api/checklist/' + id, { concluida });
+    carregarChecklist();
+  } catch (e) { alerta('Erro ao atualizar tarefa'); }
+}
+
+async function excluirTarefa(id) {
+  await api('DELETE', '/api/checklist/' + id);
+  carregarChecklist();
 }
 
 // ── MODAIS ──
