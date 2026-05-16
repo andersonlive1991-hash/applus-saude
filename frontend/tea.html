@@ -369,6 +369,10 @@ body {
   background: #22c55e;
   transition: width 1s linear, background 1s;
 }
+@keyframes pulsar-barra {
+  0%, 100% { opacity: 1; transform: scaleY(1); }
+  50% { opacity: 0.6; transform: scaleY(1.15); }
+}
 .temp-botoes {
   display: flex;
   gap: 8px;
@@ -545,6 +549,67 @@ function definirTempo(minutos) {
   atualizarDisplayTempo();
 }
 
+function beepAlerta() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.6, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+
+function beepFinal() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.15, 0.3].forEach((t, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = i === 2 ? 1047 : 880;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.6, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.3);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.3);
+    });
+  } catch(e) {}
+}
+
+function falarContagem(n) {
+  try {
+    speechSynthesis.cancel();
+    const voz = new SpeechSynthesisUtterance(String(n));
+    voz.lang = 'pt-BR';
+    voz.rate = 1.1;
+    voz.volume = 1;
+    speechSynthesis.speak(voz);
+  } catch(e) {}
+}
+
+function animarFim() {
+  const emoji = document.getElementById('temp-emoji');
+  const tempo = document.getElementById('temp-tempo');
+  emoji.textContent = '🎉';
+  tempo.style.transition = 'transform 0.2s';
+  let pulsos = 0;
+  const pulsar = setInterval(() => {
+    tempo.style.transform = pulsos % 2 === 0 ? 'scale(1.3)' : 'scale(1)';
+    pulsos++;
+    if (pulsos >= 6) {
+      clearInterval(pulsar);
+      tempo.style.transform = 'scale(1)';
+    }
+  }, 200);
+}
+
 function atualizarDisplayTempo() {
   const min = Math.floor(tempRestante / 60);
   const seg = tempRestante % 60;
@@ -553,14 +618,18 @@ function atualizarDisplayTempo() {
   const pct = tempTotal > 0 ? (tempRestante / tempTotal) * 100 : 100;
   const barra = document.getElementById('temp-barra');
   barra.style.width = pct + '%';
+
   if (pct > 50) {
     barra.style.background = '#22c55e';
+    barra.style.animation = '';
     document.getElementById('temp-emoji').textContent = '🟢';
   } else if (pct > 20) {
     barra.style.background = '#f59e0b';
+    barra.style.animation = '';
     document.getElementById('temp-emoji').textContent = '🟡';
   } else {
     barra.style.background = '#ef4444';
+    barra.style.animation = 'pulsar-barra 0.8s ease-in-out infinite';
     document.getElementById('temp-emoji').textContent = '🔴';
   }
 }
@@ -576,15 +645,29 @@ function iniciarTemporizador() {
     if (tempRestante <= 0) {
       clearInterval(tempInterval);
       tempInterval = null;
-      document.getElementById('temp-emoji').textContent = '🎉';
-      document.getElementById('temp-tempo').textContent = '00:00';
       document.getElementById('temp-btn-iniciar').style.display = 'block';
       document.getElementById('temp-btn-parar').style.display = 'none';
-      const voz = new SpeechSynthesisUtterance('O tempo acabou!');
-      voz.lang = 'pt-BR';
-      voz.rate = 0.9;
-      speechSynthesis.speak(voz);
+      document.getElementById('temp-tempo').textContent = '00:00';
+      // Vibração
+      if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
+      // Beep final
+      beepFinal();
+      // Animação
+      animarFim();
+      // Voz
+      setTimeout(() => {
+        const voz = new SpeechSynthesisUtterance('Muito bem! O tempo acabou!');
+        voz.lang = 'pt-BR';
+        voz.rate = 0.9;
+        voz.pitch = 1.1;
+        speechSynthesis.speak(voz);
+      }, 500);
       return;
+    }
+    // Contagem regressiva falada nos últimos 10 segundos
+    if (tempRestante <= 10) {
+      falarContagem(tempRestante);
+      beepAlerta();
     }
     tempRestante--;
     atualizarDisplayTempo();
@@ -598,6 +681,8 @@ function pararTemporizador() {
   }
   document.getElementById('temp-btn-iniciar').style.display = 'block';
   document.getElementById('temp-btn-parar').style.display = 'none';
+  const barra = document.getElementById('temp-barra');
+  barra.style.animation = '';
   tempRestante = tempTotal;
   atualizarDisplayTempo();
 }
