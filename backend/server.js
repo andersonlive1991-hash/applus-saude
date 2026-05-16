@@ -263,6 +263,11 @@ setInterval(async () => {
       [hojeFormatado, amanhaFormatado]
     );
     console.log('[Agenda] Eventos encontrados:', eventos.rows.length);
+    for (const ev of eventos.rows) {
+      console.log('[Agenda] Evento:', ev.titulo, 'membro_id:', ev.membro_id, 'hora:', ev.hora, 'data:', ev.data);
+      const subCheck = await pool.query('SELECT id FROM push_subscriptions WHERE membro_id = $1', [ev.membro_id]);
+      console.log('[Agenda] Push subscriptions para membro', ev.membro_id, ':', subCheck.rows.length);
+    }
 
     for (const ev of eventos.rows) {
       const subRes = await pool.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [ev.membro_id]);
