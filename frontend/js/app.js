@@ -190,6 +190,7 @@ function selecionarPerfil(id, nome, tipo, idPessoal) {
   APP.membroNome = nome;
   APP.membroTipo = tipo;
   APP.idPessoal = idPessoal;
+  APP.membroAtivo = { id, nome, tipo, id_pessoal: idPessoal };
   salvarSessaoMembro();
   iniciarApp();
 }
