@@ -274,7 +274,7 @@ setInterval(async () => {
       const minutosEvento = hEv * 60 + mEv;
       const minutosAgora = hAt * 60 + mAt;
 
-      if (ev.data === hoje && minutosEvento - minutosAgora === 60) {
+      if (ev.data === hoje && minutosEvento - minutosAgora === 2) { // TESTE: 2min
         const payload = JSON.stringify({
           titulo: '⏰ Compromisso em 1 hora!',
           corpo: ev.titulo + (ev.local ? ' — ' + ev.local : '') + ' às ' + horaEvento,
