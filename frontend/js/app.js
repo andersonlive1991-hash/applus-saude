@@ -278,6 +278,7 @@ async function criarFamilia() {
     const mes = document.getElementById('inp-data-mes')?.value || '';
     const ano = document.getElementById('inp-data-ano')?.value || '';
     const dataNasc = (dia && mes && ano) ? ano + '-' + mes + '-' + dia : '';
+    console.log('DEBUG DATA:', dia, mes, ano, '->', dataNasc);
     const tipoSangue = document.getElementById('inp-tipo-sangue')?.value || '';
     const alergias = document.getElementById('inp-alergias')?.value.trim() || '';
     const cpf = document.getElementById('inp-cpf')?.value.trim() || '';
