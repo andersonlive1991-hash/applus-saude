@@ -255,10 +255,14 @@ setInterval(async () => {
     const amanhaStr = amanha.toISOString().split('T')[0];
 
     // Buscar eventos de hoje e amanhã
+    const hojeFormatado = horaBrasil.getFullYear() + '-' + String(horaBrasil.getMonth()+1).padStart(2,'0') + '-' + String(horaBrasil.getDate()).padStart(2,'0');
+    const amanhaFormatado = amanha.getFullYear() + '-' + String(amanha.getMonth()+1).padStart(2,'0') + '-' + String(amanha.getDate()).padStart(2,'0');
+    console.log('[Agenda] Verificando datas:', hojeFormatado, amanhaFormatado, 'hora:', horaAtual);
     const eventos = await pool.query(
-      "SELECT e.*, m.id as mid FROM eventos e JOIN membros m ON m.id = e.membro_id WHERE e.data IN ($1, $2) AND e.hora IS NOT NULL",
-      [hoje, amanhaStr]
+      "SELECT e.*, m.id as mid FROM eventos e JOIN membros m ON m.id = e.membro_id WHERE e.data::text IN ($1, $2) AND e.hora IS NOT NULL",
+      [hojeFormatado, amanhaFormatado]
     );
+    console.log('[Agenda] Eventos encontrados:', eventos.rows.length);
 
     for (const ev of eventos.rows) {
       const subRes = await pool.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [ev.membro_id]);
