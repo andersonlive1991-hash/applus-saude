@@ -530,7 +530,8 @@ async function carregarHistorico(membro) {
     </div>`;
 
     html += `
-      <button class="btn-sair" onclick="novoAcesso()" style="margin-bottom:8px">🔍 Consultar outro paciente</button>
+      <button class="btn-sair" onclick="gerarPDF()" style="margin-bottom:8px;background:#e0f2fe;color:#0369a1">📄 Gerar Relatório PDF</button>
+    <a href="#" onclick="consultarOutro()" style="display:block;text-align:center;padding:14px;color:#1a6eb5;font-weight:600;text-decoration:none">🔍 Consultar outro paciente</button>
       <button class="btn-sair" onclick="encerrarSessao()" style="background:#fee2e2;color:#991b1b">🚪 Encerrar Sessão</button>
     `;
 
@@ -545,6 +546,10 @@ async function carregarHistorico(membro) {
   } catch (e) {
     content.innerHTML = '<p style="text-align:center;color:red;padding:20px">Erro ao carregar histórico</p>';
   }
+}
+
+function gerarPDF() {
+  window.open("/api/pdf/medicamentos/" + MEDICO.pacienteMembroId, "_blank");
 }
 
 function novoAcesso() {
