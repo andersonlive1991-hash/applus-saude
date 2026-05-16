@@ -240,3 +240,63 @@ setInterval(async () => {
     console.log('Erro agendador:', e.message);
   }
 }, 60000);
+
+// ── VERIFICAR EVENTOS DA AGENDA ──
+setInterval(async () => {
+  try {
+    const agora = new Date();
+    const horaBrasil = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const horaAtual = String(horaBrasil.getHours()).padStart(2,'0') + ':' + String(horaBrasil.getMinutes()).padStart(2,'0');
+    const hoje = horaBrasil.toISOString().split('T')[0];
+
+    // Data de amanhã
+    const amanha = new Date(horaBrasil);
+    amanha.setDate(amanha.getDate() + 1);
+    const amanhaStr = amanha.toISOString().split('T')[0];
+
+    // Buscar eventos de hoje e amanhã
+    const eventos = await pool.query(
+      "SELECT e.*, m.id as mid FROM eventos e JOIN membros m ON m.id = e.membro_id WHERE e.data IN ($1, $2) AND e.hora IS NOT NULL",
+      [hoje, amanhaStr]
+    );
+
+    for (const ev of eventos.rows) {
+      const subRes = await pool.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [ev.membro_id]);
+      if (!subRes.rows.length) continue;
+      const sub = typeof subRes.rows[0].subscription === 'string' ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
+
+      const horaEvento = ev.hora ? ev.hora.substring(0,5) : null;
+      if (!horaEvento) continue;
+
+      // 1 hora antes — alarme sonoro + push
+      const [hEv, mEv] = horaEvento.split(':').map(Number);
+      const [hAt, mAt] = horaAtual.split(':').map(Number);
+      const minutosEvento = hEv * 60 + mEv;
+      const minutosAgora = hAt * 60 + mAt;
+
+      if (ev.data === hoje && minutosEvento - minutosAgora === 60) {
+        const payload = JSON.stringify({
+          titulo: '⏰ Compromisso em 1 hora!',
+          corpo: ev.titulo + (ev.local ? ' — ' + ev.local : '') + ' às ' + horaEvento,
+          url: '/#agenda',
+          tag: 'evento-1h-' + ev.id
+        });
+        webpush.sendNotification(sub, payload).catch(e => console.log('Erro push evento 1h:', e.message));
+      }
+
+      // 1 dia antes — push às 08:00
+      if (ev.data === amanhaStr && horaAtual === '08:00') {
+        const payload = JSON.stringify({
+          titulo: '📅 Lembrete para amanhã!',
+          corpo: ev.titulo + ' amanhã às ' + horaEvento + (ev.local ? ' — ' + ev.local : ''),
+          url: '/#agenda',
+          tag: 'evento-1d-' + ev.id
+        });
+        webpush.sendNotification(sub, payload).catch(e => console.log('Erro push evento 1d:', e.message));
+      }
+    }
+  } catch(e) {
+    console.log('Erro agendador eventos:', e.message);
+  }
+}, 60000);
+
