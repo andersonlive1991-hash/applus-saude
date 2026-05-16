@@ -393,7 +393,6 @@ body.calmo .rotina-item { background: #1e293b !important; color: #e2e8f0 !import
   <!-- ── HOME TEA ── -->
   <div class="tea-home" id="tea-home">
     <div class="tea-header" style="position:relative">
-      <button onclick="toggleModoCalmo()" id="btn-calmo" style="position:absolute;top:10px;right:10px;z-index:99999;background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:44px;height:44px;font-size:22px;cursor:pointer">🌙</button>
       <div class="tea-avatar">🧩</div>
       <div class="tea-ola" id="tea-nome">Olá!</div>
     </div>
@@ -486,7 +485,6 @@ body.calmo .rotina-item { background: #1e293b !important; color: #e2e8f0 !import
 // ── MODO CALMO ──
 let modoCalmoAtivo = false;
 function toggleModoCalmo() {
-  alert("Modo calmo tocado!");
   if (modoCalmoAtivo) {
     desativarModoCalmo();
   } else {
@@ -804,5 +802,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.activeElement.id === 'tea-id-input') entrarTEA();
 });
 </script>
+<button id="btn-calmo" onclick="toggleModoCalmo()" style="position:fixed;bottom:80px;right:16px;z-index:99999;background:#0ea5e9;border:none;border-radius:50%;width:52px;height:52px;font-size:24px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3)">🌙</button>
 </body>
 </html>
