@@ -501,29 +501,25 @@ async function carregarPerfil() {
     // Formatar data YYYY-MM-DD para o input type=date
     if (p.data_nascimento) {
       const d = new Date(p.data_nascimento);
-      const yyyy = String(d.getUTCFullYear());
+      const yyyy = d.getUTCFullYear();
       const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
       const dd = String(d.getUTCDate()).padStart(2, '0');
-      document.getElementById('pf-nasc-dia').value = dd;
-      document.getElementById('pf-nasc-mes').value = mm;
-      document.getElementById('pf-nasc-ano').value = yyyy;
+      document.getElementById('pf-nascimento').value = yyyy + '-' + mm + '-' + dd;
     } else {
-      document.getElementById('pf-nasc-dia').value = '';
-      document.getElementById('pf-nasc-mes').value = '';
-      document.getElementById('pf-nasc-ano').value = '';
+      document.getElementById('pf-nascimento').value = '';
     }
     document.getElementById('pf-sangue').value = p.tipo_sanguineo || '';
     document.getElementById('pf-alergias').value = p.alergias || '';
     document.getElementById('pf-cpf').value = p.cpf || '';
     document.getElementById('pf-sus').value = p.cartao_sus || '';
-    document.getElementById('pf-convenio').value = p.conve  const pfDia = document.getElementById('pf-nasc-dia').value || '';
-  const pfMes = document.getElementById('pf-nasc-mes').value || '';
-  const pfAno = document.getElementById('pf-nasc-ano').value || '';
-  const dataNascRaw = (pfDia && pfMes && pfAno) ? pfAno + '-' + pfMes + '-' + pfDia : '';
-  const dados = {
-    membro_id: APP.membroAtivo.id,
-    nome_completo: document.getElementById('pf-nome').value.trim() || APP.membroAtivo.nome,
-    data_nascimento: dataNascRaw !== '' ? dataNascRaw : null,'';
+    document.getElementById('pf-convenio').value = p.convenio || '';
+    document.getElementById('pf-contato').value = p.contato_emergencia || '';
+    document.getElementById('pf-tel').value = p.tel_emergencia || '';
+  } catch(e) {}
+}
+
+async function salvarPerfil() {
+  const dataNascRaw = document.getElementById('pf-nascimento').value || '';
   const dados = {
     membro_id: APP.membroAtivo.id,
     nome_completo: document.getElementById('pf-nome').value.trim() || APP.membroAtivo.nome,
