@@ -247,61 +247,55 @@ setInterval(async () => {
     const agora = new Date();
     const horaBrasil = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
     const horaAtual = String(horaBrasil.getHours()).padStart(2,'0') + ':' + String(horaBrasil.getMinutes()).padStart(2,'0');
-    const hoje = horaBrasil.toISOString().split('T')[0];
-
-    // Data de amanhã
+    const hojeFormatado = horaBrasil.getFullYear() + '-' + String(horaBrasil.getMonth()+1).padStart(2,'0') + '-' + String(horaBrasil.getDate()).padStart(2,'0');
     const amanha = new Date(horaBrasil);
     amanha.setDate(amanha.getDate() + 1);
-    const amanhaStr = amanha.toISOString().split('T')[0];
-
-    // Buscar eventos de hoje e amanhã
-    const hojeFormatado = horaBrasil.getFullYear() + '-' + String(horaBrasil.getMonth()+1).padStart(2,'0') + '-' + String(horaBrasil.getDate()).padStart(2,'0');
     const amanhaFormatado = amanha.getFullYear() + '-' + String(amanha.getMonth()+1).padStart(2,'0') + '-' + String(amanha.getDate()).padStart(2,'0');
-    console.log('[Agenda] Verificando datas:', hojeFormatado, amanhaFormatado, 'hora:', horaAtual);
+
     const eventos = await pool.query(
-      "SELECT e.*, m.id as mid FROM eventos e JOIN membros m ON m.id = e.membro_id WHERE e.data::text IN ($1, $2) AND e.hora IS NOT NULL",
-      [hojeFormatado, amanhaFormatado]
+      "SELECT * FROM eventos WHERE hora IS NOT NULL",
+      []
     );
-    console.log('[Agenda] Eventos encontrados:', eventos.rows.length);
-    for (const ev of eventos.rows) {
-      console.log('[Agenda] Evento:', ev.titulo, 'membro_id:', ev.membro_id, 'hora:', ev.hora, 'data:', ev.data);
-      const subCheck = await pool.query('SELECT id FROM push_subscriptions WHERE membro_id = $1', [ev.membro_id]);
-      console.log('[Agenda] Push subscriptions para membro', ev.membro_id, ':', subCheck.rows.length);
-    }
 
     for (const ev of eventos.rows) {
+      if (!ev.hora || !ev.data) continue;
+      const dataEvento = ev.data.toString().split('T')[0];
+      const horaEvento = ev.hora.toString().substring(0,5);
+
       const subRes = await pool.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [ev.membro_id]);
       if (!subRes.rows.length) continue;
       const sub = typeof subRes.rows[0].subscription === 'string' ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
 
-      const horaEvento = ev.hora ? ev.hora.toString().substring(0,5) : null;
-      if (!horaEvento) continue;
-      // Normalizar data do evento (pode vir como timestamp)
-      const dataEvento = ev.data ? ev.data.toString().split('T')[0] : null;
-      if (!dataEvento) continue;
-
-      // 1 hora antes — alarme sonoro + push
-      const [hEv, mEv] = h      if (dataEvento === hojeFormatado && minutosEvento - minutosAgora === 2) { // TESTE: 2minp(Number);
+      const hEv = parseInt(horaEvento.split(':')[0]);
+      const mEv = parseInt(horaEvento.split(':')[1]);
+      const hAt = parseInt(horaAtual.split(':')[0]);
+      const mAt = parseInt(horaAtual.split(':')[1]);
       const minutosEvento = hEv * 60 + mEv;
       const minutosAgora = hAt * 60 + mAt;
+      const diff = minutosEvento - minutosAgora;
 
-      if (ev.data === hoje && minutosEvento - minutosAgora === 2) { // TESTE: 2min
+      // 2 minutos antes (TESTE — mudar para 60 depois)
+      if (dataEvento === hojeFormatado && diff === 2) {
         const payload = JSON.stringify({
-          titulo: '⏰ Compromisso em 1 hora!',
-          corpo: ev.titulo + (ev.local ? ' — ' + ev.local : '') + ' às ' + horaEvento,
+          titulo: '⏰ Compromisso em breve!',
+          corpo: ev.titulo + ' às ' + horaEvento + (ev.local ? ' — ' + ev.local : ''),
           url: '/#agenda',
-              if (dataEvento === amanhaFormatado && horaAtual === '08:00') {dNotification(sub, payload).catch(e => console.log('Erro push evento 1h:', e.message));
+          tag: 'evento-1h-' + ev.id
+        });
+        webpush.sendNotification(sub, payload).catch(function(e) { console.log('Erro push evento:', e.message); });
+        console.log('[Agenda] Push enviado para evento:', ev.titulo);
       }
 
-      // 1 dia antes — push às 08:00
-      if (ev.data === amanhaStr && horaAtual === '08:00') {
+      // 1 dia antes às 08:00
+      if (dataEvento === amanhaFormatado && horaAtual === '08:00') {
         const payload = JSON.stringify({
           titulo: '📅 Lembrete para amanhã!',
           corpo: ev.titulo + ' amanhã às ' + horaEvento + (ev.local ? ' — ' + ev.local : ''),
           url: '/#agenda',
           tag: 'evento-1d-' + ev.id
         });
-        webpush.sendNotification(sub, payload).catch(e => console.log('Erro push evento 1d:', e.message));
+        webpush.sendNotification(sub, payload).catch(function(e) { console.log('Erro push evento 1d:', e.message); });
+        console.log('[Agenda] Push 1 dia antes enviado para evento:', ev.titulo);
       }
     }
   } catch(e) {
