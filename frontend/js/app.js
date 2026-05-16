@@ -289,20 +289,30 @@ async function criarFamilia() {
 
     const temDados = dataNasc || tipoSangue || alergias || cpf || cartaoSus || convenio || contatoEmerg || telEmerg;
     if (temDados) {
+      const membroId = resMem.id;
+      const dadosPerfil = {
+        membro_id: membroId,
+        nome_completo: membro,
+        data_nascimento: dataNasc !== '' ? dataNasc : null,
+        tipo_sanguineo: tipoSangue !== '' ? tipoSangue : null,
+        alergias: alergias !== '' ? alergias : null,
+        cpf: cpf !== '' ? cpf : null,
+        cartao_sus: cartaoSus !== '' ? cartaoSus : null,
+        convenio: convenio !== '' ? convenio : null,
+        contato_emergencia: contatoEmerg !== '' ? contatoEmerg : null,
+        tel_emergencia: telEmerg !== '' ? telEmerg : null
+      };
       try {
-        await api('POST', '/api/perfil', {
-          membro_id: resMem.id,
-          nome_completo: membro,
-          data_nascimento: dataNasc || null, // formato YYYY-MM-DD
-          tipo_sanguineo: tipoSangue || null,
-          alergias: alergias || null,
-          cpf: cpf || null,
-          cartao_sus: cartaoSus || null,
-          convenio: convenio || null,
-          contato_emergencia: contatoEmerg || null,
-          tel_emergencia: telEmerg || null
+        const respPerfil = await fetch('/api/perfil', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dadosPerfil)
         });
-      } catch(ep) {}
+        const jsonPerfil = await respPerfil.json();
+        console.log('Perfil salvo:', JSON.stringify(jsonPerfil));
+      } catch(ep) {
+        console.log('Erro perfil:', ep.message);
+      }
     }
 
     fecharModal('modal-criar');
