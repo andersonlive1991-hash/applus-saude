@@ -811,6 +811,7 @@ async function entrarTEA() {
 
     conectarSocketTEA();
     carregarRotinaTEA();
+    iniciarAlarmeRotina();
   } catch (e) {
     (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('ID não encontrado. Tenta de novo!');
   }
@@ -877,6 +878,116 @@ async function concluirAtividade(id) {
     });
     carregarRotinaTEA();
   } catch(e) {}
+}
+
+
+// ── ALARME DE ROTINA ──
+let alarmeRotinaInterval = null;
+let alarmesFoados = new Set();
+
+function iniciarAlarmeRotina() {
+  if (alarmeRotinaInterval) return;
+  alarmeRotinaInterval = setInterval(verificarAlarmesRotina, 30000);
+  verificarAlarmesRotina();
+}
+
+async function verificarAlarmesRotina() {
+  try {
+    const hoje = new Date().toISOString().split('T')[0];
+    const res = await fetch('/api/rotina-tea/' + TEA.membroId + '?data=' + hoje);
+    const rotina = await res.json();
+    if (!Array.isArray(rotina)) return;
+
+    const agora = new Date();
+    const horaAtual = String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0');
+
+    rotina.forEach(r => {
+      if (!r.hora || r.concluida) return;
+      const horaAtiv = r.hora.substring(0,5);
+      const chave = r.id + '-' + horaAtiv;
+      if (horaAtiv === horaAtual && !alarmesFoados.has(chave)) {
+        alarmesFoados.add(chave);
+        dispararAlarmeAtividade(r);
+      }
+    });
+  } catch(e) {}
+}
+
+function dispararAlarmeAtividade(atividade) {
+  if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.4, 0.8].forEach(t => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 660;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.5, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.35);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.35);
+    });
+  } catch(e) {}
+
+  const el = document.getElementById('rotina-' + atividade.id);
+  if (el) {
+    el.style.border = '3px solid #f59e0b';
+    el.style.background = '#fffbeb';
+    el.style.transform = 'scale(1.03)';
+    el.style.transition = 'all 0.3s';
+    setTimeout(() => {
+      el.style.border = '';
+      el.style.background = '';
+      el.style.transform = '';
+    }, 10000);
+  }
+
+  setTimeout(() => {
+    const texto = 'Hora de: ' + atividade.atividade;
+    const voz = new SpeechSynthesisUtterance(texto);
+    voz.lang = 'pt-BR';
+    voz.rate = 0.85;
+    voz.pitch = 1.1;
+    voz.volume = 1;
+    speechSynthesis.speak(voz);
+  }, 900);
+
+  mostrarToastRotina(atividade.emoji || '📌', atividade.atividade);
+}
+
+function mostrarToastRotina(emoji, nome) {
+  let toast = document.getElementById('toast-rotina');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast-rotina';
+    toast.style.cssText = `
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-200px);
+      background: #1e293b;
+      color: white;
+      padding: 16px 24px;
+      border-radius: 20px;
+      font-family: Nunito, sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      z-index: 9999;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      text-align: center;
+      max-width: 300px;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = '<div style="font-size:36px;margin-bottom:6px">' + emoji + '</div><div>Hora de:</div><div style="color:#fbbf24">' + nome + '</div>';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  setTimeout(() => {
+    toast.style.transform = 'translateX(-50%) translateY(-200px)';
+  }, 6000);
 }
 
 function trocarAbaTea(aba) {
