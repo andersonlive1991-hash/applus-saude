@@ -485,9 +485,26 @@ body.calmo .rotina-item { background: #1e293b !important; color: #e2e8f0 !import
 // ── MODO CALMO ──
 let modoCalmoAtivo = false;
 function toggleModoCalmo() {
-  modoCalmoAtivo = !modoCalmoAtivo;
-  document.body.style.filter = modoCalmoAtivo ? "brightness(0.3)" : "";
-  document.getElementById("btn-calmo").textContent = modoCalmoAtivo ? "☀️" : "🌙";
+  if (modoCalmoAtivo) {
+    desativarModoCalmo();
+  } else {
+    ativarModoCalmo();
+  }
+}
+function ativarModoCalmo() {
+  modoCalmoAtivo = true;
+  document.body.classList.add('calmo');
+  document.getElementById('calmo-overlay').classList.add('ativo');
+  document.getElementById('btn-calmo').textContent = '☀️';
+  setTimeout(() => {
+    document.getElementById('calmo-overlay').classList.remove('ativo');
+  }, 2000);
+}
+function desativarModoCalmo() {
+  modoCalmoAtivo = false;
+  document.body.classList.remove('calmo');
+  document.getElementById('calmo-overlay').classList.remove('ativo');
+  document.getElementById('btn-calmo').textContent = '🌙';
 }
 
 </script>
