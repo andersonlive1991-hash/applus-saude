@@ -847,7 +847,7 @@
 
 <!-- Modal Criar Família -->
 <div id="modal-criar" class="modal-overlay">
-  <div class="modal">
+  <div class="modal" style="max-height:90vh;overflow-y:auto">
     <div class="modal-titulo">🏠 Criar perfil</div>
     <div class="form" style="padding:0">
       <div class="campo"><label>Nome</label><input id="inp-nome-familia" type="text" placeholder="Ex: Anderson"></div>
@@ -859,6 +859,23 @@
           <option value="idoso">Idoso</option>
         </select>
       </div>
+      <div style="margin:12px 0 8px;font-size:13px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">📋 Dados de saúde (opcional)</div>
+      <div class="campo"><label>Data de nascimento</label><input id="inp-data-nasc" type="date"></div>
+      <div class="campo"><label>Tipo sanguíneo</label>
+        <select id="inp-tipo-sangue">
+          <option value="">Selecione</option>
+          <option>A+</option><option>A-</option>
+          <option>B+</option><option>B-</option>
+          <option>AB+</option><option>AB-</option>
+          <option>O+</option><option>O-</option>
+        </select>
+      </div>
+      <div class="campo"><label>Alergias</label><input id="inp-alergias" type="text" placeholder="Ex: Dipirona, Amendoim"></div>
+      <div class="campo"><label>CPF</label><input id="inp-cpf" type="text" placeholder="000.000.000-00"></div>
+      <div class="campo"><label>Cartão SUS</label><input id="inp-cartao-sus" type="text" placeholder="Número do cartão SUS"></div>
+      <div class="campo"><label>Convênio</label><input id="inp-convenio" type="text" placeholder="Nome do convênio"></div>
+      <div class="campo"><label>Contato de emergência</label><input id="inp-contato-emerg" type="text" placeholder="Nome do contato"></div>
+      <div class="campo"><label>Telefone de emergência</label><input id="inp-tel-emerg" type="tel" placeholder="(00) 00000-0000"></div>
       <button class="btn btn-verde btn-block" onclick="criarFamilia()">Criar perfil</button>
       <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-criar')">Cancelar</button>
     </div>

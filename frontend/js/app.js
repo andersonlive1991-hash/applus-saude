@@ -272,6 +272,35 @@ async function criarFamilia() {
     APP.codigoFamilia = resFam.codigo;
     APP.nomeFamilia = resFam.nome;
     salvarSessaoFamilia();
+
+    // Salvar dados de saúde se preenchidos
+    const dataNasc = document.getElementById('inp-data-nasc')?.value || '';
+    const tipoSangue = document.getElementById('inp-tipo-sangue')?.value || '';
+    const alergias = document.getElementById('inp-alergias')?.value.trim() || '';
+    const cpf = document.getElementById('inp-cpf')?.value.trim() || '';
+    const cartaoSus = document.getElementById('inp-cartao-sus')?.value.trim() || '';
+    const convenio = document.getElementById('inp-convenio')?.value.trim() || '';
+    const contatoEmerg = document.getElementById('inp-contato-emerg')?.value.trim() || '';
+    const telEmerg = document.getElementById('inp-tel-emerg')?.value.trim() || '';
+
+    const temDados = dataNasc || tipoSangue || alergias || cpf || cartaoSus || convenio || contatoEmerg || telEmerg;
+    if (temDados) {
+      try {
+        await api('POST', '/api/perfil', {
+          membro_id: resMem.id,
+          nome_completo: membro,
+          data_nascimento: dataNasc || null,
+          tipo_sanguineo: tipoSangue || null,
+          alergias: alergias || null,
+          cpf: cpf || null,
+          cartao_sus: cartaoSus || null,
+          convenio: convenio || null,
+          contato_emergencia: contatoEmerg || null,
+          tel_emergencia: telEmerg || null
+        });
+      } catch(ep) {}
+    }
+
     fecharModal('modal-criar');
     verificarPerfilCuidador(tipo, resMem.id);
   } catch (e) {
