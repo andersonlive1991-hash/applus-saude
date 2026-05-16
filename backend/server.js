@@ -49,6 +49,28 @@ app.use('/api/gastos', require('./routes/gastos'));
 app.use('/api/push', require('./routes/push'));
 app.use('/api/ia', require('./routes/ia'));
 app.use('/api/escala', require('./routes/escala'));
+const rateLimit = require('express-rate-limit');
+
+// Rate limiting — proteção contra força bruta
+const limiterGeral = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minuto
+  max: 60,
+  message: { erro: 'Muitas requisições. Tente novamente em 1 minuto.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const limiterBuscarId = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minuto
+  max: 20,
+  message: { erro: 'Muitas tentativas. Tente novamente em 1 minuto.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+app.use('/api', limiterGeral);
+app.use('/api/membros/id', limiterBuscarId);
+
 app.use('/api/bem-estar', require('./routes/bem_estar'));
 app.use('/api/perfil', require('./routes/perfil'));app.use('/api/perfil', require('./routes/perfil'));
 app.use('/api/perfil-cuidador', require('./routes/perfil_cuidador'));
