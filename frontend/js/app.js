@@ -274,7 +274,9 @@ async function criarFamilia() {
     salvarSessaoFamilia();
 
     // Salvar dados de saúde se preenchidos
-    const dataNasc = document.getElementById('inp-data-nasc')?.value || '';
+    const dataNascRaw = document.getElementById('inp-data-nasc')?.value || '';
+    // Garante formato YYYY-MM-DD para o PostgreSQL
+    const dataNasc = dataNascRaw ? dataNascRaw.substring(0, 10) : '';
     const tipoSangue = document.getElementById('inp-tipo-sangue')?.value || '';
     const alergias = document.getElementById('inp-alergias')?.value.trim() || '';
     const cpf = document.getElementById('inp-cpf')?.value.trim() || '';
@@ -289,7 +291,7 @@ async function criarFamilia() {
         await api('POST', '/api/perfil', {
           membro_id: resMem.id,
           nome_completo: membro,
-          data_nascimento: dataNasc || null,
+          data_nascimento: dataNasc || null, // formato YYYY-MM-DD
           tipo_sanguineo: tipoSangue || null,
           alergias: alergias || null,
           cpf: cpf || null,
