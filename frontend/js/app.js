@@ -490,6 +490,59 @@ function iniciarApp() {
 }
 
 // ── NAVEGAÇÃO ──
+
+async function carregarPerfil() {
+  try {
+    const res = await fetch('/api/perfil/' + APP.membroAtivo.id);
+    if (!res.ok) return; // sem perfil ainda, tudo vazio
+    const p = await res.json();
+    document.getElementById('pf-nome').value = p.nome_completo || '';
+    // Formatar data YYYY-MM-DD para o input type=date
+    if (p.data_nascimento) {
+      const d = new Date(p.data_nascimento);
+      const yyyy = d.getUTCFullYear();
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(d.getUTCDate()).padStart(2, '0');
+      document.getElementById('pf-nascimento').value = yyyy + '-' + mm + '-' + dd;
+    } else {
+      document.getElementById('pf-nascimento').value = '';
+    }
+    document.getElementById('pf-sangue').value = p.tipo_sanguineo || '';
+    document.getElementById('pf-alergias').value = p.alergias || '';
+    document.getElementById('pf-cpf').value = p.cpf || '';
+    document.getElementById('pf-sus').value = p.cartao_sus || '';
+    document.getElementById('pf-convenio').value = p.convenio || '';
+    document.getElementById('pf-contato').value = p.contato_emergencia || '';
+    document.getElementById('pf-tel').value = p.tel_emergencia || '';
+  } catch(e) {}
+}
+
+async function salvarPerfil() {
+  const dataNascRaw = document.getElementById('pf-nascimento').value || '';
+  const dados = {
+    membro_id: APP.membroAtivo.id,
+    nome_completo: document.getElementById('pf-nome').value.trim() || APP.membroAtivo.nome,
+    data_nascimento: dataNascRaw !== '' ? dataNascRaw : null,
+    tipo_sanguineo: document.getElementById('pf-sangue').value || null,
+    alergias: document.getElementById('pf-alergias').value.trim() || null,
+    cpf: document.getElementById('pf-cpf').value.trim() || null,
+    cartao_sus: document.getElementById('pf-sus').value.trim() || null,
+    convenio: document.getElementById('pf-convenio').value.trim() || null,
+    contato_emergencia: document.getElementById('pf-contato').value.trim() || null,
+    tel_emergencia: document.getElementById('pf-tel').value.trim() || null
+  };
+  try {
+    await fetch('/api/perfil', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+    alerta('✅ Perfil salvo com sucesso!');
+  } catch(e) {
+    alerta('Erro ao salvar perfil.');
+  }
+}
+
 function navegarPara(pagina) {
   document.querySelectorAll('.pagina').forEach(p => p.classList.remove('ativa'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
@@ -506,6 +559,7 @@ function navegarPara(pagina) {
   if (pagina === 'agenda') carregarAgenda();
   if (pagina === 'chat') carregarChat();
   if (pagina === 'mais') carregarMais();
+  if (pagina === 'perfil') carregarPerfil();
   if (pagina === 'checklist') carregarChecklist();
   if (pagina === 'escala') carregarEscala();
   if (pagina === 'historico') { carregarDoencas(); }
