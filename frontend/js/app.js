@@ -274,9 +274,10 @@ async function criarFamilia() {
     salvarSessaoFamilia();
 
     // Salvar dados de saúde se preenchidos
-    const dataNascRaw = document.getElementById('inp-data-nasc')?.value || '';
-    // Garante formato YYYY-MM-DD para o PostgreSQL
-    const dataNasc = dataNascRaw ? dataNascRaw.substring(0, 10) : '';
+    const dia = document.getElementById('inp-data-dia')?.value || '';
+    const mes = document.getElementById('inp-data-mes')?.value || '';
+    const ano = document.getElementById('inp-data-ano')?.value || '';
+    const dataNasc = (dia && mes && ano) ? ano + '-' + mes + '-' + dia : '';
     const tipoSangue = document.getElementById('inp-tipo-sangue')?.value || '';
     const alergias = document.getElementById('inp-alergias')?.value.trim() || '';
     const cpf = document.getElementById('inp-cpf')?.value.trim() || '';

@@ -23,6 +23,8 @@ router.post('/', async (req, res) => {
     alergias, cpf, cartao_sus, convenio,
     contato_emergencia, tel_emergencia
   } = req.body;
+  // Converter strings vazias para null para evitar erro no PostgreSQL
+  const dataNasc = data_nascimento && data_nascimento.trim() !== '' ? data_nascimento.trim() : null;
   try {
     const result = await db.query(
       `INSERT INTO perfil_idoso 
@@ -34,7 +36,7 @@ router.post('/', async (req, res) => {
         contato_emergencia=$9, tel_emergencia=$10,
         atualizado_em=NOW()
        RETURNING *`,
-      [membro_id, nome_completo, data_nascimento, tipo_sanguineo,
+      [membro_id, nome_completo, dataNasc, tipo_sanguineo,
        alergias, cpf, cartao_sus, convenio, contato_emergencia, tel_emergencia]
     );
     res.json(result.rows[0]);
