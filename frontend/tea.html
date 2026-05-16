@@ -655,6 +655,12 @@ function falarPictograma(emoji, texto) {
       url: '/'
     })
   }).catch(e => console.log('push tea erro:', e));
+  // Salvar no histórico
+  fetch('/api/historico-tea', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ membro_id: TEA.membroId, familia_id: TEA.familiaId, emoji: emoji, frase: texto })
+  }).catch(() => {});
   document.getElementById('voz-emoji').textContent = emoji;
   document.getElementById('voz-texto').textContent = texto;
   document.getElementById('voz-overlay').classList.add('ativo');

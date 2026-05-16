@@ -1189,6 +1189,41 @@ async function excluirTurno(id) {
   carregarEscala();
 }
 
+
+// ── HISTÓRICO TEA ──
+async function carregarHistoricoTEA() {
+  const lista = document.getElementById('lista-historico-tea');
+  if (!lista) return;
+  try {
+    const membros = await api('GET', '/api/membros/familia/' + APP.familiaId);
+    const memTEA = membros.filter(m => m.tipo === 'tea');
+    if (!memTEA.length) {
+      lista.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:24px">Nenhum membro TEA cadastrado</p>';
+      return;
+    }
+    const hoje = new Date().toISOString().split('T')[0];
+    let html = '';
+    for (const mem of memTEA) {
+      const hist = await api('GET', '/api/historico-tea/' + mem.id + '?data=' + hoje);
+      html += '<div style="font-weight:600;color:#0ea5e9;padding:8px 0 4px">' + mem.nome + ' — hoje</div>';
+      if (!hist.length) {
+        html += '<p style="color:#999;font-size:13px;padding:8px 0">Nenhuma comunicação hoje</p>';
+      } else {
+        hist.forEach(h => {
+          const hora = new Date(h.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+          html += '<div class="item-lista" style="display:flex;align-items:center;gap:12px">' +
+            '<div style="font-size:28px">' + (h.emoji || '💬') + '</div>' +
+            '<div class="item-info" style="flex:1">' +
+            '<div class="item-nome">' + h.frase + '</div>' +
+            '<div style="font-size:12px;color:#999">' + hora + '</div>' +
+            '</div></div>';
+        });
+      }
+    }
+    lista.innerHTML = html;
+  } catch (e) { lista.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:24px">Erro ao carregar histórico</p>'; }
+}
+
 // ── MODAIS ──
 function abrirModal(id) {
   document.getElementById(id).classList.add('aberto');

@@ -639,7 +639,7 @@ let membroTEAId = null;
 Object.defineProperty(window, "membroTEAId", { get: () => membroTEAId, set: v => { membroTEAId = v; } });
 
 function trocarAbaTEAAdmin(aba) {
-  ['rotina','humor','crises','comunicar'].forEach(a => {
+  ['rotina','humor','crises','comunicar','historico'].forEach(a => {
     document.getElementById(`tea-admin-${a}`).style.display = a === aba ? 'block' : 'none';
     document.getElementById(`aba-tea-${a}`).classList.toggle('ativa', a === aba);
   });
@@ -647,6 +647,7 @@ function trocarAbaTEAAdmin(aba) {
   if (aba === 'humor') carregarHumorTEA();
   if (aba === 'crises') carregarCrisesTEA();
   if (aba === 'comunicar') carregarPictosPersonalizados();
+  if (aba === 'historico') carregarHistoricoTEA();
 }
 
 async function carregarRotinaAdmin() {
