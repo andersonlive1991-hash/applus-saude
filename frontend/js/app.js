@@ -260,6 +260,20 @@ async function criarFamilia() {
   const tipo = document.getElementById('inp-tipo-membro').value;
   if (!nome || !sobrenome) return alerta('Preencha nome e sobrenome');
 
+  // Ler DOM antes de qualquer await
+  const dia = document.getElementById('inp-data-dia')?.value || '';
+  const mes = document.getElementById('inp-data-mes')?.value || '';
+  const ano = document.getElementById('inp-data-ano')?.value || '';
+  const dataNasc = (dia && mes && ano) ? ano + '-' + mes + '-' + dia : '';
+  const tipoSangue = document.getElementById('inp-tipo-sangue')?.value || '';
+  const alergias = document.getElementById('inp-alergias')?.value.trim() || '';
+  const cpf = document.getElementById('inp-cpf')?.value.trim() || '';
+  const cartaoSus = document.getElementById('inp-cartao-sus')?.value.trim() || '';
+  const convenio = document.getElementById('inp-convenio')?.value.trim() || '';
+  const contatoEmerg = document.getElementById('inp-contato-emerg')?.value.trim() || '';
+  const telEmerg = document.getElementById('inp-tel-emerg')?.value.trim() || '';
+
+
   try {
     const resFam = await api('POST', '/api/familias', { nome });
     const resMem = await api('POST', '/api/membros', {
@@ -273,19 +287,7 @@ async function criarFamilia() {
     APP.nomeFamilia = resFam.nome;
     salvarSessaoFamilia();
 
-    // Salvar dados de saúde se preenchidos
-    const dia = document.getElementById('inp-data-dia')?.value || '';
-    const mes = document.getElementById('inp-data-mes')?.value || '';
-    const ano = document.getElementById('inp-data-ano')?.value || '';
-    const dataNasc = (dia && mes && ano) ? ano + '-' + mes + '-' + dia : '';
-    console.log('DEBUG DATA:', dia, mes, ano, '->', dataNasc);
-    const tipoSangue = document.getElementById('inp-tipo-sangue')?.value || '';
-    const alergias = document.getElementById('inp-alergias')?.value.trim() || '';
-    const cpf = document.getElementById('inp-cpf')?.value.trim() || '';
-    const cartaoSus = document.getElementById('inp-cartao-sus')?.value.trim() || '';
-    const convenio = document.getElementById('inp-convenio')?.value.trim() || '';
-    const contatoEmerg = document.getElementById('inp-contato-emerg')?.value.trim() || '';
-    const telEmerg = document.getElementById('inp-tel-emerg')?.value.trim() || '';
+    
 
     const temDados = dataNasc || tipoSangue || alergias || cpf || cartaoSus || convenio || contatoEmerg || telEmerg;
     if (temDados) {
