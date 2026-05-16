@@ -410,7 +410,7 @@ async function carregarHistorico(membro) {
   content.innerHTML = '<p style="text-align:center;color:#6b7280;padding:20px">Carregando histórico...</p>';
 
   try {
-    const [perfil, meds, sinais, vacinas, eventos, doencas, tratamentos, internacoes, histTEA] = await Promise.all([
+    const [perfil, meds, sinais, vacinas, eventos, doencas, tratamentos, internacoes, dadosTEA] = await Promise.all([
       fetch(`/api/perfil/${membro.id}`).then(r => r.ok ? r.json() : null),
       fetch(`/api/medicamentos/${membro.familia_id}?membro_id=${membro.id}`).then(r => r.json()),
       fetch(`/api/sinais/${membro.id}`).then(r => r.json()),
@@ -419,7 +419,12 @@ async function carregarHistorico(membro) {
       fetch(`/api/historico/doencas/${membro.id}`).then(r => r.json()),
       fetch(`/api/historico/tratamentos/${membro.id}`).then(r => r.json()),
       fetch(`/api/historico/internacoes/${membro.id}`).then(r => r.json()),
-      membro.tipo === 'tea' ? fetch(`/api/historico-tea/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []) : Promise.resolve([],)
+      membro.tipo === 'tea' ? Promise.all([
+        fetch(`/api/historico-tea/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`/api/rotina-tea/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`/api/sinais/${membro.id}?tipo=humor_tea`).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`/api/rotina-tea/crises/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => [])
+      ]) : Promise.resolve([[], [], [], []])
     ]);
 
     const agora = new Date().toLocaleString('pt-BR');
@@ -530,13 +535,37 @@ async function carregarHistorico(membro) {
         </div>`).join('') : '<div class="vazio">Nenhuma internação registrada</div>'}
     </div>`;
 
-    html += membro.tipo === 'tea' && histTEA.length ? `<div class="paciente-card">
-      <div class="card-titulo">🧩 Comunicação TEA</div>
-      ${histTEA.slice(0,20).map(h => {
-        const hora = new Date(h.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
-        return '<div class="info-row"><span style="font-size:20px">' + (h.emoji || '💬') + '</span><div><div style="font-size:13px;font-weight:600">' + h.frase + '</div><div style="font-size:11px;color:#6b7280">' + hora + '</div></div></div>';
-      }).join('')}
-    </div>` : '';
+    if (membro.tipo === 'tea') {
+      const [histComun, rotina, humor, crises] = dadosTEA;
+
+      // Rotina TEA
+      html += '<div class="paciente-card"><div class="card-titulo">📋 Rotina TEA</div>';
+      if (rotina && rotina.length) {
+        html += rotina.map(r => '<div class="info-row"><span style="font-size:20px">' + (r.emoji || '📌') + '</span><div><div style="font-size:13px;font-weight:600">' + r.atividade + '</div><div style="font-size:11px;color:#6b7280">' + (r.hora || '') + ' · ' + (r.concluida ? '✓ Feito' : 'Pendente') + '</div></div></div>').join('');
+      } else { html += '<div class="vazio">Nenhuma atividade cadastrada</div>'; }
+      html += '</div>';
+
+      // Humor TEA
+      html += '<div class="paciente-card"><div class="card-titulo">😊 Humor TEA</div>';
+      if (humor && humor.length) {
+        html += humor.slice(0,10).map(h => '<div class="info-row"><div style="font-size:13px;font-weight:600">' + (h.valor || h.tipo) + '</div><div style="font-size:11px;color:#6b7280">' + new Date(h.criado_em).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'}) + '</div></div>').join('');
+      } else { html += '<div class="vazio">Nenhum humor registrado</div>'; }
+      html += '</div>';
+
+      // Crises TEA
+      html += '<div class="paciente-card"><div class="card-titulo">⚡ Crises TEA</div>';
+      if (crises && crises.length) {
+        html += crises.slice(0,10).map(cr => '<div class="info-row"><div><div style="font-size:13px;font-weight:600">' + (cr.descricao || 'Crise registrada') + '</div><div style="font-size:11px;color:#6b7280">' + new Date(cr.criado_em).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'}) + '</div></div></div>').join('');
+      } else { html += '<div class="vazio">Nenhuma crise registrada</div>'; }
+      html += '</div>';
+
+      // Comunicação TEA
+      html += '<div class="paciente-card"><div class="card-titulo">🧩 Comunicação TEA</div>';
+      if (histComun && histComun.length) {
+        html += histComun.slice(0,20).map(h => '<div class="info-row"><span style="font-size:20px">' + (h.emoji || '💬') + '</span><div><div style="font-size:13px;font-weight:600">' + h.frase + '</div><div style="font-size:11px;color:#6b7280">' + new Date(h.criado_em).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}) + '</div></div></div>').join('');
+      } else { html += '<div class="vazio">Nenhuma comunicação registrada</div>'; }
+      html += '</div>';
+    }
 
     html += `
       <button class="btn-sair" onclick="gerarPDF()" style="margin-bottom:8px;background:#e0f2fe;color:#0369a1">📄 Gerar Relatório PDF</button>
