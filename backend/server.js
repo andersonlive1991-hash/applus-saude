@@ -274,12 +274,14 @@ setInterval(async () => {
       if (!subRes.rows.length) continue;
       const sub = typeof subRes.rows[0].subscription === 'string' ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
 
-      const horaEvento = ev.hora ? ev.hora.substring(0,5) : null;
+      const horaEvento = ev.hora ? ev.hora.toString().substring(0,5) : null;
       if (!horaEvento) continue;
+      // Normalizar data do evento (pode vir como timestamp)
+      const dataEvento = ev.data ? ev.data.toString().split('T')[0] : null;
+      if (!dataEvento) continue;
 
       // 1 hora antes — alarme sonoro + push
-      const [hEv, mEv] = horaEvento.split(':').map(Number);
-      const [hAt, mAt] = horaAtual.split(':').map(Number);
+      const [hEv, mEv] = h      if (dataEvento === hojeFormatado && minutosEvento - minutosAgora === 2) { // TESTE: 2minp(Number);
       const minutosEvento = hEv * 60 + mEv;
       const minutosAgora = hAt * 60 + mAt;
 
@@ -288,9 +290,7 @@ setInterval(async () => {
           titulo: '⏰ Compromisso em 1 hora!',
           corpo: ev.titulo + (ev.local ? ' — ' + ev.local : '') + ' às ' + horaEvento,
           url: '/#agenda',
-          tag: 'evento-1h-' + ev.id
-        });
-        webpush.sendNotification(sub, payload).catch(e => console.log('Erro push evento 1h:', e.message));
+              if (dataEvento === amanhaFormatado && horaAtual === '08:00') {dNotification(sub, payload).catch(e => console.log('Erro push evento 1h:', e.message));
       }
 
       // 1 dia antes — push às 08:00
