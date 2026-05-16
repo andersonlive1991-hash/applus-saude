@@ -952,8 +952,13 @@ async function carregarAgenda() {
 
 async function salvarEvento() {
   const titulo = document.getElementById('ev-titulo').value.trim();
-  const data = document.getElementById('ev-data').value;
-  const hora = document.getElementById('ev-hora').value;
+  const evDia = document.getElementById('ev-data-dia').value;
+  const evMes = document.getElementById('ev-data-mes').value;
+  const evAno = document.getElementById('ev-data-ano').value;
+  const data = (evDia && evMes && evAno) ? evAno + '-' + evMes + '-' + evDia : '';
+  const evH = document.getElementById('ev-hora-h').value;
+  const evM = document.getElementById('ev-hora-m').value;
+  const hora = (evH && evM) ? evH + ':' + evM : '';
   const tipo = document.getElementById('ev-tipo').value;
   const local = document.getElementById('ev-local').value.trim();
 
