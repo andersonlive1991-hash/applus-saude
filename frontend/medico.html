@@ -410,7 +410,7 @@ async function carregarHistorico(membro) {
   content.innerHTML = '<p style="text-align:center;color:#6b7280;padding:20px">Carregando histórico...</p>';
 
   try {
-    const [perfil, meds, sinais, vacinas, eventos, doencas, tratamentos, internacoes] = await Promise.all([
+    const [perfil, meds, sinais, vacinas, eventos, doencas, tratamentos, internacoes, histTEA] = await Promise.all([
       fetch(`/api/perfil/${membro.id}`).then(r => r.ok ? r.json() : null),
       fetch(`/api/medicamentos/${membro.familia_id}?membro_id=${membro.id}`).then(r => r.json()),
       fetch(`/api/sinais/${membro.id}`).then(r => r.json()),
@@ -419,6 +419,7 @@ async function carregarHistorico(membro) {
       fetch(`/api/historico/doencas/${membro.id}`).then(r => r.json()),
       fetch(`/api/historico/tratamentos/${membro.id}`).then(r => r.json()),
       fetch(`/api/historico/internacoes/${membro.id}`).then(r => r.json()),
+      membro.tipo === 'tea' ? fetch(`/api/historico-tea/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []) : Promise.resolve([],)
     ]);
 
     const agora = new Date().toLocaleString('pt-BR');
@@ -528,6 +529,14 @@ async function carregarHistorico(membro) {
           </div>
         </div>`).join('') : '<div class="vazio">Nenhuma internação registrada</div>'}
     </div>`;
+
+    html += membro.tipo === 'tea' && histTEA.length ? `<div class="paciente-card">
+      <div class="card-titulo">🧩 Comunicação TEA</div>
+      ${histTEA.slice(0,20).map(h => {
+        const hora = new Date(h.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+        return '<div class="info-row"><span style="font-size:20px">' + (h.emoji || '💬') + '</span><div><div style="font-size:13px;font-weight:600">' + h.frase + '</div><div style="font-size:11px;color:#6b7280">' + hora + '</div></div></div>';
+      }).join('')}
+    </div>` : '';
 
     html += `
       <button class="btn-sair" onclick="gerarPDF()" style="margin-bottom:8px;background:#e0f2fe;color:#0369a1">📄 Gerar Relatório PDF</button>
