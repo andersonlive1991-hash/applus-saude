@@ -1225,12 +1225,28 @@ async function carregarHistoricoTEA() {
 }
 
 // ── MODAIS ──
+function mostrarIdPessoal() {
+  document.getElementById("escolha-acesso").style.display = "none";
+  document.getElementById("form-id-pessoal").style.display = "block";
+}
+
+function voltarEscolhaAcesso() {
+  document.getElementById("form-id-pessoal").style.display = "none";
+  document.getElementById("escolha-acesso").style.display = "block";
+}
+
 function abrirModal(id) {
   document.getElementById(id).classList.add('aberto');
 }
 
 function fecharModal(id) {
   document.getElementById(id).classList.remove('aberto');
+  if (id === 'modal-recuperar') {
+    const e = document.getElementById('escolha-acesso');
+    const f = document.getElementById('form-id-pessoal');
+    if (e) e.style.display = 'block';
+    if (f) f.style.display = 'none';
+  }
 }
 
 // ── UTILITÁRIOS ──
