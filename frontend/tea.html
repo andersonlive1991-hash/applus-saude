@@ -495,6 +495,20 @@ body {
           <span class="sos-texto">SOCORRO!</span>
           <span class="sos-sub">Toca aqui se precisar de ajuda</span>
         </button>
+        <div class="temporizador-box">
+          <div class="temp-titulo">⏱️ Temporizador Visual</div>
+          <span class="temp-emoji" id="temp-emoji">🟢</span>
+          <div class="temp-tempo" id="temp-tempo">00:00</div>
+          <div class="temp-barra-wrap"><div class="temp-barra" id="temp-barra"></div></div>
+          <div class="temp-botoes">
+            <button class="temp-btn" onclick="definirTempo(1)">1 min</button>
+            <button class="temp-btn" onclick="definirTempo(3)">3 min</button>
+            <button class="temp-btn" onclick="definirTempo(5)">5 min</button>
+            <button class="temp-btn" onclick="definirTempo(10)">10 min</button>
+          </div>
+          <button class="temp-btn-iniciar" id="temp-btn-iniciar" onclick="iniciarTemporizador()">▶ Iniciar</button>
+          <button class="temp-btn-parar" id="temp-btn-parar" onclick="pararTemporizador()">■ Parar</button>
+        </div>
       </div>
 
     </div>
