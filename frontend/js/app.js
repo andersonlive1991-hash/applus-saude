@@ -544,6 +544,90 @@ async function salvarPerfil() {
   }
 }
 
+
+// ── BEM-ESTAR DO CUIDADOR ──
+let beHumor = 0;
+let beEstresse = 0;
+let beTempo = null;
+
+function selecionarHumor(v) {
+  beHumor = v;
+  document.querySelectorAll('.btn-humor').forEach(function(b) {
+    b.classList.toggle('ativo', parseInt(b.dataset.v) === v);
+  });
+}
+
+function selecionarEstresse(v) {
+  beEstresse = v;
+  document.querySelectorAll('.btn-estresse').forEach(function(b) {
+    b.classList.toggle('ativo', parseInt(b.dataset.v) === v);
+  });
+}
+
+function selecionarTempo(v) {
+  beTempo = v;
+  document.getElementById('be-tempo-sim').style.borderColor = v ? '#10b981' : '#e2e8f0';
+  document.getElementById('be-tempo-sim').style.background = v ? '#f0fdf4' : 'white';
+  document.getElementById('be-tempo-nao').style.borderColor = !v ? '#ef4444' : '#e2e8f0';
+  document.getElementById('be-tempo-nao').style.background = !v ? '#fff0f0' : 'white';
+}
+
+async function salvarBemEstar() {
+  if (!beHumor) return alerta('Selecione seu humor de hoje');
+  if (!beEstresse) return alerta('Selecione seu nivel de estresse');
+  const dados = {
+    membro_id: APP.membroId,
+    familia_id: APP.familiaId,
+    humor: beHumor,
+    estresse: beEstresse,
+    sono: parseFloat(document.getElementById('be-sono').value) || null,
+    tempo_proprio: beTempo,
+    anotacao: document.getElementById('be-anotacao').value.trim() || null
+  };
+  try {
+    await api('POST', '/api/bem-estar', dados);
+    alerta('Registro salvo!');
+    beHumor = 0; beEstresse = 0; beTempo = null;
+    document.querySelectorAll('.btn-humor,.btn-estresse').forEach(function(b) { b.classList.remove('ativo'); });
+    document.getElementById('be-sono').value = '';
+    document.getElementById('be-anotacao').value = '';
+    document.getElementById('be-tempo-sim').style.borderColor = '#e2e8f0';
+    document.getElementById('be-tempo-sim').style.background = 'white';
+    document.getElementById('be-tempo-nao').style.borderColor = '#e2e8f0';
+    document.getElementById('be-tempo-nao').style.background = 'white';
+    carregarHistoricoBemEstar();
+  } catch(e) { alerta('Erro ao salvar: ' + e.message); }
+}
+
+async function carregarHistoricoBemEstar() {
+  try {
+    const dados = await api('GET', '/api/bem-estar/' + APP.membroId);
+    const lista = document.getElementById('lista-bem-estar');
+    if (!dados.length) {
+      lista.innerHTML = '<p style="text-align:center;color:#6b7280;font-size:14px">Nenhum registro ainda</p>';
+      return;
+    }
+    const emojisHumor = ['','😢','😕','😐','🙂','😄'];
+    let html = '';
+    dados.forEach(function(d) {
+      const data = new Date(d.criado_em).toLocaleDateString('pt-BR');
+      const tempoStr = d.tempo_proprio === true ? 'Sim' : d.tempo_proprio === false ? 'Nao' : '-';
+      const estresseEmoji = '🔴'.repeat(d.estresse) + '⚪'.repeat(5 - d.estresse);
+      html += '<div style="border-bottom:1px solid #f1f5f9;padding:12px 0">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+      html += '<span style="font-weight:700;color:#1e293b">' + data + '</span>';
+      html += '<span style="font-size:24px">' + emojisHumor[d.humor] + '</span>';
+      html += '</div>';
+      html += '<div style="font-size:13px;color:#6b7280;margin-top:4px">';
+      html += 'Estresse: ' + estresseEmoji + ' | Sono: ' + (d.sono || '-') + 'h | Tempo proprio: ' + tempoStr;
+      html += '</div>';
+      if (d.anotacao) html += '<div style="font-size:13px;color:#374151;margin-top:6px;font-style:italic">' + d.anotacao + '</div>';
+      html += '</div>';
+    });
+    lista.innerHTML = html;
+  } catch(e) {}
+}
+
 function navegarPara(pagina) {
   document.querySelectorAll('.pagina').forEach(p => p.classList.remove('ativa'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
@@ -561,6 +645,7 @@ function navegarPara(pagina) {
   if (pagina === 'chat') carregarChat();
   if (pagina === 'mais') carregarMais();
   if (pagina === 'perfil') carregarPerfil();
+  if (pagina === 'bem-estar') carregarHistoricoBemEstar();
   if (pagina === 'checklist') carregarChecklist();
   if (pagina === 'escala') carregarEscala();
   if (pagina === 'historico') { carregarDoencas(); }
