@@ -49,6 +49,23 @@ app.use('/api/gastos', require('./routes/gastos'));
 app.use('/api/push', require('./routes/push'));
 app.use('/api/ia', require('./routes/ia'));
 app.use('/api/escala', require('./routes/escala'));
+
+// ── ROTA TEMPORÁRIA DE LIMPEZA ──
+app.get('/api/admin/limpar-tudo-agora', async (req, res) => {
+  const tabelas = [
+    'perfil_idoso','perfil_cuidador','push_subscriptions',
+    'medicamentos','agenda','sinais_vitais','vacinas','financeiro',
+    'checklist','escala_cuidado','rotina_tea','historico_comunicacao_tea',
+    'crises_tea','humor_tea','chat_mensagens','cuidados','membros','familias'
+  ];
+  const log = [];
+  for (const t of tabelas) {
+    try { await db.query('DELETE FROM ' + t); log.push('OK: ' + t); }
+    catch(e) { log.push('SKIP: ' + t + ' — ' + e.message); }
+  }
+  res.json({ ok: true, log });
+});
+
 app.use('/api/perfil', require('./routes/perfil'));
 app.use('/api/perfil-cuidador', require('./routes/perfil_cuidador'));
 app.use('/api/qrcode', require('./routes/qrcode'));
