@@ -41,7 +41,7 @@ html, body {
 .pagina.ativa { display: flex; }
 #pag-chat.ativa { display: flex; flex-direction: column; height: calc(100vh - 70px); padding-bottom: 60px; overflow: hidden; }
 #pag-chat.ativa .chat-mensagens { flex: 1; min-height: 0; overflow-y: auto; }
-#pag-chat.ativa .chat-input { position: fixed; bottom: 70px; left: 0; right: 0; max-width: 480px; margin: 0 auto; z-index: 10; background: white; }
+#pag-chat.ativa .chat-input, #pag-ia.ativa .chat-input { position: fixed; bottom: 70px; left: 0; right: 0; max-width: 480px; margin: 0 auto; z-index: 10; background: white; }
 
 /* ── HEADER VERDE ── */
 .header-verde {
