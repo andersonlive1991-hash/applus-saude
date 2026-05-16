@@ -52,6 +52,7 @@ app.use('/api/escala', require('./routes/escala'));
 
 // ── ROTA TEMPORÁRIA DE LIMPEZA ──
 app.get('/api/admin/limpar-tudo-agora', async (req, res) => {
+  const _db = require('./db');
   const tabelas = [
     'perfil_idoso','perfil_cuidador','push_subscriptions',
     'medicamentos','agenda','sinais_vitais','vacinas','financeiro',
@@ -60,7 +61,7 @@ app.get('/api/admin/limpar-tudo-agora', async (req, res) => {
   ];
   const log = [];
   for (const t of tabelas) {
-    try { await db.query('DELETE FROM ' + t); log.push('OK: ' + t); }
+    try { await _db.query('DELETE FROM ' + t); log.push('OK: ' + t); }
     catch(e) { log.push('SKIP: ' + t + ' — ' + e.message); }
   }
   res.json({ ok: true, log });
