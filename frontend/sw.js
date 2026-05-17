@@ -1,4 +1,4 @@
-const CACHE = 'applus-v14';
+const CACHE = 'applus-v15';
 const ARQUIVOS = [
   '/', '/index.html', '/css/style.css',
   '/js/app.js', '/js/modulos.js', '/manifest.json'
@@ -32,7 +32,19 @@ self.addEventListener('push', e => {
 
   if (isMed || isEvento) {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(lista => {
-      lista.forEach(c => c.postMessage({ tipo: 'tocar-alarme' }));
+      lista.forEach(c => {
+        c.postMessage({ tipo: 'tocar-alarme' });
+        c.postMessage({ tipo: 'alarme-push', dados: {
+          medicamento: isMed,
+          alarme: isEvento,
+          eventoNome: data.eventoNome || '',
+          corpo: corpo,
+          titulo: titulo,
+          medId: data.medId,
+          medNome: data.medNome,
+          url: data.url || '/'
+        }});
+      });
     });
   }
 
