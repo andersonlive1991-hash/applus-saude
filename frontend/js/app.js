@@ -306,14 +306,14 @@ async function criarFamilia() {
         tel_emergencia: telEmerg !== '' ? telEmerg : null
       };
       try {
-        alerta('Enviando: ' + JSON.stringify(dadosPerfil).substring(0, 100));
+        
       const respPerfil = await fetch('/api/perfil', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(dadosPerfil)
         });
         const jsonPerfil = await respPerfil.json();
-        alerta('Resposta: ' + JSON.stringify(jsonPerfil).substring(0, 100));
+        
       } catch(ep) {
         console.log('Erro perfil:', ep.message);
       }
