@@ -1212,7 +1212,9 @@ async function confirmarExcluirMembro(membroId, nome) {
       sair();
     } else {
       // Excluiu outro perfil — atualiza a lista sem sair
-      excluirPerfil();
+        const membros = await api('GET', '/api/membros/familia/' + APP.familiaId);
+        const lista = document.getElementById('lista-excluir-perfis');
+        lista.innerHTML = membros.map(m => '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;border:1px solid #eee;border-radius:8px;margin-bottom:0.5rem"><div><strong>' + m.nome.split(' ')[0] + '</strong><span style="font-size:0.8rem;color:#999;margin-left:0.5rem">' + m.tipo + '</span></div><button onclick="confirmarExcluirMembro(' + m.id + ', \'' + m.nome.split(' ')[0] + '\')" style="background:#fff0f0;color:#e74c3c;border:1px solid #e74c3c;border-radius:6px;padding:0.3rem 0.7rem;cursor:pointer">Excluir</button></div>').join('');
     }
   } catch(e) {
     alerta('Erro ao excluir perfil: ' + e.message);
