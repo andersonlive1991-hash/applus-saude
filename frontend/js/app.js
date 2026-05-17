@@ -1884,7 +1884,7 @@ function trocarAbaMeuDia(aba) {
 
 async function iniciarMeuDia() {
   try {
-    const perfil = await api('GET', '/api/perfil/' + APP.membroAtivo.id);
+    const perfil = await api('GET', '/api/perfil/' + APP.membroId);
     if (perfil && !perfil.erro) {
       meudiaMetaAgua = perfil.meta_agua || 8;
       meudiaMetaRefeicoes = perfil.meta_refeicoes || 3;
@@ -1939,7 +1939,7 @@ async function meudiaRegistrarAgua(qtd) {
     var totalAtual = parseInt(document.getElementById('meudia-total-agua').textContent) || 0;
     var novoTotal = Math.max(0, totalAtual + qtd);
     await api('POST', '/api/cuidados/hidratacao', {
-      familia_id: APP.familiaId, membro_id: APP.membroAtivo.id, copos: qtd
+      familia_id: APP.familiaId, membro_id: APP.membroId, copos: qtd
     });
     await meudiaCarregarAgua();
     if (novoTotal >= meudiaMetaAgua) alerta('💧 Meta de hidratação atingida! Parabéns!');
@@ -1964,7 +1964,7 @@ async function meudiaCarregarRefeicoes() {
 async function meudiaRegistrarRefeicao(tipo) {
   try {
     await api('POST', '/api/cuidados/refeicao', {
-      familia_id: APP.familiaId, membro_id: APP.membroAtivo.id,
+      familia_id: APP.familiaId, membro_id: APP.membroId,
       tipo: tipo, quantidade: 'Tudo', obs: ''
     });
     alerta('✅ ' + tipo + ' registrado!');
@@ -2007,7 +2007,7 @@ async function meudiaRegistrarSono() {
   if (!inicio || !fim) return alerta('Selecione os horários');
   try {
     await api('POST', '/api/cuidados/sono', {
-      familia_id: APP.familiaId, membro_id: APP.membroAtivo.id,
+      familia_id: APP.familiaId, membro_id: APP.membroId,
       inicio: inicio, fim: fim, qualidade: qualidade, obs: ''
     });
     alerta('✅ Sono registrado!');
@@ -2037,7 +2037,7 @@ async function meudiaRegistrarAtividade() {
   if (!duracao) return alerta('Informe a duração');
   try {
     await api('POST', '/api/cuidados/atividade', {
-      familia_id: APP.familiaId, membro_id: APP.membroAtivo.id,
+      familia_id: APP.familiaId, membro_id: APP.membroId,
       tipo: tipo, duracao: duracao, obs: obs, hora: ''
     });
     document.getElementById('meudia-atv-duracao').value = '';
@@ -2061,7 +2061,7 @@ async function meudiaRegistrarHumor() {
   var obs = document.getElementById('meudia-humor-obs').value.trim();
   try {
     await api('POST', '/api/cuidados/humor', {
-      familia_id: APP.familiaId, membro_id: APP.membroAtivo.id,
+      familia_id: APP.familiaId, membro_id: APP.membroId,
       humor: meudiaHumorAtual, obs: obs
     });
     document.getElementById('meudia-humor-obs').value = '';
