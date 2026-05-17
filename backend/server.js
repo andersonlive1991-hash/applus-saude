@@ -49,6 +49,7 @@ app.use('/api/gastos', require('./routes/gastos'));
 app.use('/api/push', require('./routes/push'));
 app.use('/api/ia', require('./routes/ia'));
 app.use('/api/escala', require('./routes/escala'));
+app.use('/api/mente-sa', require('./routes/mente-sa'));
 const rateLimit = require('express-rate-limit');
 
 // Rate limiting — proteção contra força bruta
