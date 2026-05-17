@@ -545,7 +545,7 @@ async function salvarPerfil() {
     });
     alerta('✅ Perfil salvo com sucesso!');
   } catch(e) {
-    alerta('Erro ao salvar perfil.');
+    alerta('Erro ao salvar perfil: ' + e.message);
   }
 }
 
