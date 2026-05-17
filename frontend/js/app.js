@@ -537,7 +537,8 @@ async function salvarPerfil() {
     contato_emergencia: document.getElementById('pf-contato').value.trim() || null,
     tel_emergencia: document.getElementById('pf-tel').value.trim() || null
   };
-  alerta('membroAtivo: ' + JSON.stringify(APP.membroAtivo));
+  console.log('membroAtivo:', JSON.stringify(APP.membroAtivo));
+  console.log('dados:', JSON.stringify(dados));
   try {
     const resp = await fetch('/api/perfil', {
       method: 'POST',
