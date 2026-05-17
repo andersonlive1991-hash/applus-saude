@@ -84,6 +84,10 @@ async function registrarSW() {
         if (e.data && e.data.tipo === 'parar-alarme') pararSomAlarme();
         if (e.data && e.data.tipo === 'alarme-push') {
           const dados = e.data.dados;
+          if (dados && dados.alarme && !dados.medicamento) {
+            // Alarme de evento
+            dispararAlarmeEvento(dados.eventoNome || dados.titulo || 'Evento', dados.corpo || '');
+          }
           if (dados && dados.medicamento) {
             // Aguarda o app carregar completamente antes de disparar
             const tentarDisparar = (tentativas) => {
@@ -868,6 +872,21 @@ async function verificarAlarmes() {
   } catch (e) {
     console.log('Erro alarmes:', e);
   }
+}
+
+function dispararAlarmeEvento(titulo, corpo) {
+  iniciarSomAlarme();
+  falarAlarme('Atenção! ' + titulo + ' em 1 minuto. ' + (corpo || ''));
+  // Toast visual
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a9e6e;color:white;padding:1rem 1.5rem;border-radius:16px;z-index:9999;font-size:1rem;font-weight:600;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:90vw';
+  toast.innerHTML = '📅 ' + titulo + '<br><span style="font-size:0.85rem;font-weight:400">' + (corpo || '') + '</span>';
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.transition = 'opacity 0.5s';
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  }, 8000);
 }
 
 function dispararAlarme(med) {
