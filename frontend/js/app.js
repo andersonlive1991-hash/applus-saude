@@ -248,6 +248,7 @@ async function _salvarMembro(nome, tipo) {
     });
     document.getElementById('add-mem-nome').value = '';
     APP._membroNomePendente = null;
+    fecharModal('modal-add-membro');
     mostrarSelecaoPerfil();
   } catch (e) {
     alerta('Erro ao adicionar membro');
