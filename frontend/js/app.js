@@ -1204,11 +1204,14 @@ async function confirmarExcluirMembro(membroId, nome) {
   if (!confirm('Tem certeza que deseja excluir o perfil de ' + nome + '? Esta ação não pode ser desfeita.')) return;
   try {
     await api('DELETE', '/api/membros/' + membroId);
-    fecharModal('modal-excluir-perfil');
     alerta('Perfil de ' + nome + ' excluído com sucesso!');
     // Se excluiu o próprio perfil, sair
     if (membroId == APP.membroId) {
+      fecharModal('modal-excluir-perfil');
       sair();
+    } else {
+      // Excluiu outro perfil — atualiza a lista sem sair
+      excluirPerfil();
     }
   } catch(e) {
     alerta('Erro ao excluir perfil: ' + e.message);
