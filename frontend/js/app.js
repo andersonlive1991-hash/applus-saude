@@ -650,6 +650,7 @@ function navegarPara(pagina) {
   if (pagina === 'checklist') carregarChecklist();
   if (pagina === 'escala') carregarEscala();
   if (pagina === 'historico') { carregarDoencas(); }
+  if (pagina === 'meu-dia') iniciarMeuDia();
   if (pagina === 'cuidados') {
     if (APP.membroTipo === 'cuidador') {
       // Cuidador vê formulários para registrar
@@ -1863,4 +1864,228 @@ async function carregarFeedCuidados() {
   } catch(e) {
     el.innerHTML = '<p style="text-align:center;color:#999">Erro ao carregar registros.</p>';
   }
+}
+
+
+// ── MEU DIA ──
+let meudiaHumorAtual = null;
+let meudiaMetaAgua = 8;
+let meudiaMetaRefeicoes = 3;
+let meudiaMetaSono = 8;
+let meudiaMetaAtividades = 1;
+
+function trocarAbaMeuDia(aba) {
+  ['agua','refeicao','sono','atividade','humor'].forEach(function(a) {
+    document.getElementById('meudia-' + a).style.display = a === aba ? 'block' : 'none';
+    var btn = document.getElementById('aba-meudia-' + a);
+    if (btn) btn.classList.toggle('ativa', a === aba);
+  });
+}
+
+async function iniciarMeuDia() {
+  try {
+    const perfil = await api('GET', '/api/perfil/' + APP.membroAtivo.id);
+    if (perfil && !perfil.erro) {
+      meudiaMetaAgua = perfil.meta_agua || 8;
+      meudiaMetaRefeicoes = perfil.meta_refeicoes || 3;
+      meudiaMetaSono = perfil.meta_sono || 8;
+      meudiaMetaAtividades = perfil.meta_atividades || 1;
+    }
+  } catch(e) {}
+
+  // Preencher selects de hora do sono
+  var opts = '<option value="">Selecione</option>';
+  for (var h = 0; h < 24; h++) {
+    for (var m = 0; m < 60; m += 30) {
+      var hh = String(h).padStart(2,'0');
+      var mm = String(m).padStart(2,'0');
+      opts += '<option value="' + hh + ':' + mm + '">' + hh + ':' + mm + '</option>';
+    }
+  }
+  document.getElementById('meudia-sono-inicio').innerHTML = opts;
+  document.getElementById('meudia-sono-fim').innerHTML = opts;
+
+  document.getElementById('meudia-meta-agua').textContent = meudiaMetaAgua;
+  await meudiaCarregarAgua();
+  await meudiaCarregarRefeicoes();
+  await meudiaCarregarSono();
+  await meudiaCarregarAtividades();
+  await meudiaCarregarHumor();
+}
+
+function meudiaAtualizarBarra(idBarra, idLabel, atual, meta, cor, unidade) {
+  var pct = Math.min(100, Math.round((atual / meta) * 100));
+  document.getElementById(idBarra).style.width = pct + '%';
+  document.getElementById(idBarra).style.background = cor;
+  if (idLabel) {
+    var label = pct >= 100 ? '✅ Meta atingida!' : atual + ' de ' + meta + ' ' + unidade;
+    document.getElementById(idLabel).textContent = label;
+  }
+}
+
+// ÁGUA
+async function meudiaCarregarAgua() {
+  try {
+    const dados = await api('GET', '/api/cuidados/hidratacao/' + APP.familiaId);
+    var total = dados.total || 0;
+    document.getElementById('meudia-total-agua').textContent = total;
+    document.getElementById('meudia-meta-agua').textContent = meudiaMetaAgua;
+    meudiaAtualizarBarra('meudia-barra-agua', null, total, meudiaMetaAgua, '#2563eb', 'copos');
+  } catch(e) {}
+}
+
+async function meudiaRegistrarAgua(qtd) {
+  try {
+    var totalAtual = parseInt(document.getElementById('meudia-total-agua').textContent) || 0;
+    var novoTotal = Math.max(0, totalAtual + qtd);
+    await api('POST', '/api/cuidados/hidratacao', {
+      familia_id: APP.familiaId, membro_id: APP.membroAtivo.id, copos: qtd
+    });
+    await meudiaCarregarAgua();
+    if (novoTotal >= meudiaMetaAgua) alerta('💧 Meta de hidratação atingida! Parabéns!');
+  } catch(e) { alerta('Erro ao registrar água'); }
+}
+
+// REFEIÇÕES
+async function meudiaCarregarRefeicoes() {
+  try {
+    const lista = await api('GET', '/api/cuidados/refeicoes/' + APP.familiaId);
+    meudiaAtualizarBarra('meudia-barra-refeicao', 'meudia-label-refeicao', lista.length, meudiaMetaRefeicoes, '#10b981', 'refeições');
+    var el = document.getElementById('meudia-lista-refeicao');
+    if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhuma refeição registrada hoje.</p>'; return; }
+    el.innerHTML = lista.map(function(r) {
+      return '<div style="background:white;border-radius:12px;padding:0.75rem;margin-bottom:0.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
+        '<div style="font-weight:600">' + r.tipo + '</div>' +
+        '<div style="font-size:0.85rem;color:#666">' + (r.obs || '') + '</div></div>';
+    }).join('');
+  } catch(e) {}
+}
+
+async function meudiaRegistrarRefeicao(tipo) {
+  try {
+    await api('POST', '/api/cuidados/refeicao', {
+      familia_id: APP.familiaId, membro_id: APP.membroAtivo.id,
+      tipo: tipo, quantidade: 'Tudo', obs: ''
+    });
+    alerta('✅ ' + tipo + ' registrado!');
+    await meudiaCarregarRefeicoes();
+  } catch(e) { alerta('Erro ao registrar refeição'); }
+}
+
+// SONO
+async function meudiaCarregarSono() {
+  try {
+    const lista = await api('GET', '/api/cuidados/sono/' + APP.familiaId);
+    var totalHoras = 0;
+    if (lista.length) {
+      lista.forEach(function(s) {
+        if (s.inicio && s.fim) {
+          var ini = s.inicio.split(':');
+          var fim = s.fim.split(':');
+          var diff = (parseInt(fim[0]) * 60 + parseInt(fim[1])) - (parseInt(ini[0]) * 60 + parseInt(ini[1]));
+          if (diff < 0) diff += 24 * 60;
+          totalHoras += diff / 60;
+        }
+      });
+    }
+    totalHoras = Math.round(totalHoras * 10) / 10;
+    meudiaAtualizarBarra('meudia-barra-sono', 'meudia-label-sono', totalHoras, meudiaMetaSono, '#8b5cf6', 'horas dormidas');
+    var el = document.getElementById('meudia-lista-sono');
+    if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhum sono registrado hoje.</p>'; return; }
+    el.innerHTML = lista.map(function(s) {
+      return '<div style="background:white;border-radius:12px;padding:0.75rem;margin-bottom:0.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
+        '<div style="font-weight:600">😴 ' + (s.qualidade || '') + '</div>' +
+        '<div style="font-size:0.85rem;color:#666">Dormiu: ' + (s.inicio || '--') + ' | Acordou: ' + (s.fim || '--') + '</div></div>';
+    }).join('');
+  } catch(e) {}
+}
+
+async function meudiaRegistrarSono() {
+  var inicio = document.getElementById('meudia-sono-inicio').value;
+  var fim = document.getElementById('meudia-sono-fim').value;
+  var qualidade = document.getElementById('meudia-sono-qualidade').value;
+  if (!inicio || !fim) return alerta('Selecione os horários');
+  try {
+    await api('POST', '/api/cuidados/sono', {
+      familia_id: APP.familiaId, membro_id: APP.membroAtivo.id,
+      inicio: inicio, fim: fim, qualidade: qualidade, obs: ''
+    });
+    alerta('✅ Sono registrado!');
+    await meudiaCarregarSono();
+  } catch(e) { alerta('Erro ao registrar sono'); }
+}
+
+// ATIVIDADE
+async function meudiaCarregarAtividades() {
+  try {
+    const lista = await api('GET', '/api/cuidados/atividades/' + APP.familiaId);
+    meudiaAtualizarBarra('meudia-barra-atividade', 'meudia-label-atividade', lista.length, meudiaMetaAtividades, '#f59e0b', 'atividades');
+    var el = document.getElementById('meudia-lista-atividade');
+    if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhuma atividade registrada hoje.</p>'; return; }
+    el.innerHTML = lista.map(function(a) {
+      return '<div style="background:white;border-radius:12px;padding:0.75rem;margin-bottom:0.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
+        '<div style="font-weight:600">' + a.tipo + (a.duracao ? ' — ' + a.duracao + ' min' : '') + '</div>' +
+        '<div style="font-size:0.85rem;color:#666">' + (a.obs || '') + '</div></div>';
+    }).join('');
+  } catch(e) {}
+}
+
+async function meudiaRegistrarAtividade() {
+  var tipo = document.getElementById('meudia-atv-tipo').value;
+  var duracao = document.getElementById('meudia-atv-duracao').value;
+  var obs = document.getElementById('meudia-atv-obs').value.trim();
+  if (!duracao) return alerta('Informe a duração');
+  try {
+    await api('POST', '/api/cuidados/atividade', {
+      familia_id: APP.familiaId, membro_id: APP.membroAtivo.id,
+      tipo: tipo, duracao: duracao, obs: obs, hora: ''
+    });
+    document.getElementById('meudia-atv-duracao').value = '';
+    document.getElementById('meudia-atv-obs').value = '';
+    alerta('✅ Atividade registrada!');
+    await meudiaCarregarAtividades();
+  } catch(e) { alerta('Erro ao registrar atividade'); }
+}
+
+// HUMOR
+function meudiaHumor(valor) {
+  meudiaHumorAtual = valor;
+  document.querySelectorAll('#meudia-humor .emoji-humor').forEach(function(el) {
+    el.style.background = el.dataset.valor === valor ? '#e8f5e9' : '';
+    el.style.border = el.dataset.valor === valor ? '2px solid #10b981' : '2px solid transparent';
+  });
+}
+
+async function meudiaRegistrarHumor() {
+  if (!meudiaHumorAtual) return alerta('Selecione como você está');
+  var obs = document.getElementById('meudia-humor-obs').value.trim();
+  try {
+    await api('POST', '/api/cuidados/humor', {
+      familia_id: APP.familiaId, membro_id: APP.membroAtivo.id,
+      humor: meudiaHumorAtual, obs: obs
+    });
+    document.getElementById('meudia-humor-obs').value = '';
+    meudiaHumorAtual = null;
+    document.querySelectorAll('#meudia-humor .emoji-humor').forEach(function(el) {
+      el.style.background = '';
+      el.style.border = '2px solid transparent';
+    });
+    alerta('✅ Humor registrado!');
+    await meudiaCarregarHumor();
+  } catch(e) { alerta('Erro ao registrar humor'); }
+}
+
+async function meudiaCarregarHumor() {
+  try {
+    const lista = await api('GET', '/api/cuidados/humor/' + APP.familiaId);
+    var el = document.getElementById('meudia-lista-humor');
+    var emojis = { otimo:'😄', bem:'🙂', regular:'😐', mal:'😔', pessimo:'😢' };
+    if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhum humor registrado hoje.</p>'; return; }
+    el.innerHTML = lista.map(function(h) {
+      return '<div style="background:white;border-radius:12px;padding:0.75rem;margin-bottom:0.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:0.75rem">' +
+        '<div style="font-size:2rem">' + (emojis[h.humor] || '😐') + '</div>' +
+        '<div><div style="font-weight:600;text-transform:capitalize">' + h.humor + '</div>' +
+        '<div style="font-size:0.85rem;color:#666">' + (h.obs || '') + '</div></div></div>';
+    }).join('');
+  } catch(e) {}
 }

@@ -157,7 +157,12 @@
       <div class="card" onclick="navegarPara('cuidados')">
         <div class="card-icone">📋</div>
         <div class="card-titulo">Cuidados</div>
-        <div class="card-sub">Registro do plantão</div>
+        <div class="card-sub">Cuidados do idoso</div>
+      </div>
+      <div class="card" onclick="navegarPara('meu-dia')">
+        <div class="card-icone">💚</div>
+        <div class="card-titulo">Meu Dia</div>
+        <div class="card-sub">Autocuidado pessoal</div>
       </div>
       <div class="card" id="card-tea" onclick="navegarPara('tea')" style="display:none">
         <div class="card-icone">🧩</div>
@@ -843,6 +848,153 @@
         <div class="campo"><label>O que aconteceu</label><textarea id="inter-obs" rows="3" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem" placeholder="Descreva o que aconteceu e como foi tratado..."></textarea></div>
         <button class="btn btn-block" onclick="salvarIntercorrencia()" style="background:#e74c3c;color:white">🚨 Registrar e alertar família</button>
         <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-nova-intercorrencia')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MEU DIA ── -->
+  <div id="pag-meu-dia" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#064e3b,#059669,#34d399)">
+      <h1>💚 Meu Dia</h1>
+      <p>Autocuidado pessoal</p>
+    </div>
+    <div class="curva"></div>
+    <div class="conteudo">
+
+      <!-- Cards de progresso -->
+      <div id="meudia-resumo" style="margin-bottom:1rem"></div>
+
+      <!-- Abas -->
+      <div style="display:flex;gap:0.4rem;overflow-x:auto;margin-bottom:1rem;padding-bottom:0.5rem">
+        <button class="btn-aba ativa" id="aba-meudia-agua" onclick="trocarAbaMeuDia('agua')">💧 Água</button>
+        <button class="btn-aba" id="aba-meudia-refeicao" onclick="trocarAbaMeuDia('refeicao')">🍽️ Refeições</button>
+        <button class="btn-aba" id="aba-meudia-sono" onclick="trocarAbaMeuDia('sono')">😴 Sono</button>
+        <button class="btn-aba" id="aba-meudia-atividade" onclick="trocarAbaMeuDia('atividade')">🚶 Atividade</button>
+        <button class="btn-aba" id="aba-meudia-humor" onclick="trocarAbaMeuDia('humor')">😊 Humor</button>
+      </div>
+
+      <!-- Água -->
+      <div id="meudia-agua">
+        <div style="background:white;border-radius:16px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center">
+          <div style="font-size:3rem;font-weight:bold;color:#2563eb" id="meudia-total-agua">0</div>
+          <div style="color:#666;margin-bottom:1rem">copos hoje (meta: <span id="meudia-meta-agua">8</span>)</div>
+          <div style="background:#f0f0f0;border-radius:99px;height:12px;overflow:hidden;margin-bottom:1rem">
+            <div id="meudia-barra-agua" style="height:12px;border-radius:99px;background:#2563eb;width:0%;transition:width 0.5s"></div>
+          </div>
+          <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap">
+            <button onclick="meudiaRegistrarAgua(1)" class="btn btn-verde">+ 1 copo</button>
+            <button onclick="meudiaRegistrarAgua(2)" class="btn btn-verde">+ 2 copos</button>
+            <button onclick="meudiaRegistrarAgua(-1)" class="btn" style="background:#fff0f0;color:#e74c3c;border:1px solid #e74c3c">- 1 copo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Refeições -->
+      <div id="meudia-refeicao" style="display:none">
+        <div style="background:white;border-radius:16px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+          <div style="background:#f0f0f0;border-radius:99px;height:12px;overflow:hidden;margin-bottom:0.5rem">
+            <div id="meudia-barra-refeicao" style="height:12px;border-radius:99px;background:#10b981;width:0%;transition:width 0.5s"></div>
+          </div>
+          <div style="color:#666;font-size:0.85rem;margin-bottom:1rem" id="meudia-label-refeicao">0 de 3 refeições</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+            <button onclick="meudiaRegistrarRefeicao('Café da manhã')" class="btn btn-verde">☀️ Café da manhã</button>
+            <button onclick="meudiaRegistrarRefeicao('Almoço')" class="btn btn-verde">🌤️ Almoço</button>
+            <button onclick="meudiaRegistrarRefeicao('Lanche')" class="btn btn-verde">🍎 Lanche</button>
+            <button onclick="meudiaRegistrarRefeicao('Jantar')" class="btn btn-verde">🌙 Jantar</button>
+          </div>
+        </div>
+        <div id="meudia-lista-refeicao"></div>
+      </div>
+
+      <!-- Sono -->
+      <div id="meudia-sono" style="display:none">
+        <div style="background:white;border-radius:16px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+          <div style="background:#f0f0f0;border-radius:99px;height:12px;overflow:hidden;margin-bottom:0.5rem">
+            <div id="meudia-barra-sono" style="height:12px;border-radius:99px;background:#8b5cf6;width:0%;transition:width 0.5s"></div>
+          </div>
+          <div style="color:#666;font-size:0.85rem;margin-bottom:1rem" id="meudia-label-sono">0 de 8h dormidas</div>
+          <div class="campo"><label>Dormiu às</label>
+            <select id="meudia-sono-inicio">
+              <option value="">Selecione</option>
+            </select>
+          </div>
+          <div class="campo"><label>Acordou às</label>
+            <select id="meudia-sono-fim">
+              <option value="">Selecione</option>
+            </select>
+          </div>
+          <div class="campo"><label>Qualidade</label>
+            <select id="meudia-sono-qualidade">
+              <option value="Ótimo">😴 Ótimo</option>
+              <option value="Bom">🙂 Bom</option>
+              <option value="Regular">😐 Regular</option>
+              <option value="Ruim">😔 Ruim</option>
+            </select>
+          </div>
+          <button class="btn btn-verde btn-block" onclick="meudiaRegistrarSono()">💾 Salvar sono</button>
+        </div>
+        <div id="meudia-lista-sono"></div>
+      </div>
+
+      <!-- Atividade -->
+      <div id="meudia-atividade" style="display:none">
+        <div style="background:white;border-radius:16px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+          <div style="background:#f0f0f0;border-radius:99px;height:12px;overflow:hidden;margin-bottom:0.5rem">
+            <div id="meudia-barra-atividade" style="height:12px;border-radius:99px;background:#f59e0b;width:0%;transition:width 0.5s"></div>
+          </div>
+          <div style="color:#666;font-size:0.85rem;margin-bottom:1rem" id="meudia-label-atividade">0 de 1 atividade</div>
+          <div class="campo"><label>Tipo de atividade</label>
+            <select id="meudia-atv-tipo">
+              <option value="Caminhada">🚶 Caminhada</option>
+              <option value="Corrida">🏃 Corrida</option>
+              <option value="Musculação">💪 Musculação</option>
+              <option value="Alongamento">🧘 Alongamento</option>
+              <option value="Fisioterapia">🏥 Fisioterapia</option>
+              <option value="Natação">🏊 Natação</option>
+              <option value="Ciclismo">🚴 Ciclismo</option>
+              <option value="Outro">⚡ Outro</option>
+            </select>
+          </div>
+          <div class="campo"><label>Duração (minutos)</label>
+            <input id="meudia-atv-duracao" type="number" min="1" max="300" placeholder="30">
+          </div>
+          <div class="campo"><label>Observação</label>
+            <input id="meudia-atv-obs" type="text" placeholder="Como foi?">
+          </div>
+          <button class="btn btn-verde btn-block" onclick="meudiaRegistrarAtividade()">💾 Salvar atividade</button>
+        </div>
+        <div id="meudia-lista-atividade"></div>
+      </div>
+
+      <!-- Humor -->
+      <div id="meudia-humor" style="display:none">
+        <div style="background:white;border-radius:16px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+          <p style="font-weight:600;text-align:center;margin-bottom:1rem">Como você está hoje?</p>
+          <div style="display:flex;justify-content:space-around;margin-bottom:1rem">
+            <div onclick="meudiaHumor('otimo')" class="emoji-humor" data-valor="otimo" style="text-align:center;cursor:pointer;padding:0.5rem;border-radius:8px">
+              <div style="font-size:2.5rem">😄</div><div style="font-size:0.75rem">Ótimo</div>
+            </div>
+            <div onclick="meudiaHumor('bem')" class="emoji-humor" data-valor="bem" style="text-align:center;cursor:pointer;padding:0.5rem;border-radius:8px">
+              <div style="font-size:2.5rem">🙂</div><div style="font-size:0.75rem">Bem</div>
+            </div>
+            <div onclick="meudiaHumor('regular')" class="emoji-humor" data-valor="regular" style="text-align:center;cursor:pointer;padding:0.5rem;border-radius:8px">
+              <div style="font-size:2.5rem">😐</div><div style="font-size:0.75rem">Regular</div>
+            </div>
+            <div onclick="meudiaHumor('mal')" class="emoji-humor" data-valor="mal" style="text-align:center;cursor:pointer;padding:0.5rem;border-radius:8px">
+              <div style="font-size:2.5rem">😔</div><div style="font-size:0.75rem">Mal</div>
+            </div>
+            <div onclick="meudiaHumor('pessimo')" class="emoji-humor" data-valor="pessimo" style="text-align:center;cursor:pointer;padding:0.5rem;border-radius:8px">
+              <div style="font-size:2.5rem">😢</div><div style="font-size:0.75rem">Péssimo</div>
+            </div>
+          </div>
+          <textarea id="meudia-humor-obs" placeholder="Como você está se sentindo?" rows="2" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem"></textarea>
+          <button class="btn btn-verde btn-block" style="margin-top:0.75rem" onclick="meudiaRegistrarHumor()">💾 Salvar humor</button>
+        </div>
+        <div id="meudia-lista-humor"></div>
+      </div>
+
+      <div class="secao">
+        <button class="btn btn-cinza btn-block" onclick="navegarPara('inicio')">← Voltar</button>
       </div>
     </div>
   </div>
