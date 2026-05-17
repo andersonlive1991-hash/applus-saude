@@ -252,12 +252,14 @@ setInterval(async () => {
     const proximoMinuto = new Date(agora.getTime() + 60000);
     const horaProxima = String(proximoMinuto.getHours()).padStart(2,'0') + ':' + String(proximoMinuto.getMinutes()).padStart(2,'0');
 
+    console.log('Agendador eventos — data:', dataAtual, 'horaProxima:', horaProxima);
     const eventos = await pool.query(
       `SELECT e.*, m.nome as membro_nome FROM eventos e
        JOIN membros m ON m.id = e.membro_id
        WHERE e.data = $1 AND SUBSTRING(e.hora, 1, 5) = $2`,
       [dataAtual, horaProxima]
     );
+    console.log('Eventos encontrados:', eventos.rows.length);
 
     for (const ev of eventos.rows) {
       const subRes = await pool.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [ev.membro_id]);
