@@ -538,12 +538,17 @@ async function salvarPerfil() {
     tel_emergencia: document.getElementById('pf-tel').value.trim() || null
   };
   try {
-    await fetch('/api/perfil', {
+    const resp = await fetch('/api/perfil', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dados)
     });
-    alerta('✅ Perfil salvo com sucesso!');
+    const json = await resp.json();
+    if (json.erro) {
+      alerta('Erro: ' + json.erro);
+    } else {
+      alerta('✅ Perfil salvo com sucesso!');
+    }
   } catch(e) {
     alerta('Erro ao salvar perfil: ' + e.message);
   }
