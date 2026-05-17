@@ -516,10 +516,6 @@ async function carregarPerfil() {
     document.getElementById('pf-convenio').value = p.convenio || '';
     document.getElementById('pf-contato').value = p.contato_emergencia || '';
     document.getElementById('pf-tel').value = p.tel_emergencia || '';
-    document.getElementById('pf-meta-agua').value = p.meta_agua || 8;
-    document.getElementById('pf-meta-refeicoes').value = p.meta_refeicoes || 3;
-    document.getElementById('pf-meta-sono').value = p.meta_sono || 8;
-    document.getElementById('pf-meta-atividades').value = p.meta_atividades || 1;
   } catch(e) {}
 }
 
@@ -535,11 +531,7 @@ async function salvarPerfil() {
     cartao_sus: document.getElementById('pf-sus').value.trim() || null,
     convenio: document.getElementById('pf-convenio').value.trim() || null,
     contato_emergencia: document.getElementById('pf-contato').value.trim() || null,
-    tel_emergencia: document.getElementById('pf-tel').value.trim() || null,
-    meta_agua: parseInt(document.getElementById('pf-meta-agua').value) || 8,
-    meta_refeicoes: parseInt(document.getElementById('pf-meta-refeicoes').value) || 3,
-    meta_sono: parseFloat(document.getElementById('pf-meta-sono').value) || 8,
-    meta_atividades: parseInt(document.getElementById('pf-meta-atividades').value) || 1
+    tel_emergencia: document.getElementById('pf-tel').value.trim() || null
   };
   try {
     await fetch('/api/perfil', {
@@ -1801,31 +1793,14 @@ async function carregarFeedCuidados() {
       </div>`;
     }
 
-    // Buscar metas do perfil
-    let metas = { meta_agua: 8, meta_refeicoes: 3, meta_sono: 8, meta_atividades: 1 };
-    try {
-      const perfil = await api('GET', '/api/perfil/' + APP.membroAtivo.id);
-      if (perfil && !perfil.erro) metas = { ...metas, ...perfil };
-    } catch(e) {}
-
-    function barraProgresso(atual, meta, cor) {
-      const pct = Math.min(100, Math.round((atual / meta) * 100));
-      const bateu = pct >= 100;
-      return '<div style="margin-top:0.4rem;background:#f0f0f0;border-radius:99px;height:8px;overflow:hidden">' +
-        '<div style="height:8px;border-radius:99px;background:' + cor + ';width:' + pct + '%"></div></div>' +
-        '<div style="font-size:0.75rem;color:' + (bateu ? cor : '#999') + ';margin-top:0.2rem">' +
-        (bateu ? '✅ Meta atingida!' : atual + ' de ' + meta) + '</div>';
-    }
-
-    // Hidratação com barra
-    const coposHoje = hidratacao.total || 0;
-    html += '<div style="background:white;border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
-      '<div style="display:flex;align-items:center;gap:1rem">' +
-      '<div style="font-size:2.5rem">💧</div>' +
-      '<div style="flex:1"><div style="font-weight:600">Hidratação hoje</div>' +
-      '<div style="font-size:1.5rem;font-weight:bold;color:#2563eb">' + coposHoje + ' copos</div>' +
-      barraProgresso(coposHoje, metas.meta_agua, '#2563eb') +
-      '</div></div></div>';
+    // Hidratação
+    html += `<div style="background:white;border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:1rem">
+      <div style="font-size:2.5rem">💧</div>
+      <div>
+        <div style="font-weight:600">Hidratação hoje</div>
+        <div style="font-size:1.5rem;font-weight:bold;color:#2563eb">${hidratacao.total || 0} copos</div>
+      </div>
+    </div>`;
 
     // Humor
     if (humor.length) {
@@ -1843,10 +1818,8 @@ async function carregarFeedCuidados() {
 
     // Atividades
     if (atividades.length) {
-      html += '<div style="background:white;border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
-        '<div style="font-weight:700;margin-bottom:0.25rem">📝 Atividades de hoje</div>' +
-        barraProgresso(atividades.length, metas.meta_atividades, '#f59e0b') +
-        '<div style="margin-top:0.75rem">
+      html += `<div style="background:white;border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+        <div style="font-weight:700;margin-bottom:0.75rem">📝 Atividades de hoje</div>
         ${atividades.map(a => `
           <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid #f5f5f5">
             <div style="font-size:1.5rem">${iconeAtividade(a.tipo)}</div>
@@ -1862,10 +1835,8 @@ async function carregarFeedCuidados() {
     // Refeições
     if (refeicoes.length) {
       const cores = { 'Tudo':'#e8f5e9','Metade':'#fff8e1','Pouco':'#fff3e0','Recusou':'#fff0f0' };
-      html += '<div style="background:white;border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
-        '<div style="font-weight:700;margin-bottom:0.25rem">🍽️ Refeições de hoje</div>' +
-        barraProgresso(refeicoes.length, metas.meta_refeicoes, '#10b981') +
-        '<div style="margin-top:0.75rem">
+      html += `<div style="background:white;border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+        <div style="font-weight:700;margin-bottom:0.75rem">🍽️ Refeições de hoje</div>
         ${refeicoes.map(r => `
           <div style="background:${cores[r.quantidade]||'#f9f9f9'};border-radius:8px;padding:0.5rem;margin-bottom:0.5rem">
             <div style="font-weight:600">${r.tipo} — ${r.quantidade}</div>
