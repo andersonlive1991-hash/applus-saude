@@ -256,7 +256,7 @@ setInterval(async () => {
     const eventos = await pool.query(
       `SELECT e.*, m.nome as membro_nome FROM eventos e
        JOIN membros m ON m.id = e.membro_id
-       WHERE e.data = $1 AND SUBSTRING(e.hora, 1, 5) = $2`,
+       WHERE e.data = $1 AND TO_CHAR(e.hora, 'HH24:MI') = $2`,
       [dataAtual, horaProxima]
     );
     console.log('Eventos encontrados:', eventos.rows.length);
