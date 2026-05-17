@@ -2,6 +2,19 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+
+// Adicionar colunas de meta se não existirem
+async function inicializarMetas() {
+  try {
+    await db.query(`ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS meta_agua INTEGER DEFAULT 8`);
+    await db.query(`ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS meta_refeicoes INTEGER DEFAULT 3`);
+    await db.query(`ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS meta_sono NUMERIC(4,1) DEFAULT 8`);
+    await db.query(`ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS meta_atividades INTEGER DEFAULT 1`);
+    console.log('Colunas de meta OK');
+  } catch(e) { console.log('Erro metas:', e.message); }
+}
+inicializarMetas();
+
 // Buscar perfil
 router.get('/:membro_id', async (req, res) => {
   try {
@@ -21,7 +34,8 @@ router.post('/', async (req, res) => {
   const {
     membro_id, nome_completo, data_nascimento, tipo_sanguineo,
     alergias, cpf, cartao_sus, convenio,
-    contato_emergencia, tel_emergencia
+    contato_emergencia, tel_emergencia,
+    meta_agua, meta_refeicoes, meta_sono, meta_atividades
   } = req.body;
   // Converter strings vazias para null para evitar erro no PostgreSQL
   const dataNasc = data_nascimento && data_nascimento.trim() !== '' ? data_nascimento.trim() : null;
