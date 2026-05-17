@@ -240,3 +240,40 @@ setInterval(async () => {
     console.log('Erro agendador:', e.message);
   }
 }, 60000);
+
+// ── AGENDADOR DE EVENTOS ──
+setInterval(async () => {
+  try {
+    const agora = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const horaAtual = String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0');
+    const dataAtual = agora.toISOString().split('T')[0];
+
+    // 1 minuto antes
+    const proximoMinuto = new Date(agora.getTime() + 60000);
+    const horaProxima = String(proximoMinuto.getHours()).padStart(2,'0') + ':' + String(proximoMinuto.getMinutes()).padStart(2,'0');
+
+    const eventos = await pool.query(
+      `SELECT e.*, m.nome as membro_nome FROM eventos e
+       JOIN membros m ON m.id = e.membro_id
+       WHERE e.data = $1 AND SUBSTRING(e.hora, 1, 5) = $2`,
+      [dataAtual, horaProxima]
+    );
+
+    for (const ev of eventos.rows) {
+      const subRes = await pool.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [ev.membro_id]);
+      if (!subRes.rows.length) continue;
+      const sub = typeof subRes.rows[0].subscription === 'string' ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
+      const payload = JSON.stringify({
+        titulo: '📅 Evento em 1 minuto!',
+        corpo: `${ev.titulo}${ev.local ? ' — ' + ev.local : ''} · ${horaProxima}`,
+        url: '/#agenda',
+        alarme: true,
+        eventoNome: ev.titulo
+      });
+      webpush.sendNotification(sub, payload).catch(e => console.log('Erro push evento:', e.message));
+    }
+  } catch(e) {
+    console.log('Erro agendador eventos:', e.message);
+  }
+}, 60000);
+
