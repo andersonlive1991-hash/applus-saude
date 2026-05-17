@@ -1,4 +1,4 @@
-const CACHE = 'applus-v15';
+const CACHE = 'applus-v16';
 const ARQUIVOS = [
   '/', '/index.html', '/css/style.css',
   '/js/app.js', '/js/modulos.js', '/manifest.json'
@@ -32,6 +32,7 @@ self.addEventListener('push', e => {
 
   if (isMed || isEvento) {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(lista => {
+      console.log('[SW] Clientes ativos:', lista.length, 'isMed:', isMed, 'isEvento:', isEvento);
       lista.forEach(c => {
         c.postMessage({ tipo: 'tocar-alarme' });
         c.postMessage({ tipo: 'alarme-push', dados: {
