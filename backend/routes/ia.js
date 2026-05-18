@@ -54,20 +54,20 @@ router.post('/resumo-dia', async (req, res) => {
       db.query('SELECT nome, dosagem FROM medicamentos WHERE familia_id=$1 AND membro_id=$2', [familia_id, membro_id]),
       db.query('SELECT tipo, valor, valor2, unidade FROM sinais_vitais WHERE membro_id=$1 ORDER BY criado_em DESC LIMIT 5', [membro_id]),
       db.query('SELECT humor FROM cuidados_humor WHERE membro_id=$1 ORDER BY criado_em DESC LIMIT 7', [membro_id]),
-      db.query('SELECT copos, meta FROM cuidados_hidratacao WHERE membro_id=$1 AND DATE(criado_em)=$2 ORDER BY criado_em DESC LIMIT 1', [membro_id, hoje]),
-      db.query('SELECT dormiu_as, acordou_as FROM cuidados_sono WHERE membro_id=$1 AND DATE(criado_em)=$2 ORDER BY criado_em DESC LIMIT 1', [membro_id, hoje]),
-      db.query('SELECT nome, meta_agua, meta_sono FROM perfil_idoso WHERE membro_id=$1 LIMIT 1', [membro_id])
+      db.query('SELECT copos FROM cuidados_hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE ORDER BY id DESC LIMIT 1', [membro_id]),
+      db.query('SELECT inicio, fim FROM cuidados_sono WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1', [membro_id]),
+      db.query('SELECT nome_completo, meta_agua, meta_sono FROM perfil_idoso WHERE membro_id=$1 LIMIT 1', [membro_id])
     ]);
 
-    const nome = perfil.rows[0] ? perfil.rows[0].nome : 'usuario';
+    const nome = perfil.rows[0] ? perfil.rows[0].nome_completo : 'usuario';
     const metaAgua = perfil.rows[0] ? (perfil.rows[0].meta_agua || 8) : 8;
     const metaSono = perfil.rows[0] ? (perfil.rows[0].meta_sono || 8) : 8;
     const copos = hidratacao.rows[0] ? (hidratacao.rows[0].copos || 0) : 0;
 
     let horasSono = null;
-    if (sono.rows[0] && sono.rows[0].dormiu_as && sono.rows[0].acordou_as) {
-      const d = sono.rows[0].dormiu_as.split(':').map(Number);
-      const a = sono.rows[0].acordou_as.split(':').map(Number);
+    if (sono.rows[0] && sono.rows[0].inicio && sono.rows[0].fim) {
+      const d = sono.rows[0].inicio.split(':').map(Number);
+      const a = sono.rows[0].fim.split(':').map(Number);
       let h = (a[0] - d[0]) + (a[1] - d[1]) / 60;
       if (h < 0) h += 24;
       horasSono = Math.round(h * 10) / 10;
