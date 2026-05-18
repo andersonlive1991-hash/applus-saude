@@ -758,6 +758,7 @@ function iconeTipoEvento(tipo) {
 async function carregarMedicamentos() {
   try {
     const meds = await api('GET', `/api/medicamentos/${APP.familiaId}?membro_id=${APP.membroId}`);
+    window._listaMedsCache = meds;
     const lista = document.getElementById('lista-medicamentos');
     lista.innerHTML = meds.length
       ? meds.map(m => `
@@ -2396,4 +2397,27 @@ async function atualizarBadgeRemedios() {
       }
     }
   } catch(e) {}
+}
+
+window._listaMedsCache = [];
+function filtrarMedicamentos(termo) {
+  const lista = document.getElementById('lista-medicamentos');
+  if (!lista) return;
+  const t = termo.toLowerCase().trim();
+  const filtrados = t
+    ? window._listaMedsCache.filter(m => m.nome.toLowerCase().includes(t))
+    : window._listaMedsCache;
+  if (!filtrados.length) {
+    lista.innerHTML = '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:16px">Nenhum medicamento encontrado</p>';
+    return;
+  }
+  lista.innerHTML = filtrados.map(m => `
+    <div class="item-lista">
+      <span style="font-size:24px">💊</span>
+      <div class="item-info">
+        <div class="item-nome">${m.nome} ${m.dosagem || ''}</div>
+        <div class="item-sub">${formatarHorarios(m.horarios)} · ${m.via || 'Oral'}</div>
+      </div>
+      <button onclick="excluirMed(${m.id})" style="background:none;border:none;font-size:18px;cursor:pointer">🗑️</button>
+    </div>`).join('');
 }
