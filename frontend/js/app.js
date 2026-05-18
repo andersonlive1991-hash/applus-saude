@@ -1531,7 +1531,14 @@ async function atualizarDropdown() {
     const avatar = document.getElementById('dropdown-avatar');
     const nomeEl = document.getElementById('dropdown-nome');
 
-    if (avatar) avatar.textContent = avatarMembro(APP.membroNome, APP.membroTipo);
+    const memAtivo = membros.find(function(m) { return m.id == APP.membroId; });
+    if (avatar) {
+      if (memAtivo && memAtivo.foto) {
+        avatar.innerHTML = '<img src="' + memAtivo.foto + '" style="width:32px;height:32px;object-fit:cover;border-radius:50%">';
+      } else {
+        avatar.textContent = avatarMembro(APP.membroNome, APP.membroTipo);
+      }
+    }
     if (nomeEl) nomeEl.textContent = APP.membroNome.split(' ')[0];
 
     if (lista) {
@@ -1541,7 +1548,7 @@ async function atualizarDropdown() {
       lista.innerHTML = membrosVisiveis.map(m => `
         <button class="dropdown-item ${m.id == APP.membroId ? 'ativo' : ''}"
           onclick="trocarParaPerfil(${m.id}, '${m.nome}', '${m.tipo}', '${m.id_pessoal}')">
-          <div class="av">${avatarMembro(m.nome, m.tipo)}</div>
+          <div class="av" style="overflow:hidden;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center">${m.foto ? '<img src="' + m.foto + '" style="width:40px;height:40px;object-fit:cover;border-radius:50%">' : avatarMembro(m.nome, m.tipo)}</div>
           <div class="dropdown-item-info">
             <div class="dn">${m.nome.split(' ')[0]}</div>
             <div class="dt">${m.tipo}</div>
