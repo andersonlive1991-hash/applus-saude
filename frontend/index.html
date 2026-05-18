@@ -1253,18 +1253,23 @@
 <!-- Modal Criar Família -->
 <div id="modal-criar" class="modal-overlay">
   <div class="modal" style="max-height:90vh;overflow-y:auto">
-    <div class="modal-titulo">🏠 Criar perfil</div>
+    <div class="modal-titulo">🌿 Criar seu perfil</div>
+    <div style="text-align:center;font-size:13px;color:#6b7280;margin:-8px 0 16px">Leva menos de 1 minuto</div>
     <div class="form" style="padding:0">
       <div class="campo"><label>Nome</label><input id="inp-nome-familia" type="text" placeholder="Ex: Anderson"></div>
       <div class="campo"><label>Sobrenome</label><input id="inp-nome-membro" type="text" placeholder="Ex: Barros"></div>
       <div class="campo"><label>Seu papel</label>
-        <select id="inp-tipo-membro">
-          <option value="administrador">Próprio</option>
-          <option value="cuidador">Cuidador</option>
-          <option value="idoso">Idoso</option>
+        <select id="inp-tipo-membro" onchange="mostrarDescricaoPapel(this.value)" style="margin-bottom:6px">
+          <option value="administrador">👤 Para mim — vou cuidar da minha saude</option>
+          <option value="cuidador">💚 Cuidador — cuido de outra pessoa</option>
+          <option value="idoso">🧓 Idoso — sou o familiar sendo cuidado</option>
         </select>
+        <div id="desc-papel" style="font-size:12px;color:#6b7280;padding:8px 12px;background:#f8fafc;border-radius:8px;line-height:1.5">👤 Use esta opcao se voce mesmo vai acompanhar sua saude no app.</div>
       </div>
-      <div style="margin:12px 0 8px;font-size:13px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">📋 Dados de saúde (opcional)</div>
+      <div style="margin:16px 0 8px;background:linear-gradient(135deg,#f0fdf4,#e8f7f1);border-radius:12px;padding:12px 16px;border-left:4px solid #1a9e6e">
+        <div style="font-size:13px;font-weight:700;color:#0f6647;text-transform:uppercase;letter-spacing:0.05em">📋 Dados de saúde (opcional)</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:4px">Pode preencher agora ou depois no Meu Perfil</div>
+      </div>
       <div class="campo"><label>Data de nascimento</label>
         <div style="display:flex;gap:8px">
           <select id="inp-data-dia" style="flex:1">
@@ -1405,7 +1410,7 @@
         <div class="campo"><label>Seu nome</label><input id="inp-nome-entrar" type="text" placeholder="Seu nome completo"></div>
         <div class="campo"><label>Seu papel</label>
           <select id="inp-tipo-entrar">
-            <option value="administrador">Próprio</option>
+            <option value="administrador">👤 Para mim</option>
             <option value="idoso">Idoso</option>
             <option value="crianca">Criança</option>
           </select>
@@ -1738,7 +1743,7 @@
       <div class="campo"><label>Papel</label>
         <select id="add-mem-tipo">
           <option value="cuidador">Cuidador</option>
-          <option value="administrador">Próprio</option>
+          <option value="administrador">👤 Para mim</option>
           <option value="idoso">Idoso</option>
           <option value="crianca">Criança</option>
         </select>

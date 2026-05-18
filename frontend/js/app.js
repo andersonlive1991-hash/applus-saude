@@ -2597,3 +2597,14 @@ async function gerarResumoConsulta() {
     }
   } catch(e) { alerta('Erro ao gerar resumo: ' + e.message); }
 }
+
+function mostrarDescricaoPapel(valor) {
+  const desc = document.getElementById('desc-papel');
+  if (!desc) return;
+  const textos = {
+    'administrador': '👤 Use esta opcao se voce mesmo vai acompanhar sua saude no app.',
+    'cuidador': '💚 Use esta opcao se voce cuida de um idoso, crianca ou familiar.',
+    'idoso': '🧓 Use esta opcao se voce e o familiar que sera acompanhado pela familia.'
+  };
+  desc.textContent = textos[valor] || '';
+}
