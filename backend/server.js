@@ -43,31 +43,8 @@ app.use('/api/checklist', require('./routes/checklist'));
 app.use('/api/historico-tea', require('./routes/historico-tea'));
 app.use('/api/pdf', require('./routes/pdf'));
 
-app.get('/api/migrar-foto-perfil', async (req, res) => {
-  try {
-    await pool.query('ALTER TABLE membros ADD COLUMN IF NOT EXISTS foto TEXT');
-    await pool.query('ALTER TABLE membros ADD COLUMN IF NOT EXISTS foto_thumb TEXT');
-    res.json({ ok: true });
-  } catch(e) { res.status(500).json({ erro: e.message }); }
-});
-app.get('/api/migrar-eventos', async (req, res) => {
-  const cols = [
-    'ALTER TABLE eventos ADD COLUMN IF NOT EXISTS nome_medico VARCHAR(200)',
-    'ALTER TABLE eventos ADD COLUMN IF NOT EXISTS especialidade VARCHAR(100)',
-    'ALTER TABLE eventos ADD COLUMN IF NOT EXISTS pediu_exame BOOLEAN DEFAULT FALSE',
-    'ALTER TABLE eventos ADD COLUMN IF NOT EXISTS foto_exame TEXT',
-    'ALTER TABLE eventos ADD COLUMN IF NOT EXISTS gerou_receita BOOLEAN DEFAULT FALSE',
-    'ALTER TABLE eventos ADD COLUMN IF NOT EXISTS data_retorno DATE',
-    'ALTER TABLE eventos ADD COLUMN IF NOT EXISTS resumo_gemini TEXT',
-    'ALTER TABLE eventos ADD COLUMN IF NOT EXISTS atualizado_em TIMESTAMP DEFAULT NOW()'
-  ];
-  const r2 = [];
-  for (const sql of cols) {
-    try { await pool.query(sql); r2.push('OK'); }
-    catch(e) { r2.push('ERRO: ' + e.message); }
-  }
-  res.json({ ok: true, resultados: r2 });
-});
+
+
 
 app.use('/api/eventos', require('./routes/eventos'));
 app.use('/api/sinais', require('./routes/sinais'));
