@@ -542,6 +542,7 @@ async function carregarPerfil() {
 }
 
 async function salvarPerfil() {
+  alerta("DEBUG membroAtivo: " + JSON.stringify(APP.membroAtivo));
   const pfDia = document.getElementById('pf-nasc-dia').value;
   const pfMes = document.getElementById('pf-nasc-mes').value;
   const pfAno = document.getElementById('pf-nasc-ano').value;
