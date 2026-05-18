@@ -266,6 +266,7 @@ async function criarFamilia() {
   const membro = nome + ' ' + sobrenome;
   const tipo = document.getElementById('inp-tipo-membro').value;
   if (!nome || !sobrenome) return alerta('Preencha nome e sobrenome');
+  const foto = await getFotoBase64();
 
   // Ler DOM antes de qualquer await
   const dia = document.getElementById('inp-data-dia')?.value || '';
@@ -289,6 +290,7 @@ async function criarFamilia() {
       tipo,
       relacao: tipo
     });
+    if (foto) { try { await api('PUT', '/api/membros/' + resMem.id + '/foto', { foto }); } catch(e) {} }
     APP.familiaId = String(resFam.id);
     APP.codigoFamilia = resFam.codigo;
     APP.nomeFamilia = resFam.nome;
@@ -2607,4 +2609,37 @@ function mostrarDescricaoPapel(valor) {
     'idoso': '🧓 Use esta opcao se voce e o familiar que sera acompanhado pela familia.'
   };
   desc.textContent = textos[valor] || '';
+}
+
+// FOTO DE PERFIL
+function previewFotoCadastro(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('foto-preview-cadastro');
+    if (preview) {
+      preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover">';
+    }
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function getFotoBase64() {
+  const input = document.getElementById('inp-foto-cadastro');
+  if (!input || !input.files || !input.files[0]) return null;
+  return new Promise(function(resolve) {
+    const reader = new FileReader();
+    reader.onload = function(e) { resolve(e.target.result); };
+    reader.readAsDataURL(input.files[0]);
+  });
+}
+
+async function atualizarAvatarHeader(foto) {
+  const avatar = document.getElementById('dropdown-avatar');
+  if (!avatar) return;
+  if (foto) {
+    avatar.innerHTML = '<img src="' + foto + '" style="width:32px;height:32px;object-fit:cover;border-radius:50%">';
+  } else {
+    avatar.innerHTML = '👤';
+  }
 }

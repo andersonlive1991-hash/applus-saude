@@ -93,7 +93,7 @@
       </div>
       <div class="perfil-selector">
         <div class="perfil-btn-atual" onclick="toggleDropdown()">
-          <div class="av-mini" id="dropdown-avatar">👤</div>
+          <div class="av-mini" id="dropdown-avatar" style="overflow:hidden;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#e8f7f1">👤</div>
           <span class="nome-curto" id="dropdown-nome">...</span>
           <span class="seta">▼</span>
         </div>
@@ -1256,6 +1256,11 @@
     <div class="modal-titulo">🌿 Criar seu perfil</div>
     <div style="text-align:center;font-size:13px;color:#6b7280;margin:-8px 0 16px">Leva menos de 1 minuto</div>
     <div class="form" style="padding:0">
+      <div class="campo" style="text-align:center">
+        <div id="foto-preview-cadastro" onclick="document.getElementById('inp-foto-cadastro').click()" style="width:90px;height:90px;border-radius:50%;background:#e8f7f1;border:3px dashed #1a9e6e;display:flex;align-items:center;justify-content:center;font-size:36px;cursor:pointer;margin:0 auto 8px;overflow:hidden">👤</div>
+        <div style="font-size:12px;color:#6b7280">Toque para adicionar foto</div>
+        <input type="file" id="inp-foto-cadastro" accept="image/*" style="display:none" onchange="previewFotoCadastro(this)">
+      </div>
       <div class="campo"><label>Nome</label><input id="inp-nome-familia" type="text" placeholder="Ex: Anderson"></div>
       <div class="campo"><label>Sobrenome</label><input id="inp-nome-membro" type="text" placeholder="Ex: Barros"></div>
       <div class="campo"><label>Seu papel</label>

@@ -42,6 +42,14 @@ app.use('/api/interacoes', require('./routes/interacoes'));
 app.use('/api/checklist', require('./routes/checklist'));
 app.use('/api/historico-tea', require('./routes/historico-tea'));
 app.use('/api/pdf', require('./routes/pdf'));
+
+app.get('/api/migrar-foto-perfil', async (req, res) => {
+  try {
+    await pool.query('ALTER TABLE membros ADD COLUMN IF NOT EXISTS foto TEXT');
+    await pool.query('ALTER TABLE membros ADD COLUMN IF NOT EXISTS foto_thumb TEXT');
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
 app.get('/api/migrar-eventos', async (req, res) => {
   const cols = [
     'ALTER TABLE eventos ADD COLUMN IF NOT EXISTS nome_medico VARCHAR(200)',

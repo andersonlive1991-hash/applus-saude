@@ -50,6 +50,18 @@ router.get('/familia/:familia_id', async (req, res) => {
   }
 });
 
+
+router.put('/:id/foto', async (req, res) => {
+  const { foto } = req.body;
+  try {
+    const result = await db.query(
+      'UPDATE membros SET foto=$1 WHERE id=$2 RETURNING *',
+      [foto, req.params.id]
+    );
+    res.json(result.rows[0]);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 module.exports = router;
 
 // Excluir membro
