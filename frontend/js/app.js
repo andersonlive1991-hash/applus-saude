@@ -267,18 +267,12 @@ async function criarFamilia() {
   const tipo = document.getElementById('inp-tipo-membro').value;
   if (!nome || !sobrenome) return alerta('Preencha nome e sobrenome');
 
-  // Pega foto antes de qualquer await (regra de ouro 8)
-  const fotoInput = document.getElementById('inp-foto-cadastro');
-  let fotoDataUrl = null;
-  if (fotoInput && fotoInput.files && fotoInput.files[0]) {
-    fotoDataUrl = await new Promise(function(resolve) {
-      const reader = new FileReader();
-      reader.onload = function(e) { resolve(e.target.result); };
-      reader.readAsDataURL(fotoInput.files[0]);
-    });
-  }
+  // Foto lida do preview (evita await antes do DOM)
+  const imgPreview = document.querySelector('#foto-preview-cadastro img');
+  const fotoDataUrl = imgPreview ? imgPreview.src : null;
 
   // Ler DOM antes de qualquer await
+
   const dia = document.getElementById('inp-data-dia')?.value || '';
   const mes = document.getElementById('inp-data-mes')?.value || '';
   const ano = document.getElementById('inp-data-ano')?.value || '';
