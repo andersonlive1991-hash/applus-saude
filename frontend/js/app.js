@@ -746,6 +746,7 @@ async function carregarHome() {
   } catch (e) {
     console.log('Erro home:', e);
   }
+  atualizarBadgeRemedios();
 }
 
 function iconeTipoEvento(tipo) {
@@ -2372,4 +2373,27 @@ async function msConcluirRotina(id, concluido) {
     await api('PUT', '/api/mente-sa/rotinas/' + id, { concluido: concluido });
     alerta(concluido ? '✅ Tarefa concluída!' : 'Tarefa desmarcada');
   } catch(e) { alerta('Erro ao atualizar rotina'); }
+}
+
+async function atualizarBadgeRemedios() {
+  try {
+    const meds = await api('GET', '/api/medicamentos/' + APP.membroId);
+    const agora = new Date();
+    const hora = agora.getHours().toString().padStart(2,'0') + ':' + agora.getMinutes().toString().padStart(2,'0');
+    let pendentes = 0;
+    meds.forEach(m => {
+      if (m.horarios) {
+        m.horarios.forEach(h => { if (h <= hora) pendentes++; });
+      }
+    });
+    const badge = document.getElementById('badge-remedios');
+    if (badge) {
+      if (pendentes > 0) {
+        badge.textContent = pendentes > 9 ? '9+' : pendentes;
+        badge.style.display = 'block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  } catch(e) {}
 }
