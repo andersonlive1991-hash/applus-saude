@@ -91,6 +91,7 @@ router.post('/resumo-dia', async (req, res) => {
       }
     );
     const data = await response.json();
+    console.log('Gemini resumo resposta:', JSON.stringify(data).substring(0, 300));
     const resumo = data.candidates && data.candidates[0] ? data.candidates[0].content.parts[0].text : 'Nao consegui gerar analise agora.';
     res.json({ resumo: resumo, dados: { copos: copos, metaAgua: metaAgua, horasSono: horasSono, metaSono: metaSono } });
   } catch (e) {
