@@ -44,4 +44,72 @@ Pergunta: ${pergunta}`;
   }
 });
 
+
+router.post('/resumo-dia', async (req, res) => {
+  const { membro_id, familia_id } = req.body;
+  try {
+    const hoje = new Date().toISOString().split('T')[0];
+
+    const [meds, sinais, humor, hidratacao, sono, perfil] = await Promise.all([
+      db.query('SELECT nome, dosagem FROM medicamentos WHERE familia_id=$1 AND membro_id=$2', [familia_id, membro_id]),
+      db.query('SELECT tipo, valor, valor2, unidade FROM sinais_vitais WHERE membro_id=$1 ORDER BY criado_em DESC LIMIT 5', [membro_id]),
+      db.query('SELECT humor FROM cuidados_humor WHERE membro_id=$1 ORDER BY criado_em DESC LIMIT 7', [membro_id]),
+      db.query('SELECT copos, meta FROM cuidados_hidratacao WHERE membro_id=$1 AND DATE(criado_em)=$2 ORDER BY criado_em DESC LIMIT 1', [membro_id, hoje]),
+      db.query('SELECT dormiu_as, acordou_as FROM cuidados_sono WHERE membro_id=$1 AND DATE(criado_em)=$2 ORDER BY criado_em DESC LIMIT 1', [membro_id, hoje]),
+      db.query('SELECT nome, meta_agua, meta_sono FROM perfil_idoso WHERE membro_id=$1 LIMIT 1', [membro_id])
+    ]);
+
+    const nome = perfil.rows[0] ? perfil.rows[0].nome : 'usuario';
+    const metaAgua = perfil.rows[0] ? (perfil.rows[0].meta_agua || 8) : 8;
+    const metaSono = perfil.rows[0] ? (perfil.rows[0].meta_sono || 8) : 8;
+    const copos = hidratacao.rows[0] ? (hidratacao.rows[0].copos || 0) : 0;
+
+    let horasSono = null;
+    if (sono.rows[0] && sono.rows[0].dormiu_as && sono.rows[0].acordou_as) {
+      const d = sono.rows[0].dormiu_as.split(':').map(Number);
+      const a = sono.rows[0].acordou_as.split(':').map(Number);
+      let h = (a[0] - d[0]) + (a[1] - d[1]) / 60;
+      if (h < 0) h += 24;
+      horasSono = Math.round(h * 10) / 10;
+    }
+
+    const emojisHumor = { 1: 'pessimo', 2: 'mal', 3: 'regular', 4: 'bem', 5: 'otimo' };
+    const humorTexto = humor.rows.length ? humor.rows.map(function(h) { return emojisHumor[h.humor] || h.humor; }).join(', ') : 'nao registrado';
+    const sinaisTexto = sinais.rows.length ? sinais.rows.map(function(s) { return s.tipo + ': ' + s.valor + (s.valor2 ? '/' + s.valor2 : '') + ' ' + (s.unidade || ''); }).join('; ') : 'nenhum registro';
+    const medsTexto = meds.rows.length ? meds.rows.map(function(m) { return m.nome + ' ' + (m.dosagem || ''); }).join(', ') : 'nenhum';
+
+    const sonoInfo = horasSono ? (horasSono + 'h dormidas (meta: ' + metaSono + 'h)') : 'nao registrado hoje';
+
+    const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de ' + nome + ' e faca um resumo em portugues brasileiro.
+
+DADOS:
+- Agua: ' + copos + ' copos (meta: ' + metaAgua + ')
+- Sono: ' + sonoInfo + '
+- Humor recente: ' + humorTexto + '
+- Sinais vitais: ' + sinaisTexto + '
+- Medicamentos: ' + medsTexto + '
+
+Responda em 3 blocos curtos:
+1. O que esta bem
+2. O que precisa de atencao
+3. Uma dica pratica + 1 doenca que pode ser evitada
+
+Seja direto e acolhedor. Nao substitui consulta medica.';
+
+    const response = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      }
+    );
+    const data = await response.json();
+    const resumo = data.candidates && data.candidates[0] ? data.candidates[0].content.parts[0].text : 'Nao consegui gerar analise agora.';
+    res.json({ resumo: resumo, dados: { copos: copos, metaAgua: metaAgua, horasSono: horasSono, metaSono: metaSono } });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 module.exports = router;

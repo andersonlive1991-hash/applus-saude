@@ -747,6 +747,7 @@ async function carregarHome() {
     console.log('Erro home:', e);
   }
   atualizarBadgeRemedios();
+  gerarResumoIA();
 }
 
 function iconeTipoEvento(tipo) {
@@ -2420,4 +2421,37 @@ function filtrarMedicamentos(termo) {
       </div>
       <button onclick="excluirMed(${m.id})" style="background:none;border:none;font-size:18px;cursor:pointer">🗑️</button>
     </div>`).join('');
+}
+
+async function gerarResumoIA() {
+  const card = document.getElementById('card-resumo-ia');
+  const texto = document.getElementById('resumo-texto');
+  if (!card || !APP.membroId) return;
+
+  card.style.display = 'block';
+  texto.textContent = 'Analisando seus dados...';
+  document.getElementById('resumo-agua').textContent = '--';
+  document.getElementById('resumo-sono').textContent = '--';
+  document.getElementById('resumo-humor').textContent = '--';
+
+  try {
+    const r = await api('POST', '/api/ia/resumo-dia', {
+      membro_id: APP.membroId,
+      familia_id: APP.familiaId
+    });
+
+    if (r.dados) {
+      const agua = r.dados.copos + '/' + r.dados.metaAgua;
+      const sono = r.dados.horasSono ? r.dados.horasSono + 'h' : '--';
+      document.getElementById('resumo-agua').textContent = agua;
+      document.getElementById('resumo-sono').textContent = sono;
+    }
+
+    if (r.resumo) {
+      texto.textContent = r.resumo;
+      document.getElementById('resumo-humor').textContent = '😊';
+    }
+  } catch(e) {
+    texto.textContent = 'Nao foi possivel gerar analise agora.';
+  }
 }

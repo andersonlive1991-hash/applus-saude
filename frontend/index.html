@@ -121,6 +121,31 @@
 
     <button onclick="iniciarSOSCompleto()" style="width:100%;margin:0 0 20px;padding:20px;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;border:none;border-radius:20px;font-size:22px;font-weight:800;letter-spacing:2px;cursor:pointer;box-shadow:0 6px 20px rgba(239,68,68,0.6);animation:sos-pulse 1.8s infinite">🚨 SOS — EMERGÊNCIA</button>
 
+    <div id="card-resumo-ia" style="background:linear-gradient(135deg,#0f6647,#1a9e6e);border-radius:20px;padding:20px;margin-bottom:16px;color:#fff;display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:16px;font-weight:700">🤖 Seu resumo de hoje</span>
+        <button onclick="gerarResumoIA()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:10px;padding:6px 12px;font-size:12px;cursor:pointer">🔄 Atualizar</button>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:12px">
+        <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:10px;flex:1;text-align:center">
+          <div style="font-size:20px">💧</div>
+          <div id="resumo-agua" style="font-size:13px;font-weight:700">--</div>
+          <div style="font-size:11px;opacity:0.8">copos</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:10px;flex:1;text-align:center">
+          <div style="font-size:20px">😴</div>
+          <div id="resumo-sono" style="font-size:13px;font-weight:700">--</div>
+          <div style="font-size:11px;opacity:0.8">horas</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:10px;flex:1;text-align:center">
+          <div style="font-size:20px">😊</div>
+          <div id="resumo-humor" style="font-size:13px;font-weight:700">--</div>
+          <div style="font-size:11px;opacity:0.8">humor</div>
+        </div>
+      </div>
+      <div id="resumo-texto" style="font-size:13px;line-height:1.6;opacity:0.95">Analisando seus dados...</div>
+    </div>
+
     <div class="cards-grid">
       <div class="card destaque" onclick="navegarPara('remedios')">
         <div class="card-icone">💊</div>
