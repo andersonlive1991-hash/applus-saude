@@ -57,21 +57,25 @@ app.use('/api/escala', require('./routes/escala'));
 app.use('/api/mente-sa', require('./routes/mente-sa'));
 const rateLimit = require('express-rate-limit');
 
+app.set('trust proxy', 1);
+
 // Rate limiting — proteção contra força bruta
 const limiterGeral = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minuto
+  windowMs: 1 * 60 * 1000,
   max: 60,
   message: { erro: 'Muitas requisições. Tente novamente em 1 minuto.' },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false }
 });
 
 const limiterBuscarId = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minuto
+  windowMs: 1 * 60 * 1000,
   max: 20,
   message: { erro: 'Muitas tentativas. Tente novamente em 1 minuto.' },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false }
 });
 
 app.use('/api', limiterGeral);
