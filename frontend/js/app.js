@@ -521,15 +521,15 @@ async function carregarPerfil() {
     if (!res.ok) return; // sem perfil ainda, tudo vazio
     const p = await res.json();
     document.getElementById('pf-nome').value = p.nome_completo || '';
-    // Formatar data YYYY-MM-DD para o input type=date
     if (p.data_nascimento) {
       const d = new Date(p.data_nascimento);
-      const yyyy = d.getUTCFullYear();
-      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-      const dd = String(d.getUTCDate()).padStart(2, '0');
-      document.getElementById('pf-nascimento').value = yyyy + '-' + mm + '-' + dd;
+      document.getElementById('pf-nasc-dia').value = String(d.getUTCDate());
+      document.getElementById('pf-nasc-mes').value = String(d.getUTCMonth() + 1).padStart(2, '0');
+      document.getElementById('pf-nasc-ano').value = String(d.getUTCFullYear());
     } else {
-      document.getElementById('pf-nascimento').value = '';
+      document.getElementById('pf-nasc-dia').value = '';
+      document.getElementById('pf-nasc-mes').value = '';
+      document.getElementById('pf-nasc-ano').value = '';
     }
     document.getElementById('pf-sangue').value = p.tipo_sanguineo || '';
     document.getElementById('pf-alergias').value = p.alergias || '';
@@ -542,11 +542,14 @@ async function carregarPerfil() {
 }
 
 async function salvarPerfil() {
-  const dataNascRaw = document.getElementById('pf-nascimento').value || '';
+  const pfDia = document.getElementById('pf-nasc-dia').value;
+  const pfMes = document.getElementById('pf-nasc-mes').value;
+  const pfAno = document.getElementById('pf-nasc-ano').value;
+  const dataNascRaw = (pfDia && pfMes && pfAno) ? pfAno + '-' + pfMes + '-' + pfDia : null;
   const dados = {
     membro_id: APP.membroAtivo.id,
     nome_completo: document.getElementById('pf-nome').value.trim() || APP.membroAtivo.nome,
-    data_nascimento: dataNascRaw !== '' ? dataNascRaw : null,
+    data_nascimento: dataNascRaw,
     tipo_sanguineo: document.getElementById('pf-sangue').value || null,
     alergias: document.getElementById('pf-alergias').value.trim() || null,
     cpf: document.getElementById('pf-cpf').value.trim() || null,
