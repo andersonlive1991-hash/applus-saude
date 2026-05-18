@@ -807,6 +807,9 @@ async function salvarMedicamento() {
 }
 
 async function excluirMed(id) {
+  const card = document.querySelector('[onclick="excluirMed(' + id + ')"]');
+  const nome = card ? card.closest('.item-lista')?.querySelector('.item-nome')?.textContent || 'este medicamento' : 'este medicamento';
+  if (!confirm('Excluir ' + nome + '?\nEsta ação não pode ser desfeita.')) return;
   if (!confirm('Excluir medicamento?')) return;
   await api('DELETE', `/api/medicamentos/${id}`);
   carregarMedicamentos();
@@ -1002,6 +1005,9 @@ async function salvarEvento() {
 }
 
 async function excluirEvento(id) {
+  const card = document.querySelector('[onclick="excluirEvento(' + id + ')"]');
+  const nome = card ? card.closest('.item-lista')?.querySelector('.item-nome')?.textContent || 'este evento' : 'este evento';
+  if (!confirm('Excluir ' + nome + '?\nEsta ação não pode ser desfeita.')) return;
   if (!confirm('Excluir evento?')) return;
   await api('DELETE', `/api/eventos/${id}`);
   carregarAgenda();
@@ -1355,6 +1361,9 @@ async function toggleTarefa(id, concluida) {
 }
 
 async function excluirTarefa(id) {
+  const card = document.querySelector('[onclick="excluirTarefa(' + id + ')"]');
+  const nome = card ? card.closest('.item-lista')?.querySelector('.item-nome')?.textContent || 'esta tarefa' : 'esta tarefa';
+  if (!confirm('Excluir ' + nome + '?\nEsta ação não pode ser desfeita.')) return;
   await api('DELETE', '/api/checklist/' + id);
   carregarChecklist();
 }
