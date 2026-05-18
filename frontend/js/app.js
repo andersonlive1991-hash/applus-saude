@@ -2419,12 +2419,23 @@ async function atualizarBadgeRemedios() {
     const meds = await api('GET', '/api/medicamentos/' + APP.membroId);
     const agora = new Date();
     const hora = agora.getHours().toString().padStart(2,'0') + ':' + agora.getMinutes().toString().padStart(2,'0');
+    const hoje = agora.toISOString().slice(0,10);
     let pendentes = 0;
-    meds.forEach(m => {
-      if (m.horarios) {
-        m.horarios.forEach(h => { if (h <= hora) pendentes++; });
+    for (const m of meds) {
+      if (!m.horarios) continue;
+      for (const h of m.horarios) {
+        if (h > hora) continue;
+        try {
+          const hist = await api('GET', '/api/medicamentos/historico/' + m.id);
+          const jaConcluido = hist.some(function(r) {
+            return (r.status === 'tomado' || r.status === 'pulado') &&
+                   r.criado_em && r.criado_em.slice(0,10) === hoje &&
+                   r.criado_em.slice(11,16) >= h;
+          });
+          if (!jaConcluido) pendentes++;
+        } catch(e) { pendentes++; }
       }
-    });
+    }
     const badge = document.getElementById('badge-remedios');
     if (badge) {
       if (pendentes > 0) {
