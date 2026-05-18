@@ -11,6 +11,17 @@ const APP = {
   alarmeInterval: null
 };
 
+// ── RENDER MARKDOWN ──
+function renderMarkdown(txt) {
+  if (!txt) return "";
+  var rBold = new RegExp("\\*\\*(.+?)\\*\\*", "g");
+  var rItal = new RegExp("\\*(.+?)\\*", "g");
+  var rLine = new RegExp("\\n", "g");
+  return txt.replace(rBold, "<strong>$1</strong>")
+             .replace(rItal, "<em>$1</em>")
+             .replace(rLine, "<br>");
+}
+
 // ── INICIALIZAR ──
 document.addEventListener('DOMContentLoaded', () => {
   verificarBoasVindas();
@@ -1171,7 +1182,7 @@ async function perguntarIA() {
     });
 
     document.getElementById('ia-digitando')?.remove();
-    container.innerHTML += `<div class="ia-msg-bot fade-up">${res.resposta}</div>`;
+    container.innerHTML += `<div class="ia-msg-bot fade-up">${renderMarkdown(res.resposta)}</div>`;
     container.scrollTop = container.scrollHeight;
   } catch (e) {
     document.getElementById('ia-digitando')?.remove();
@@ -2474,7 +2485,7 @@ async function gerarResumoIA() {
     }
 
     if (r.resumo) {
-      texto.textContent = r.resumo;
+      texto.innerHTML = renderMarkdown(r.resumo);
       document.getElementById('resumo-humor').textContent = '😊';
     }
   } catch(e) {
