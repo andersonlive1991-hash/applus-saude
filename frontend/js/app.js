@@ -537,15 +537,22 @@ async function salvarPerfil() {
     contato_emergencia: document.getElementById('pf-contato').value.trim() || null,
     tel_emergencia: document.getElementById('pf-tel').value.trim() || null
   };
+  console.log('membroAtivo:', JSON.stringify(APP.membroAtivo));
+  console.log('dados:', JSON.stringify(dados));
   try {
-    await fetch('/api/perfil', {
+    const resp = await fetch('/api/perfil', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dados)
     });
-    alerta('✅ Perfil salvo com sucesso!');
+    const json = await resp.json();
+    if (json.erro) {
+      alerta('Erro: ' + json.erro);
+    } else {
+      alerta('✅ Perfil salvo com sucesso!');
+    }
   } catch(e) {
-    alerta('Erro ao salvar perfil.');
+    alerta('Erro ao salvar perfil: ' + e.message);
   }
 }
 
@@ -655,6 +662,7 @@ function navegarPara(pagina) {
   if (pagina === 'escala') carregarEscala();
   if (pagina === 'historico') { carregarDoencas(); }
   if (pagina === 'meu-dia') iniciarMeuDia();
+  if (pagina === 'mente-sa') iniciarMenteSa();
   if (pagina === 'cuidados') {
     if (APP.membroTipo === 'cuidador') {
       // Cuidador vê formulários para registrar
@@ -2107,4 +2115,252 @@ async function meudiaCarregarHumor() {
         '<div style="font-size:0.85rem;color:#666">' + (h.obs || '') + '</div></div></div>';
     }).join('');
   } catch(e) {}
+}
+
+
+// ── MENTE SÃ ──
+let msRespTimer = null;
+let msRespAtivo = false;
+let msHumorSelecionado = null;
+
+function trocarAbaMenteSa(aba) {
+  ['respiracao','humor','diario','rotinas'].forEach(function(a) {
+    document.getElementById('ms-' + a).style.display = a === aba ? 'block' : 'none';
+    var btn = document.getElementById('aba-ms-' + a);
+    if (btn) btn.classList.toggle('ativa', a === aba);
+  });
+  if (aba === 'humor') msCarregarHumor();
+  if (aba === 'diario') msCarregarDiario();
+  if (aba === 'rotinas') msCarregarRotinas();
+}
+
+async function iniciarMenteSa() {
+  trocarAbaMenteSa('respiracao');
+}
+
+// ── RESPIRAÇÃO GUIADA ──
+function iniciarRespiracao(tipo) {
+  pararRespiracao();
+  msRespAtivo = true;
+  var ciclos = {
+    '4-7-8': [
+      { texto: 'Inspire...', emoji: '😮‍💨', dur: 4, cor: '#667eea' },
+      { texto: 'Segure...', emoji: '🤐', dur: 7, cor: '#764ba2' },
+      { texto: 'Expire...', emoji: '😌', dur: 8, cor: '#06b6d4' }
+    ],
+    'box': [
+      { texto: 'Inspire...', emoji: '😮‍💨', dur: 4, cor: '#667eea' },
+      { texto: 'Segure...', emoji: '🤐', dur: 4, cor: '#764ba2' },
+      { texto: 'Expire...', emoji: '😌', dur: 4, cor: '#06b6d4' },
+      { texto: 'Segure...', emoji: '🤐', dur: 4, cor: '#f59e0b' }
+    ],
+    'coerencia': [
+      { texto: 'Inspire...', emoji: '😮‍💨', dur: 5, cor: '#10b981' },
+      { texto: 'Expire...', emoji: '😌', dur: 5, cor: '#06b6d4' }
+    ]
+  };
+
+  var fases = ciclos[tipo] || ciclos['4-7-8'];
+  var faseAtual = 0;
+  var contador = fases[0].dur;
+
+  function executarFase() {
+    if (!msRespAtivo) return;
+    var fase = fases[faseAtual];
+    document.getElementById('ms-resp-emoji').textContent = fase.emoji;
+    document.getElementById('ms-resp-texto').textContent = fase.texto;
+    document.getElementById('ms-resp-fase').textContent = fase.texto;
+    document.getElementById('ms-circulo-resp').style.background = 'linear-gradient(145deg,' + fase.cor + ', #1a1a2e)';
+    
+    if (fase.texto === 'Inspire...') {
+      document.getElementById('ms-circulo-resp').style.transform = 'scale(1.3)';
+    } else if (fase.texto === 'Expire...') {
+      document.getElementById('ms-circulo-resp').style.transform = 'scale(0.9)';
+    } else {
+      document.getElementById('ms-circulo-resp').style.transform = 'scale(1.1)';
+    }
+
+    contador = fase.dur;
+    document.getElementById('ms-resp-contador').textContent = contador + 's';
+
+    msRespTimer = setInterval(function() {
+      if (!msRespAtivo) { clearInterval(msRespTimer); return; }
+      contador--;
+      document.getElementById('ms-resp-contador').textContent = contador + 's';
+      if (contador <= 0) {
+        clearInterval(msRespTimer);
+        faseAtual = (faseAtual + 1) % fases.length;
+        executarFase();
+      }
+    }, 1000);
+  }
+
+  executarFase();
+}
+
+function pararRespiracao() {
+  msRespAtivo = false;
+  if (msRespTimer) { clearInterval(msRespTimer); msRespTimer = null; }
+  var el = document.getElementById('ms-resp-emoji');
+  if (el) el.textContent = '😮‍💨';
+  var t = document.getElementById('ms-resp-texto');
+  if (t) t.textContent = 'Toque para iniciar';
+  var f = document.getElementById('ms-resp-fase');
+  if (f) f.textContent = '';
+  var cnt = document.getElementById('ms-resp-contador');
+  if (cnt) cnt.textContent = '';
+  var circ = document.getElementById('ms-circulo-resp');
+  if (circ) {
+    circ.style.transform = 'scale(1)';
+    circ.style.background = 'linear-gradient(145deg,#667eea,#764ba2)';
+  }
+}
+
+// ── HUMOR ──
+async function msRegistrarHumor(valor, label) {
+  document.querySelectorAll('.ms-emoji-humor').forEach(function(el) {
+    el.style.background = el.dataset.valor === label ? '#e8f5e9' : '';
+    el.style.border = el.dataset.valor === label ? '2px solid #10b981' : '2px solid transparent';
+    el.style.borderRadius = '8px';
+  });
+  msHumorSelecionado = { valor: valor, label: label };
+}
+
+async function msSalvarHumor() {
+  if (!msHumorSelecionado) return alerta('Selecione como você está');
+  var obs = document.getElementById('ms-humor-obs').value.trim();
+  try {
+    await api('POST', '/api/mente-sa/humor', {
+      membro_id: APP.membroId,
+      familia_id: APP.familiaId,
+      humor: msHumorSelecionado.label,
+      valor: msHumorSelecionado.valor,
+      obs: obs
+    });
+    document.getElementById('ms-humor-obs').value = '';
+    msHumorSelecionado = null;
+    document.querySelectorAll('.ms-emoji-humor').forEach(function(el) {
+      el.style.background = '';
+      el.style.border = '2px solid transparent';
+    });
+    alerta('✅ Humor registrado!');
+    msCarregarHumor();
+  } catch(e) { alerta('Erro ao salvar humor: ' + e.message); }
+}
+
+async function msCarregarHumor() {
+  try {
+    const lista = await api('GET', '/api/mente-sa/humor/' + APP.membroId);
+    
+    // Gráfico semanal
+    var dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    var hoje = new Date();
+    var grafico = document.getElementById('ms-grafico-humor');
+    var labels = document.getElementById('ms-grafico-labels');
+    var barras = '';
+    var lbls = '';
+    
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(hoje);
+      d.setDate(d.getDate() - i);
+      var dataStr = d.toISOString().split('T')[0];
+      var diaNome = dias[d.getDay()];
+      var registro = lista.find(function(h) { return h.data && h.data.startsWith(dataStr); });
+      var valor = registro ? registro.valor : 0;
+      var cores = { 5:'#10b981', 4:'#34d399', 3:'#f59e0b', 2:'#f97316', 1:'#ef4444', 0:'#e5e7eb' };
+      var cor = cores[valor] || '#e5e7eb';
+      var altura = valor ? (valor * 18) + 'px' : '4px';
+      var emoji = { 5:'😄', 4:'🙂', 3:'😐', 2:'😔', 1:'😢', 0:'' }[valor] || '';
+      
+      barras += '<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:4px">' +
+        '<div style="font-size:0.8rem">' + emoji + '</div>' +
+        '<div style="width:100%;background:' + cor + ';border-radius:6px 6px 0 0;height:' + altura + ';transition:height 0.5s;min-height:4px"></div>' +
+        '</div>';
+      lbls += '<div style="flex:1;text-align:center;font-size:0.7rem;color:#999">' + diaNome + '</div>';
+    }
+    
+    grafico.innerHTML = barras;
+    labels.innerHTML = lbls;
+
+    // Lista
+    var el = document.getElementById('ms-lista-humor');
+    var emojis = { otimo:'😄', bem:'🙂', regular:'😐', mal:'😔', pessimo:'😢' };
+    if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhum registro ainda.</p>'; return; }
+    el.innerHTML = lista.slice(0,5).map(function(h) {
+      return '<div style="background:white;border-radius:12px;padding:0.75rem;margin-bottom:0.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:0.75rem">' +
+        '<div style="font-size:2rem">' + (emojis[h.humor] || '😐') + '</div>' +
+        '<div><div style="font-weight:600;text-transform:capitalize">' + h.humor + '</div>' +
+        '<div style="font-size:0.8rem;color:#666">' + (h.obs || '') + '</div>' +
+        '<div style="font-size:0.75rem;color:#999">' + new Date(h.criado_em).toLocaleDateString('pt-BR') + '</div></div></div>';
+    }).join('');
+  } catch(e) { console.log('Erro humor MS:', e); }
+}
+
+// ── DIÁRIO ──
+async function msSalvarDiario() {
+  var bom = document.getElementById('ms-diario-bom').value.trim();
+  var dificil = document.getElementById('ms-diario-dificil').value.trim();
+  var sentimento = document.getElementById('ms-diario-sentimento').value.trim();
+  if (!bom && !dificil && !sentimento) return alerta('Escreva pelo menos um campo');
+  try {
+    await api('POST', '/api/mente-sa/diario', {
+      membro_id: APP.membroId,
+      familia_id: APP.familiaId,
+      bom: bom, dificil: dificil, sentimento: sentimento
+    });
+    document.getElementById('ms-diario-bom').value = '';
+    document.getElementById('ms-diario-dificil').value = '';
+    document.getElementById('ms-diario-sentimento').value = '';
+    alerta('✅ Diário salvo!');
+    msCarregarDiario();
+  } catch(e) { alerta('Erro ao salvar diário: ' + e.message); }
+}
+
+async function msCarregarDiario() {
+  try {
+    const lista = await api('GET', '/api/mente-sa/diario/' + APP.membroId);
+    var el = document.getElementById('ms-lista-diario');
+    if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhuma entrada no diário ainda.</p>'; return; }
+    el.innerHTML = lista.slice(0,5).map(function(d) {
+      return '<div style="background:white;border-radius:12px;padding:1rem;margin-bottom:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
+        '<div style="font-size:0.75rem;color:#999;margin-bottom:0.5rem">' + new Date(d.criado_em).toLocaleDateString('pt-BR') + '</div>' +
+        (d.bom ? '<div style="margin-bottom:0.5rem"><span style="font-size:0.75rem;color:#10b981;font-weight:600">✅ Bom:</span> <span style="font-size:0.9rem">' + d.bom + '</span></div>' : '') +
+        (d.dificil ? '<div style="margin-bottom:0.5rem"><span style="font-size:0.75rem;color:#f59e0b;font-weight:600">💪 Difícil:</span> <span style="font-size:0.9rem">' + d.dificil + '</span></div>' : '') +
+        (d.sentimento ? '<div><span style="font-size:0.75rem;color:#667eea;font-weight:600">💙 Sentimento:</span> <span style="font-size:0.9rem">' + d.sentimento + '</span></div>' : '') +
+        '</div>';
+    }).join('');
+  } catch(e) { console.log('Erro diario MS:', e); }
+}
+
+// ── ROTINAS ──
+async function msCarregarRotinas() {
+  try {
+    const lista = await api('GET', '/api/mente-sa/rotinas/' + APP.membroId);
+    var el = document.getElementById('ms-lista-rotinas');
+    var vazio = document.getElementById('ms-rotinas-vazio');
+    if (!lista.length) {
+      vazio.style.display = 'block';
+      el.innerHTML = '';
+      return;
+    }
+    vazio.style.display = 'none';
+    el.innerHTML = lista.map(function(r) {
+      return '<div style="background:white;border-radius:12px;padding:1rem;margin-bottom:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">' +
+        '<div style="font-weight:600">' + r.titulo + '</div>' +
+        '<input type="checkbox" ' + (r.concluido ? 'checked' : '') + ' onchange="msConcluirRotina(' + r.id + ', this.checked)" style="width:20px;height:20px;cursor:pointer"></div>' +
+        '<div style="font-size:0.85rem;color:#666;margin-bottom:0.25rem">' + (r.descricao || '') + '</div>' +
+        '<div style="font-size:0.75rem;color:#999">👨‍⚕️ ' + (r.especialista || 'Especialista') + '</div>' +
+        '</div>';
+    }).join('');
+  } catch(e) {
+    document.getElementById('ms-rotinas-vazio').style.display = 'block';
+  }
+}
+
+async function msConcluirRotina(id, concluido) {
+  try {
+    await api('PUT', '/api/mente-sa/rotinas/' + id, { concluido: concluido });
+    alerta(concluido ? '✅ Tarefa concluída!' : 'Tarefa desmarcada');
+  } catch(e) { alerta('Erro ao atualizar rotina'); }
 }
