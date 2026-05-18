@@ -13,6 +13,7 @@ const APP = {
 
 // ── INICIALIZAR ──
 document.addEventListener('DOMContentLoaded', () => {
+  verificarBoasVindas();
   carregarSessao();
   registrarSW();
 });
@@ -2454,4 +2455,47 @@ async function gerarResumoIA() {
   } catch(e) {
     texto.textContent = 'Nao foi possivel gerar analise agora.';
   }
+}
+
+// BOAS VINDAS
+let _bvSlideAtual = 0;
+
+function verificarBoasVindas() {
+  try {
+    const visto = localStorage.getItem('applus_boas_vindas');
+    if (!visto) {
+      const tela = document.getElementById('tela-boas-vindas');
+      if (tela) tela.style.display = 'flex';
+    }
+  } catch(e) {}
+}
+
+function proximoSlide() {
+  const slides = document.querySelectorAll('.bv-slide');
+  const dots = [
+    document.getElementById('bv-dot-0'),
+    document.getElementById('bv-dot-1'),
+    document.getElementById('bv-dot-2')
+  ];
+  const btn = document.getElementById('bv-btn-proximo');
+
+  if (_bvSlideAtual < slides.length - 1) {
+    slides[_bvSlideAtual].style.transform = 'translateX(-100%)';
+    _bvSlideAtual++;
+    slides[_bvSlideAtual].style.transform = 'translateX(0)';
+    slides[_bvSlideAtual].style.transition = 'transform 0.3s ease';
+    dots.forEach(function(d, i) {
+      if (d) d.style.background = i === _bvSlideAtual ? '#0f6647' : '#d1d5db';
+    });
+    if (_bvSlideAtual === slides.length - 1) {
+      btn.style.display = 'none';
+    }
+  }
+}
+
+function fecharBoasVindas(abrirCadastro) {
+  try { localStorage.setItem('applus_boas_vindas', '1'); } catch(e) {}
+  const tela = document.getElementById('tela-boas-vindas');
+  if (tela) tela.style.display = 'none';
+  if (abrirCadastro) abrirModal('modal-criar');
 }
