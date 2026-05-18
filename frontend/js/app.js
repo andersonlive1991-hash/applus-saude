@@ -2570,7 +2570,7 @@ async function salvarEdicaoEvento() {
       data_retorno, foto_exame
     });
     fecharModal('modal-editar-evento');
-    carregarEventos();
+    carregarAgenda();
     alerta('Evento atualizado!');
   } catch(e) { alerta('Erro ao salvar: ' + e.message); }
 }
