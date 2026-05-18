@@ -20,13 +20,38 @@ router.get('/:familia_id', async (req, res) => {
   }
 });
 
+// Buscar evento por ID
+router.get('/detalhe/:id', async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM eventos WHERE id = $1', [req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ erro: 'Evento nao encontrado' });
+    res.json(result.rows[0]);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 // Criar evento
 router.post('/', async (req, res) => {
-  const { familia_id, membro_id, titulo, data, hora, tipo, local, observacoes } = req.body;
+  const { familia_id, membro_id, titulo, data, hora, tipo, local, observacoes, nome_medico, especialidade, pediu_exame, foto_exame, gerou_receita, data_retorno } = req.body;
   try {
     const result = await db.query(
-      'INSERT INTO eventos (familia_id, membro_id, titulo, data, hora, tipo, local, observacoes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
-      [familia_id, membro_id, titulo, data, hora, tipo, local, observacoes]
+      'INSERT INTO eventos (familia_id, membro_id, titulo, data, hora, tipo, local, observacoes, nome_medico, especialidade, pediu_exame, foto_exame, gerou_receita, data_retorno) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *',
+      [familia_id, membro_id, titulo, data, hora, tipo, local, observacoes, nome_medico, especialidade, pediu_exame || false, foto_exame || null, gerou_receita || false, data_retorno || null]
+    );
+    res.json(result.rows[0]);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// Editar evento
+router.put('/:id', async (req, res) => {
+  const { titulo, data, hora, tipo, local, observacoes, nome_medico, especialidade, pediu_exame, foto_exame, gerou_receita, data_retorno, resumo_gemini } = req.body;
+  try {
+    const result = await db.query(
+      'UPDATE eventos SET titulo=$1, data=$2, hora=$3, tipo=$4, local=$5, observacoes=$6, nome_medico=$7, especialidade=$8, pediu_exame=$9, foto_exame=$10, gerou_receita=$11, data_retorno=$12, resumo_gemini=$13, atualizado_em=NOW() WHERE id=$14 RETURNING *',
+      [titulo, data, hora, tipo, local, observacoes, nome_medico, especialidade, pediu_exame || false, foto_exame || null, gerou_receita || false, data_retorno || null, resumo_gemini || null, req.params.id]
     );
     res.json(result.rows[0]);
   } catch (e) {

@@ -177,3 +177,14 @@ async function setup() {
 }
 
 setup();
+
+// Migracoes eventos
+pool.query('ALTER TABLE eventos ADD COLUMN IF NOT EXISTS membro_id INTEGER REFERENCES membros(id) ON DELETE CASCADE').catch(()=>{});
+pool.query('ALTER TABLE eventos ADD COLUMN IF NOT EXISTS nome_medico VARCHAR(200)').catch(()=>{});
+pool.query('ALTER TABLE eventos ADD COLUMN IF NOT EXISTS especialidade VARCHAR(100)').catch(()=>{});
+pool.query('ALTER TABLE eventos ADD COLUMN IF NOT EXISTS pediu_exame BOOLEAN DEFAULT FALSE').catch(()=>{});
+pool.query('ALTER TABLE eventos ADD COLUMN IF NOT EXISTS foto_exame TEXT').catch(()=>{});
+pool.query('ALTER TABLE eventos ADD COLUMN IF NOT EXISTS gerou_receita BOOLEAN DEFAULT FALSE').catch(()=>{});
+pool.query('ALTER TABLE eventos ADD COLUMN IF NOT EXISTS data_retorno DATE').catch(()=>{});
+pool.query('ALTER TABLE eventos ADD COLUMN IF NOT EXISTS resumo_gemini TEXT').catch(()=>{});
+console.log('Migracoes eventos OK');

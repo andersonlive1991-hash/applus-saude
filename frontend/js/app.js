@@ -977,7 +977,10 @@ async function carregarAgenda() {
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
             <span class="badge badge-info">${e.tipo}</span>
-            <button onclick="excluirEvento(${e.id})" style="background:none;border:none;font-size:14px;cursor:pointer;color:var(--cinza)">🗑️</button>
+            <div style="display:flex;gap:6px">
+              <button onclick="abrirEditarEvento(${e.id})" style="background:none;border:none;font-size:14px;cursor:pointer;color:#1a9e6e">✏️</button>
+              <button onclick="excluirEvento(${e.id})" style="background:none;border:none;font-size:14px;cursor:pointer;color:var(--cinza)">🗑️</button>
+            </div>
           </div>
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhum evento cadastrado</p>';
@@ -995,11 +998,20 @@ async function salvarEvento() {
 
   if (!titulo || !data) return alerta('Preencha título e data');
 
+  const nome_medico = document.getElementById('ev-medico').value.trim();
+  const especialidade = document.getElementById('ev-especialidade').value.trim();
+  const observacoes = document.getElementById('ev-obs').value.trim();
+  const pediu_exame = document.getElementById('ev-pediu-exame').checked;
+  const gerou_receita = document.getElementById('ev-gerou-receita').checked;
+  const data_retorno = document.getElementById('ev-retorno').value || null;
+
   try {
     await api('POST', '/api/eventos', {
       familia_id: APP.familiaId,
       membro_id: APP.membroId,
-      titulo, data, hora, tipo, local
+      titulo, data, hora, tipo, local,
+      nome_medico, especialidade, observacoes,
+      pediu_exame, gerou_receita, data_retorno
     });
     fecharModal('modal-add-evento');
     carregarAgenda();
@@ -2498,4 +2510,94 @@ function fecharBoasVindas(abrirCadastro) {
   const tela = document.getElementById('tela-boas-vindas');
   if (tela) tela.style.display = 'none';
   if (abrirCadastro) abrirModal('modal-criar');
+}
+
+// EDITAR EVENTO
+async function abrirEditarEvento(id) {
+  try {
+    const ev = await api('GET', '/api/eventos/detalhe/' + id);
+    document.getElementById('edit-ev-id').value = ev.id;
+    document.getElementById('edit-ev-titulo').value = ev.titulo || '';
+    document.getElementById('edit-ev-data').value = ev.data ? ev.data.split('T')[0] : '';
+    document.getElementById('edit-ev-hora').value = ev.hora ? ev.hora.substring(0,5) : '';
+    document.getElementById('edit-ev-tipo').value = ev.tipo || 'Consulta';
+    document.getElementById('edit-ev-local').value = ev.local || '';
+    document.getElementById('edit-ev-medico').value = ev.nome_medico || '';
+    document.getElementById('edit-ev-especialidade').value = ev.especialidade || '';
+    document.getElementById('edit-ev-obs').value = ev.observacoes || '';
+    document.getElementById('edit-ev-pediu-exame').checked = ev.pediu_exame || false;
+    document.getElementById('edit-ev-gerou-receita').checked = ev.gerou_receita || false;
+    document.getElementById('edit-ev-retorno').value = ev.data_retorno ? ev.data_retorno.split('T')[0] : '';
+    if (ev.foto_exame) {
+      document.getElementById('edit-ev-foto-preview').innerHTML = '<img src="' + ev.foto_exame + '" style="width:100%;border-radius:12px;margin-top:8px">';
+    } else {
+      document.getElementById('edit-ev-foto-preview').innerHTML = '';
+    }
+    abrirModal('modal-editar-evento');
+  } catch(e) { alerta('Erro ao carregar evento: ' + e.message); }
+}
+
+async function salvarEdicaoEvento() {
+  const id = document.getElementById('edit-ev-id').value;
+  const titulo = document.getElementById('edit-ev-titulo').value.trim();
+  const data = document.getElementById('edit-ev-data').value;
+  const hora = document.getElementById('edit-ev-hora').value;
+  const tipo = document.getElementById('edit-ev-tipo').value;
+  const local = document.getElementById('edit-ev-local').value;
+  const nome_medico = document.getElementById('edit-ev-medico').value;
+  const especialidade = document.getElementById('edit-ev-especialidade').value;
+  const observacoes = document.getElementById('edit-ev-obs').value;
+  const pediu_exame = document.getElementById('edit-ev-pediu-exame').checked;
+  const gerou_receita = document.getElementById('edit-ev-gerou-receita').checked;
+  const data_retorno = document.getElementById('edit-ev-retorno').value || null;
+
+  if (!titulo || !data) return alerta('Preencha titulo e data');
+
+  let foto_exame = null;
+  const fotoInput = document.getElementById('edit-ev-foto');
+  if (fotoInput.files && fotoInput.files[0]) {
+    foto_exame = await new Promise(function(resolve) {
+      const reader = new FileReader();
+      reader.onload = function(e) { resolve(e.target.result); };
+      reader.readAsDataURL(fotoInput.files[0]);
+    });
+  }
+
+  try {
+    await api('PUT', '/api/eventos/' + id, {
+      titulo, data, hora, tipo, local, observacoes,
+      nome_medico, especialidade, pediu_exame, gerou_receita,
+      data_retorno, foto_exame
+    });
+    fecharModal('modal-editar-evento');
+    carregarEventos();
+    alerta('Evento atualizado!');
+  } catch(e) { alerta('Erro ao salvar: ' + e.message); }
+}
+
+async function gerarResumoConsulta() {
+  const id = document.getElementById('edit-ev-id').value;
+  const titulo = document.getElementById('edit-ev-titulo').value;
+  const medico = document.getElementById('edit-ev-medico').value;
+  const especialidade = document.getElementById('edit-ev-especialidade').value;
+  const obs = document.getElementById('edit-ev-obs').value;
+  const pediu = document.getElementById('edit-ev-pediu-exame').checked;
+  const receita = document.getElementById('edit-ev-gerou-receita').checked;
+  const retorno = document.getElementById('edit-ev-retorno').value;
+
+  if (!obs && !medico) return alerta('Preencha pelo menos as observacoes ou nome do medico para gerar o resumo');
+
+  const prompt = 'Faca um resumo medico objetivo desta consulta em portugues brasileiro. Consulta: ' + titulo + '. Medico: ' + (medico || 'nao informado') + '. Especialidade: ' + (especialidade || 'nao informada') + '. Observacoes: ' + (obs || 'nenhuma') + '. Pediu exame: ' + (pediu ? 'sim' : 'nao') + '. Gerou receita: ' + (receita ? 'sim' : 'nao') + '. Retorno: ' + (retorno || 'nao agendado') + '. Responda em 3 linhas curtas com os pontos mais importantes.';
+
+  try {
+    const r = await api('POST', '/api/ia/perguntar', { pergunta: prompt, membro_id: APP.membroId, familia_id: APP.familiaId });
+    if (r.resposta) {
+      document.getElementById('edit-ev-obs').value = obs + (obs ? '
+
+' : '') + 'RESUMO IA:
+' + r.resposta;
+      await api('PUT', '/api/eventos/' + id, { resumo_gemini: r.resposta });
+      alerta('Resumo gerado e salvo!');
+    }
+  } catch(e) { alerta('Erro ao gerar resumo: ' + e.message); }
 }
