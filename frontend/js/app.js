@@ -266,7 +266,17 @@ async function criarFamilia() {
   const membro = nome + ' ' + sobrenome;
   const tipo = document.getElementById('inp-tipo-membro').value;
   if (!nome || !sobrenome) return alerta('Preencha nome e sobrenome');
-  const foto = await getFotoBase64();
+
+  // Pega foto antes de qualquer await (regra de ouro 8)
+  const fotoInput = document.getElementById('inp-foto-cadastro');
+  let fotoDataUrl = null;
+  if (fotoInput && fotoInput.files && fotoInput.files[0]) {
+    fotoDataUrl = await new Promise(function(resolve) {
+      const reader = new FileReader();
+      reader.onload = function(e) { resolve(e.target.result); };
+      reader.readAsDataURL(fotoInput.files[0]);
+    });
+  }
 
   // Ler DOM antes de qualquer await
   const dia = document.getElementById('inp-data-dia')?.value || '';
@@ -290,7 +300,7 @@ async function criarFamilia() {
       tipo,
       relacao: tipo
     });
-    if (foto) { try { await api('PUT', '/api/membros/' + resMem.id + '/foto', { foto }); } catch(e) {} }
+    if (fotoDataUrl) { try { await api('PUT', '/api/membros/' + resMem.id + '/foto', { foto: fotoDataUrl }); } catch(e) {} }
     APP.familiaId = String(resFam.id);
     APP.codigoFamilia = resFam.codigo;
     APP.nomeFamilia = resFam.nome;
