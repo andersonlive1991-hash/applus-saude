@@ -2592,11 +2592,7 @@ async function gerarResumoConsulta() {
   try {
     const r = await api('POST', '/api/ia/perguntar', { pergunta: prompt, membro_id: APP.membroId, familia_id: APP.familiaId });
     if (r.resposta) {
-      document.getElementById('edit-ev-obs').value = obs + (obs ? '
-
-' : '') + 'RESUMO IA:
-' + r.resposta;
-      await api('PUT', '/api/eventos/' + id, { resumo_gemini: r.resposta });
+      document.getElementById('edit-ev-obs').value = obs + (obs ? '\n\n' : '') + 'RESUMO IA:\n' + r.resposta;
       alerta('Resumo gerado e salvo!');
     }
   } catch(e) { alerta('Erro ao gerar resumo: ' + e.message); }
