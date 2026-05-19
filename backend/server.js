@@ -158,6 +158,19 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 10000;
 
+app.get('/api/fix-perfil-89', async (req, res) => {
+  try {
+    const origem = await pool.query('SELECT * FROM perfil_idoso WHERE membro_id = 91');
+    if (!origem.rows.length) return res.json({ erro: 'perfil 91 nao encontrado' });
+    const p = origem.rows[0];
+    await pool.query(
+      'INSERT INTO perfil_idoso (membro_id, nome_completo, data_nascimento, tipo_sanguineo, alergias, cpf, cartao_sus, convenio, contato_emergencia, tel_emergencia) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT (membro_id) DO UPDATE SET nome_completo=$2, tipo_sanguineo=$4, alergias=$5, cpf=$6, cartao_sus=$7, convenio=$8, contato_emergencia=$9, tel_emergencia=$10',
+      [89, p.nome_completo, p.data_nascimento, p.tipo_sanguineo, p.alergias, p.cpf, p.cartao_sus, p.convenio, p.contato_emergencia, p.tel_emergencia]
+    );
+    res.json({ ok: true, mensagem: 'Perfil copiado do ID 91 para o ID 89' });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 app.get("/ping", (req, res) => {
   res.json({ status: "ok", uptime: Math.floor(process.uptime()) + "s", hora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) });
 });
