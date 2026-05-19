@@ -2500,6 +2500,7 @@ async function gerarResumoIA() {
 
   try {
     const r = await api('POST', '/api/ia/resumo-dia', {
+      idioma: localStorage.getItem('applus_idioma') || 'pt',
       membro_id: APP.membroId,
       familia_id: APP.familiaId
     });
@@ -2516,7 +2517,9 @@ async function gerarResumoIA() {
       document.getElementById('resumo-humor').textContent = '😊';
     }
   } catch(e) {
-    texto.textContent = 'Nao foi possivel gerar analise agora.';
+    const _errLang = localStorage.getItem('applus_idioma') || 'pt';
+      const _errMsg = {pt:'Não foi possível gerar análise agora.',en:'Could not generate analysis now.',es:'No se pudo generar el análisis ahora.',fr:'Impossible de générer une analyse maintenant.',de:'Analyse konnte nicht generiert werden.'}[_errLang] || 'Não foi possível gerar análise agora.';
+      texto.textContent = _errMsg;
   }
 }
 
@@ -2638,7 +2641,9 @@ async function gerarResumoConsulta() {
 
   if (!obs && !medico) return alerta('Preencha pelo menos as observacoes ou nome do medico para gerar o resumo');
 
-  const prompt = 'Faca um resumo medico objetivo desta consulta em portugues brasileiro. Consulta: ' + titulo + '. Medico: ' + (medico || 'nao informado') + '. Especialidade: ' + (especialidade || 'nao informada') + '. Observacoes: ' + (obs || 'nenhuma') + '. Pediu exame: ' + (pediu ? 'sim' : 'nao') + '. Gerou receita: ' + (receita ? 'sim' : 'nao') + '. Retorno: ' + (retorno || 'nao agendado') + '. Responda em 3 linhas curtas com os pontos mais importantes.';
+  const _lang = localStorage.getItem('applus_idioma') || 'pt';
+  const _langTexto = {pt:'portugues brasileiro',en:'English',es:'español',fr:'français',de:'Deutsch'}[_lang] || 'portugues brasileiro';
+  const prompt = 'Faca um resumo medico objetivo desta consulta em ' + _langTexto + '. Consulta: ' + titulo + '. Medico: ' + (medico || 'nao informado') + '. Especialidade: ' + (especialidade || 'nao informada') + '. Observacoes: ' + (obs || 'nenhuma') + '. Pediu exame: ' + (pediu ? 'sim' : 'nao') + '. Gerou receita: ' + (receita ? 'sim' : 'nao') + '. Retorno: ' + (retorno || 'nao agendado') + '. Responda em 3 linhas curtas com os pontos mais importantes.';
 
   try {
     const r = await api('POST', '/api/ia/perguntar', { pergunta: prompt, membro_id: APP.membroId, familia_id: APP.familiaId });

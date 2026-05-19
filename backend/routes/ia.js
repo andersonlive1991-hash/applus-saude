@@ -80,7 +80,9 @@ router.post('/resumo-dia', async (req, res) => {
 
     const sonoInfo = horasSono ? (horasSono + 'h dormidas (meta: ' + metaSono + 'h)') : 'nao registrado hoje';
 
-    const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de ' + nome + ' e faca um resumo em portugues brasileiro. DADOS: Agua: ' + copos + ' copos (meta: ' + metaAgua + '). Sono: ' + sonoInfo + '. Humor recente: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica e 1 doenca que pode ser evitada. Seja direto e acolhedor. Nao substitui consulta medica.';
+    const idioma = req.body.idioma || 'pt';
+    const idiomaTexto = {pt:'portugues brasileiro',en:'English',es:'español',fr:'français',de:'Deutsch'}[idioma] || 'portugues brasileiro';
+    const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de ' + nome + ' e faca um resumo em ' + idiomaTexto + '. DADOS: Agua: ' + copos + ' copos (meta: ' + metaAgua + '). Sono: ' + sonoInfo + '. Humor recente: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica e 1 doenca que pode ser evitada. Seja direto e acolhedor. Nao substitui consulta medica.';
 
     const response = await fetch(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,

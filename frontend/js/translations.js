@@ -361,6 +361,12 @@ const TRANSLATIONS = {
     'med.via': 'Vía de administración',
     'agua.copos': 'copos (meta: ',
     'agua.copos': 'vasos (meta: ',
+    'ia.powered': 'Powered by Gemini',
+    'ia.boas_vindas': 'Olá! Sou o assistente de saúde do AP+ Saúde. Posso ajudar com dúvidas sobre medicamentos, cuidados e saúde em geral. Como posso ajudar?',
+    'ia.placeholder': 'Faça uma pergunta...',
+    'ia.powered': 'Powered by Gemini',
+    'ia.boas_vindas': '¡Hola! Soy el asistente de salud de AP+ Salud. Puedo ayudar con preguntas sobre medicamentos, cuidados y salud en general. ¿Cómo puedo ayudar?',
+    'ia.placeholder': 'Haz una pregunta...',
     'idioma.continuar': 'Continuar',
   },
   en: {
@@ -580,6 +586,9 @@ const TRANSLATIONS = {
     'med.horarios': 'Schedules',
     'med.via': 'Route of administration',
     'agua.copos': 'cups (goal: ',
+    'ia.powered': 'Powered by Gemini',
+    'ia.boas_vindas': 'Hello! I am the AP+ Health assistant. I can help with questions about medications, care and health in general. How can I help?',
+    'ia.placeholder': 'Ask a question...',
     'idioma.continuar': 'Continue',
   },
   es: {
@@ -884,6 +893,9 @@ const TRANSLATIONS = {
     'med.horarios': 'Horaires',
     'med.via': 'Voie d\'administration',
     'agua.copos': 'verres (objectif: ',
+    'ia.powered': 'Powered by Gemini',
+    'ia.boas_vindas': 'Bonjour! Je suis l\'assistant santé d\'AP+ Santé. Je peux aider avec des questions sur les médicaments, les soins et la santé en général. Comment puis-je vous aider?',
+    'ia.placeholder': 'Posez une question...',
     'idioma.continuar': 'Continuer',
   },
   de: {
@@ -1103,6 +1115,9 @@ const TRANSLATIONS = {
     'med.horarios': 'Zeiten',
     'med.via': 'Verabreichungsweg',
     'agua.copos': 'Gläser (Ziel: ',
+    'ia.powered': 'Powered by Gemini',
+    'ia.boas_vindas': 'Hallo! Ich bin der AP+ Gesundheitsassistent. Ich kann bei Fragen zu Medikamenten, Pflege und Gesundheit helfen. Wie kann ich helfen?',
+    'ia.placeholder': 'Stellen Sie eine Frage...',
     'idioma.continuar': 'Weiter',
   }
 };
