@@ -359,6 +359,8 @@ const TRANSLATIONS = {
     'med.via': 'Via de administração',
     'med.horarios': 'Horarios',
     'med.via': 'Vía de administración',
+    'agua.copos': 'copos (meta: ',
+    'agua.copos': 'vasos (meta: ',
     'idioma.continuar': 'Continuar',
   },
   en: {
@@ -577,6 +579,7 @@ const TRANSLATIONS = {
     'agua.menos1': '- 1 cup',
     'med.horarios': 'Schedules',
     'med.via': 'Route of administration',
+    'agua.copos': 'cups (goal: ',
     'idioma.continuar': 'Continue',
   },
   es: {
@@ -880,6 +883,7 @@ const TRANSLATIONS = {
     'agua.menos1': '- 1 verre',
     'med.horarios': 'Horaires',
     'med.via': 'Voie d\'administration',
+    'agua.copos': 'verres (objectif: ',
     'idioma.continuar': 'Continuer',
   },
   de: {
@@ -1098,6 +1102,7 @@ const TRANSLATIONS = {
     'agua.menos1': '- 1 Glas',
     'med.horarios': 'Zeiten',
     'med.via': 'Verabreichungsweg',
+    'agua.copos': 'Gläser (Ziel: ',
     'idioma.continuar': 'Weiter',
   }
 };
