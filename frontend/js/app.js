@@ -832,7 +832,7 @@ async function salvarMedicamento() {
     limparFormMed();
     carregarMedicamentos();
     iniciarAlarmes();
-    api('POST', '/api/interacoes/verificar', { membro_id: APP.membroId, nome_novo: nome }).then(r => { if (r && r.alerta) alerta('⚠️ ' + r.alerta, 'warning'); }).catch(() => {});
+    api('POST', '/api/interacoes/verificar', { membro_id: APP.membroId, nome_novo: nome }).then(r => { if (r && r.alerta) alertaInteracao(r.alerta); }).catch(() => {});
   } catch (e) {
     alerta('Erro ao salvar: ' + e.message);
   }
@@ -1541,13 +1541,24 @@ function fecharModal(id) {
 }
 
 // ── UTILITÁRIOS ──
+function alertaInteracao(msg) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:400px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.3)';
+  box.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:28px">⚠️</span><strong style="color:#dc2626;font-size:16px">Interação Medicamentosa</strong></div><p style="color:#333;font-size:14px;line-height:1.6;margin:0 0 20px">' + msg + '</p><button onclick="this.closest(div).remove()" style="width:100%;padding:12px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">Entendi</button>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
 function alerta(msg, tipo) {
   const div = document.createElement('div');
   const bg = tipo === 'erro' ? '#ef4444' : tipo === 'aviso' ? '#f59e0b' : '#1a9e6e';
   div.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:' + bg + ';color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center';
   div.textContent = msg;
   document.body.appendChild(div);
-  setTimeout(() => div.remove(), 4000);
+  const tempo = Math.max(4000, msg.length * 60);
+  setTimeout(() => div.remove(), tempo);
 }
 
 function formatarData(data) {
