@@ -62,6 +62,7 @@ function carregarSessao() {
     APP.membroNome = dados.membroNome;
     APP.membroTipo = dados.membroTipo;
     APP.idPessoal = dados.idPessoal;
+    APP.membroAtivo = { id: dados.membroId, nome: dados.membroNome, tipo: dados.membroTipo, id_pessoal: dados.idPessoal };
     iniciarApp();
   } else if (familia) {
     const dados = JSON.parse(familia);
