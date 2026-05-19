@@ -355,6 +355,10 @@ const TRANSLATIONS = {
     'agua.mais1': '+ 1 vaso',
     'agua.mais2': '+ 2 vasos',
     'agua.menos1': '- 1 vaso',
+    'med.horarios': 'Horários',
+    'med.via': 'Via de administração',
+    'med.horarios': 'Horarios',
+    'med.via': 'Vía de administración',
     'idioma.continuar': 'Continuar',
   },
   en: {
@@ -571,6 +575,8 @@ const TRANSLATIONS = {
     'agua.mais1': '+ 1 cup',
     'agua.mais2': '+ 2 cups',
     'agua.menos1': '- 1 cup',
+    'med.horarios': 'Schedules',
+    'med.via': 'Route of administration',
     'idioma.continuar': 'Continue',
   },
   es: {
@@ -872,6 +878,8 @@ const TRANSLATIONS = {
     'agua.mais1': '+ 1 verre',
     'agua.mais2': '+ 2 verres',
     'agua.menos1': '- 1 verre',
+    'med.horarios': 'Horaires',
+    'med.via': 'Voie d\'administration',
     'idioma.continuar': 'Continuer',
   },
   de: {
@@ -1088,6 +1096,8 @@ const TRANSLATIONS = {
     'agua.mais1': '+ 1 Glas',
     'agua.mais2': '+ 2 Gläser',
     'agua.menos1': '- 1 Glas',
+    'med.horarios': 'Zeiten',
+    'med.via': 'Verabreichungsweg',
     'idioma.continuar': 'Weiter',
   }
 };
