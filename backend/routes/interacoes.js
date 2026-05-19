@@ -6,8 +6,8 @@ router.post('/verificar', async (req, res) => {
   const { membro_id, nome_novo } = req.body;
   try {
     const outrosMeds = await db.query(
-      'SELECT nome FROM medicamentos WHERE membro_id = $1',
-      [membro_id]
+      'SELECT nome FROM medicamentos WHERE membro_id = $1 AND LOWER(nome) != LOWER($2)',
+      [membro_id, nome_novo]
     );
     if (outrosMeds.rows.length === 0) return res.json({ alerta: null });
 
