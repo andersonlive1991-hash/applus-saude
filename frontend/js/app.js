@@ -574,7 +574,7 @@ async function salvarPerfil() {
       alerta('✅ Perfil salvo com sucesso!');
     }
   } catch(e) {
-    alerta('Erro ao salvar perfil: ' + e.message);
+    alerta('ERRO DETALHADO: ' + e.name + ' - ' + e.message + ' - ' + e.stack);
   }
 }
 
