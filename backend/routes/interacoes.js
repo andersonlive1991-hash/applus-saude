@@ -2,6 +2,36 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+const GEMINI_KEYS = [
+  process.env.GEMINI_API_KEY,
+  process.env.GEMINI_API_KEY_2,
+  process.env.GEMINI_API_KEY_3,
+  process.env.GEMINI_API_KEY_4
+].filter(Boolean);
+
+async function chamarGemini(prompt) {
+  for (const key of GEMINI_KEYS) {
+    try {
+      const res = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        }
+      );
+      const data = await res.json();
+      console.log('[Gemini RAW]', JSON.stringify(data).substring(0, 300));
+      const texto = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (texto) return texto;
+    } catch (e) {
+      console.log('[Gemini] Chave falhou, tentando proxima:', e.message);
+      continue;
+    }
+  }
+  return null;
+}
+
 router.post('/verificar', async (req, res) => {
   const { membro_id, nome_novo } = req.body;
   try {
@@ -14,16 +44,7 @@ router.post('/verificar', async (req, res) => {
     const outros = outrosMeds.rows.map(m => m.nome).join(', ');
     const prompt = 'Você é um farmacêutico especialista. Um paciente que já usa: ' + outros + '. Vai começar a usar: ' + nome_novo + '. Verifique se há interações medicamentosas relevantes. Responda em português brasileiro, de forma clara para leigos. Se houver interação grave ou moderada, explique o risco em 2-3 frases. Se não houver interação relevante, responda apenas: SEM_INTERACAO. Não use markdown.';
 
-    const geminiRes = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-      }
-    );
-    const geminiData = await geminiRes.json();
-    const resposta = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const resposta = await chamarGemini(prompt) || '';
     if (resposta && !resposta.includes('SEM_INTERACAO')) {
       return res.json({ alerta: resposta.trim() });
     }
