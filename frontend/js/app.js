@@ -24,6 +24,7 @@ function renderMarkdown(txt) {
 
 // ── INICIALIZAR ──
 document.addEventListener('DOMContentLoaded', () => {
+  if (typeof verificarIdioma === 'function') verificarIdioma();
   verificarBoasVindas();
   carregarSessao();
   registrarSW();
