@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+// Garantir coluna nome_completo em bancos existentes
+db.query('ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS nome_completo VARCHAR(200)')
+  .catch(e => console.log('ALTER perfil_idoso nome_completo:', e.message));
+
 // Buscar perfil
 router.get('/:membro_id', async (req, res) => {
   try {
@@ -9,7 +13,7 @@ router.get('/:membro_id', async (req, res) => {
       'SELECT * FROM perfil_idoso WHERE membro_id = $1',
       [req.params.membro_id]
     );
-    if (!result.rows.length) return res.status(404).json({ erro: 'Perfil não encontrado' });
+    if (!result.rows.length) return res.status(404).json({ erro: 'Perfil nao encontrado' });
     res.json(result.rows[0]);
   } catch (e) {
     res.status(500).json({ erro: e.message });
@@ -23,24 +27,31 @@ router.post('/', async (req, res) => {
     alergias, cpf, cartao_sus, convenio,
     contato_emergencia, tel_emergencia
   } = req.body;
-  // Converter strings vazias para null para evitar erro no PostgreSQL
+
+  console.log('[perfil] membro_id:', membro_id, '| nome:', nome_completo);
+
+  if (!membro_id) return res.status(400).json({ erro: 'membro_id obrigatorio' });
+
   const dataNasc = data_nascimento && data_nascimento.trim() !== '' ? data_nascimento.trim() : null;
+
   try {
     const result = await db.query(
-      `INSERT INTO perfil_idoso 
+      `INSERT INTO perfil_idoso
         (membro_id, nome_completo, data_nascimento, tipo_sanguineo, alergias, cpf, cartao_sus, convenio, contato_emergencia, tel_emergencia)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       ON CONFLICT (membro_id) DO UPDATE SET
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        ON CONFLICT (membro_id) DO UPDATE SET
         nome_completo=$2, data_nascimento=$3, tipo_sanguineo=$4,
         alergias=$5, cpf=$6, cartao_sus=$7, convenio=$8,
         contato_emergencia=$9, tel_emergencia=$10,
         atualizado_em=NOW()
-       RETURNING *`,
+        RETURNING *`,
       [membro_id, nome_completo, dataNasc, tipo_sanguineo,
        alergias, cpf, cartao_sus, convenio, contato_emergencia, tel_emergencia]
     );
+    console.log('[perfil] salvo id:', result.rows[0].id);
     res.json(result.rows[0]);
   } catch (e) {
+    console.log('[perfil] ERRO:', e.message);
     res.status(500).json({ erro: e.message });
   }
 });
