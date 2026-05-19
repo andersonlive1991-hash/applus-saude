@@ -189,6 +189,24 @@ app.get('/api/admin-limpar-tudo', async (req, res) => {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+app.get('/api/admin-zerar-tudo', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM perfil_idoso');
+    await pool.query('DELETE FROM perfil_cuidador');
+    await pool.query('DELETE FROM historico_meds');
+    await pool.query('DELETE FROM medicamentos');
+    await pool.query('DELETE FROM eventos');
+    await pool.query('DELETE FROM mensagens');
+    await pool.query('DELETE FROM sinais_vitais');
+    await pool.query('DELETE FROM vacinas');
+    await pool.query('DELETE FROM gastos');
+    await pool.query('DELETE FROM checklist');
+    await pool.query('DELETE FROM membros');
+    await pool.query('DELETE FROM familias');
+    res.json({ ok: true, mensagem: 'Banco zerado com sucesso!' });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 app.get("/ping", (req, res) => {
   res.json({ status: "ok", uptime: Math.floor(process.uptime()) + "s", hora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) });
 });
