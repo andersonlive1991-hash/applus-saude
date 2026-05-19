@@ -176,53 +176,53 @@
       <div class="card destaque" onclick="navegarPara('remedios')">
         <div class="card-icone">💊</div>
         <div>
-          <div class="card-titulo">Medicamentos</div>
+          <div class="card-titulo" data-i18n="card.medicamentos">Medicamentos</div>
           <div class="card-sub">Gerenciar remédios</div>
         </div>
       </div>
       <div class="card" onclick="navegarPara('agenda')">
         <div class="card-icone">📅</div>
-        <div class="card-titulo">Agenda</div>
+        <div class="card-titulo" data-i18n="card.agenda">Agenda</div>
         <div class="card-sub">Consultas e exames</div>
       </div>
       <div class="card" onclick="navegarPara('chat')">
         <div class="card-icone">💬</div>
-        <div class="card-titulo">Família</div>
+        <div class="card-titulo" data-i18n="card.familia">Família</div>
         <div class="card-sub">Chat familiar</div>
       </div>
       <div class="card" onclick="navegarPara('saude')">
         <div class="card-icone">❤️</div>
-        <div class="card-titulo">Saúde</div>
+        <div class="card-titulo" data-i18n="card.saude">Saúde</div>
         <div class="card-sub">Sinais vitais</div>
       </div>
       <div class="card" onclick="navegarPara('ia')">
         <div class="card-icone">🤖</div>
-        <div class="card-titulo">Assistente IA</div>
+        <div class="card-titulo" data-i18n="card.ia">Assistente IA</div>
         <div class="card-sub">Tire dúvidas</div>
       </div>
       <div class="card" onclick="navegarPara('historico')">
         <div class="card-icone">🏥</div>
-        <div class="card-titulo">Histórico</div>
+        <div class="card-titulo" data-i18n="card.historico">Histórico</div>
         <div class="card-sub">Doenças e tratamentos</div>
       </div>
       <div class="card" onclick="navegarPara('cuidados')">
         <div class="card-icone">📋</div>
-        <div class="card-titulo">Cuidados</div>
+        <div class="card-titulo" data-i18n="card.cuidados">Cuidados</div>
         <div class="card-sub">Cuidados do idoso</div>
       </div>
       <div class="card" onclick="navegarPara('meu-dia')">
         <div class="card-icone">💚</div>
-        <div class="card-titulo">Meu Dia</div>
+        <div class="card-titulo" data-i18n="card.meu_dia">Meu Dia</div>
         <div class="card-sub">Autocuidado pessoal</div>
       </div>
       <div class="card" onclick="navegarPara('mente-sa')">
         <div class="card-icone">🌱</div>
-        <div class="card-titulo">Mente Sã</div>
+        <div class="card-titulo" data-i18n="card.mente_sa">Mente Sã</div>
         <div class="card-sub">Equilíbrio e bem-estar</div>
       </div>
       <div class="card" id="card-tea" onclick="navegarPara('tea')" style="display:none">
         <div class="card-icone">🧩</div>
-        <div class="card-titulo">TEA</div>
+        <div class="card-titulo" data-i18n="card.tea">TEA</div>
         <div class="card-sub">Rotina e comunicação</div>
       </div>
     </div>
@@ -241,7 +241,7 @@
     </div>
     <div class="curva"></div>
     <div class="secao" style="padding-top:8px">
-      <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-med')">+ Adicionar medicamento</button>
+      <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-med')"><span data-i18n="med.adicionar">+ Adicionar medicamento</span></button>
     </div>
     <div class="secao">
       <input id="busca-med" type="text" placeholder="🔍 Buscar medicamento..." oninput="filtrarMedicamentos(this.value)" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:12px">
@@ -257,7 +257,7 @@
     </div>
     <div class="curva"></div>
     <div class="secao" style="padding-top:8px">
-      <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-evento')">+ Adicionar evento</button>
+      <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-evento')"><span data-i18n="agenda.adicionar">+ Adicionar evento</span></button>
     </div>
     <div class="secao">
       <div id="lista-eventos"></div>
@@ -288,32 +288,32 @@
     <div class="cards-grid" style="padding-top:8px">
       <div class="card" onclick="abrirModal('modal-pressao')">
         <div class="card-icone">🩺</div>
-        <div class="card-titulo">Pressão</div>
+        <div class="card-titulo" data-i18n="card.pressao">Pressão</div>
         <div class="card-sub">Registrar</div>
       </div>
       <div class="card" onclick="abrirModal('modal-glicemia')">
         <div class="card-icone">🩸</div>
-        <div class="card-titulo">Glicemia</div>
+        <div class="card-titulo" data-i18n="card.glicemia">Glicemia</div>
         <div class="card-sub">Registrar</div>
       </div>
       <div class="card" onclick="abrirModal('modal-peso')">
         <div class="card-icone">⚖️</div>
-        <div class="card-titulo">Peso</div>
+        <div class="card-titulo" data-i18n="card.peso">Peso</div>
         <div class="card-sub">Registrar</div>
       </div>
       <div class="card" onclick="abrirModal('modal-oximetria')">
         <div class="card-icone">💨</div>
-        <div class="card-titulo">Oximetria</div>
+        <div class="card-titulo" data-i18n="card.oximetria">Oximetria</div>
         <div class="card-sub">Registrar</div>
       </div>
       <div class="card" onclick="navegarPara('emergencia')">
         <div class="card-icone">🚨</div>
-        <div class="card-titulo">Emergência</div>
+        <div class="card-titulo" data-i18n="card.emergencia">Emergência</div>
         <div class="card-sub">Alertar família</div>
       </div>
       <div class="card" onclick="navegarPara('ia')">
         <div class="card-icone">🤖</div>
-        <div class="card-titulo">Assistente</div>
+        <div class="card-titulo" data-i18n="card.assistente">Assistente</div>
         <div class="card-sub">Tire dúvidas</div>
       </div>
     </div>
@@ -354,7 +354,7 @@
       <div class="item-lista">
         <span style="font-size:24px">👨‍👩‍👧</span>
         <div class="item-info">
-          <div class="item-nome">Código da Família</div>
+          <div class="item-nome" data-i18n="mais.codigo_familia">Código da Família</div>
           <div class="item-sub" id="mais-familia"></div>
         </div>
         <button onclick="compartilharCodigo()" style="background:none;border:none;font-size:20px;cursor:pointer">📤</button>
@@ -364,22 +364,22 @@
       <div class="secao-titulo">Módulos</div>
       <div class="item-lista" onclick="navegarPara('vacinas')">
         <span style="font-size:24px">💉</span>
-        <div class="item-info"><div class="item-nome">Vacinas</div></div>
+        <div class="item-info"><div class="item-nome" data-i18n="mais.vacinas">Vacinas</div></div>
         <span>›</span>
       </div>
       <div class="item-lista" onclick="navegarPara('financeiro')">
         <span style="font-size:24px">💰</span>
-        <div class="item-info"><div class="item-nome">Financeiro</div></div>
+        <div class="item-info"><div class="item-nome" data-i18n="mais.financeiro">Financeiro</div></div>
         <span>›</span>
       </div>
       <div class="item-lista" onclick="navegarPara('checklist')">
         <span style="font-size:24px">✅</span>
-        <div class="item-info"><div class="item-nome">Checklist</div></div>
+        <div class="item-info"><div class="item-nome" data-i18n="mais.checklist">Checklist</div></div>
         <span>›</span>
       </div>
       <div class="item-lista" onclick="navegarPara('escala')">
         <span style="font-size:24px">📋</span>
-        <div class="item-info"><div class="item-nome">Escala de Cuidado</div></div>
+        <div class="item-info"><div class="item-nome" data-i18n="mais.escala">Escala de Cuidado</div></div>
         <span>›</span>
       </div>
       <div class="item-lista" onclick="navegarPara('bem-estar')">
