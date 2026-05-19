@@ -971,10 +971,10 @@
           </div>
           <div style="color:#666;font-size:0.85rem;margin-bottom:1rem" id="meudia-label-refeicao">0 de 3 refeições</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
-            <button onclick="meudiaRegistrarRefeicao('Café da manhã')" class="btn btn-verde">☀️ Café da manhã</button>
-            <button onclick="meudiaRegistrarRefeicao('Almoço')" class="btn btn-verde">🌤️ Almoço</button>
-            <button onclick="meudiaRegistrarRefeicao('Lanche')" class="btn btn-verde">🍎 Lanche</button>
-            <button onclick="meudiaRegistrarRefeicao('Jantar')" class="btn btn-verde">🌙 Jantar</button>
+            <button onclick="meudiaRegistrarRefeicao('Café da manhã')" class="btn btn-verde"><span data-i18n="refeicao.cafe">☀️ Café da manhã</span></button>
+            <button onclick="meudiaRegistrarRefeicao('Almoço')" class="btn btn-verde"><span data-i18n="refeicao.almoco">🌤️ Almoço</span></button>
+            <button onclick="meudiaRegistrarRefeicao('Lanche')" class="btn btn-verde"><span data-i18n="refeicao.lanche">🍎 Lanche</span></button>
+            <button onclick="meudiaRegistrarRefeicao('Jantar')" class="btn btn-verde"><span data-i18n="refeicao.jantar">🌙 Jantar</span></button>
           </div>
         </div>
         <div id="meudia-lista-refeicao"></div>
@@ -1100,7 +1100,7 @@
           <div id="ms-circulo-resp" style="width:160px;height:160px;border-radius:50%;background:linear-gradient(145deg,#667eea,#764ba2);margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 4s ease-in-out;box-shadow:0 0 30px rgba(102,126,234,0.4)">
             <div style="text-align:center;color:white">
               <div style="font-size:2.5rem" id="ms-resp-emoji">😮‍💨</div>
-              <div style="font-size:0.85rem;font-weight:600;margin-top:0.25rem" id="ms-resp-texto">Toque para iniciar</div>
+              <div style="font-size:0.85rem;font-weight:600;margin-top:0.25rem" id="ms-resp-texto"><span data-i18n="mente.toque">Toque para iniciar</span></div>
             </div>
           </div>
 
@@ -1108,15 +1108,15 @@
           <div style="color:#666;font-size:0.9rem;margin-bottom:1rem" id="ms-resp-fase"></div>
 
           <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem">
-            <button onclick="iniciarRespiracao('4-7-8')" class="btn btn-verde">🌙 4-7-8 Relaxar</button>
-            <button onclick="iniciarRespiracao('box')" class="btn" style="background:#667eea;color:white;border:none">📦 Box Breathing</button>
-            <button onclick="iniciarRespiracao('coerencia')" class="btn" style="background:#f59e0b;color:white;border:none">💛 Coerência</button>
+            <button onclick="iniciarRespiracao('4-7-8')" class="btn btn-verde"><span data-i18n="mente.relaxar">🌙 4-7-8 Relaxar</span></button>
+            <button onclick="iniciarRespiracao('box')" class="btn" style="background:#667eea;color:white;border:none"><span data-i18n="mente.box">📦 Box Breathing</span></button>
+            <button onclick="iniciarRespiracao('coerencia')" class="btn" style="background:#f59e0b;color:white;border:none"><span data-i18n="mente.coerencia">💛 Coerência</span></button>
           </div>
-          <button onclick="pararRespiracao()" class="btn btn-cinza btn-block">⏹ Parar</button>
+          <button onclick="pararRespiracao()" class="btn btn-cinza btn-block"><span data-i18n="mente.parar">⏹ Parar</span></button>
         </div>
 
         <div style="background:#f0f9ff;border-radius:12px;padding:1rem;margin-bottom:1rem;border-left:4px solid #667eea">
-          <p style="font-weight:600;margin-bottom:0.5rem">💡 Sobre as técnicas</p>
+          <p style="font-weight:600;margin-bottom:0.5rem"><span data-i18n="mente.sobre">💡 Sobre as técnicas</span></p>
           <p style="font-size:0.85rem;color:#555;margin-bottom:0.5rem"><strong>4-7-8:</strong> Inspire 4s → Segure 7s → Expire 8s. Reduz ansiedade rapidamente.</p>
           <p style="font-size:0.85rem;color:#555;margin-bottom:0.5rem"><strong>Box Breathing:</strong> 4s cada fase. Usada por militares para foco e calma.</p>
           <p style="font-size:0.85rem;color:#555"><strong>Coerência:</strong> 5s inspirar → 5s expirar. Equilibra o sistema nervoso.</p>
@@ -1508,7 +1508,7 @@
   <div class="modal">
     <div class="modal-titulo">📅 Novo evento</div>
     <div class="form" style="padding:0">
-      <div class="campo"><label>Título</label><input id="ev-titulo" type="text" placeholder="Ex: Consulta cardiologista"></div>
+      <div class="campo"><label data-i18n="agenda.titulo">Título</label><input id="ev-titulo" type="text" placeholder="Ex: Consulta cardiologista"></div>
       <div class="campo"><label>Data</label><input id="ev-data" type="date"></div>
       <div class="campo"><label>Hora</label><input id="ev-hora" type="time"></div>
       <div class="campo"><label>Tipo</label>
@@ -1517,9 +1517,9 @@
           <option>Família</option><option>Outro</option>
         </select>
       </div>
-      <div class="campo"><label>Local</label><input id="ev-local" type="text" placeholder="Ex: Hospital São Lucas"></div>
-      <div class="campo"><label>👨‍⚕️ Nome do médico</label><input id="ev-medico" type="text" placeholder="Ex: Dr. João Silva"></div>
-      <div class="campo"><label>🏥 Especialidade</label><input id="ev-especialidade" type="text" placeholder="Ex: Cardiologista"></div>
+      <div class="campo"><label data-i18n="agenda.local">Local</label><input id="ev-local" type="text" placeholder="Ex: Hospital São Lucas"></div>
+      <div class="campo"><label data-i18n="agenda.medico">👨‍⚕️ Nome do médico</label><input id="ev-medico" type="text" placeholder="Ex: Dr. João Silva"></div>
+      <div class="campo"><label data-i18n="agenda.especialidade">🏥 Especialidade</label><input id="ev-especialidade" type="text" placeholder="Ex: Cardiologista"></div>
       <div class="campo"><label>📝 Observações</label><textarea id="ev-obs" rows="3" placeholder="Anotações sobre a consulta..." style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:15px;resize:none;box-sizing:border-box"></textarea></div>
       <div class="campo" style="display:flex;gap:12px">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;background:#f8fafc;padding:12px;border-radius:12px;border:1.5px solid #e2e8f0">
@@ -1531,7 +1531,7 @@
           <span style="font-size:14px">💊 Gerou receita?</span>
         </label>
       </div>
-      <div id="campo-retorno" style="display:none" class="campo"><label>🔄 Data do retorno</label><input id="ev-retorno" type="date"></div>
+      <div id="campo-retorno" style="display:none" class="campo"><label data-i18n="agenda.retorno">🔄 Data do retorno</label><input id="ev-retorno" type="date"></div>
       <button class="btn btn-verde btn-block" onclick="salvarEvento()">Salvar</button>
       <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-evento')">Cancelar</button>
     </div>
@@ -1544,7 +1544,7 @@
     <div class="modal-titulo">✏️ Editar evento</div>
     <div class="form" style="padding:0">
       <input type="hidden" id="edit-ev-id">
-      <div class="campo"><label>Título</label><input id="edit-ev-titulo" type="text"></div>
+      <div class="campo"><label data-i18n="agenda.titulo">Título</label><input id="edit-ev-titulo" type="text"></div>
       <div class="campo"><label>Data</label><input id="edit-ev-data" type="date"></div>
       <div class="campo"><label>Hora</label><input id="edit-ev-hora" type="time"></div>
       <div class="campo"><label>Tipo</label>
@@ -1553,9 +1553,9 @@
           <option>Família</option><option>Outro</option>
         </select>
       </div>
-      <div class="campo"><label>Local</label><input id="edit-ev-local" type="text"></div>
-      <div class="campo"><label>👨‍⚕️ Nome do médico</label><input id="edit-ev-medico" type="text"></div>
-      <div class="campo"><label>🏥 Especialidade</label><input id="edit-ev-especialidade" type="text"></div>
+      <div class="campo"><label data-i18n="agenda.local">Local</label><input id="edit-ev-local" type="text"></div>
+      <div class="campo"><label data-i18n="agenda.medico">👨‍⚕️ Nome do médico</label><input id="edit-ev-medico" type="text"></div>
+      <div class="campo"><label data-i18n="agenda.especialidade">🏥 Especialidade</label><input id="edit-ev-especialidade" type="text"></div>
       <div class="campo"><label>📝 Observações</label><textarea id="edit-ev-obs" rows="3" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:15px;resize:none;box-sizing:border-box"></textarea></div>
       <div class="campo" style="display:flex;gap:12px">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;background:#f8fafc;padding:12px;border-radius:12px;border:1.5px solid #e2e8f0">
@@ -1567,7 +1567,7 @@
           <span style="font-size:14px">💊 Gerou receita?</span>
         </label>
       </div>
-      <div class="campo"><label>🔄 Data do retorno</label><input id="edit-ev-retorno" type="date"></div>
+      <div class="campo"><label data-i18n="agenda.retorno">🔄 Data do retorno</label><input id="edit-ev-retorno" type="date"></div>
       <div class="campo">
         <label>📎 Foto do exame/resultado</label>
         <input type="file" id="edit-ev-foto" accept="image/*" style="width:100%;padding:10px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;box-sizing:border-box">
