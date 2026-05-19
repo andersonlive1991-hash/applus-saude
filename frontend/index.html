@@ -395,7 +395,7 @@
     </div>
     <div class="secao">
       <button class="btn btn-block" onclick="excluirPerfil()" style="background:#fff0f0;color:#e74c3c;border:2px solid #e74c3c;margin-bottom:0.5rem">🗑️ Excluir perfil</button>
-      <button class="btn btn-outline btn-block" onclick="sair()">Sair / Trocar conta</button>
+      <button class="btn btn-outline btn-block" onclick="sair()" data-i18n="mais.sair_trocar">Sair / Trocar conta</button>
     </div>
   </div>
 
@@ -751,12 +751,12 @@
       <div id="cuidados-view-cuidador">
       <!-- Abas -->
       <div style="display:flex;gap:0.4rem;overflow-x:auto;margin-bottom:1rem;padding-bottom:0.5rem;position:relative;z-index:10">
-        <button class="btn-aba ativa" id="aba-cuid-atividades" onclick="trocarAbaCuidados('atividades')">📝 Atividades</button>
+        <button class="btn-aba ativa" id="aba-cuid-atividades" onclick="trocarAbaCuidados('atividades')" data-i18n="cuidados.atividades">📝 Atividades</button>
         <button class="btn-aba" id="aba-cuid-humor" onclick="trocarAbaCuidados('humor')">😊 Humor</button>
-        <button class="btn-aba" id="aba-cuid-alimentacao" onclick="trocarAbaCuidados('alimentacao')">🍽️ Alimentação</button>
-        <button class="btn-aba" id="aba-cuid-hidratacao" onclick="trocarAbaCuidados('hidratacao')">💧 Hidratação</button>
-        <button class="btn-aba" id="aba-cuid-sono" onclick="trocarAbaCuidados('sono')">😴 Sono</button>
-        <button class="btn-aba" id="aba-cuid-intercorrencias" onclick="trocarAbaCuidados('intercorrencias')">🚨 Intercorrências</button>
+        <button class="btn-aba" id="aba-cuid-alimentacao" onclick="trocarAbaCuidados('alimentacao')" data-i18n="cuidados.alimentacao">🍽️ Alimentação</button>
+        <button class="btn-aba" id="aba-cuid-hidratacao" onclick="trocarAbaCuidados('hidratacao')" data-i18n="cuidados.hidratacao">💧 Hidratação</button>
+        <button class="btn-aba" id="aba-cuid-sono" onclick="trocarAbaCuidados('sono')" data-i18n="cuidados.sono">😴 Sono</button>
+        <button class="btn-aba" id="aba-cuid-intercorrencias" onclick="trocarAbaCuidados('intercorrencias')" data-i18n="cuidados.intercorrencias">🚨 Intercorrências</button>
       </div>
 
       <!-- Atividades -->
@@ -910,7 +910,7 @@
       <div class="form" style="padding:0">
         <div class="campo"><label>Tipo</label>
           <select id="inter-tipo">
-            <option value="Queda">🤕 Queda</option>
+            <option value="Queda" data-i18n="emer.queda">🤕 Queda</option>
             <option value="Recusa de medicamento">💊 Recusa de medicamento</option>
             <option value="Agitação">😤 Agitação</option>
             <option value="Dor">😣 Dor</option>
@@ -1202,9 +1202,9 @@
     <div class="curva"></div>
 
     <div style="padding:0 16px 8px 16px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;z-index:2;">
-      <button class="btn-aba ativa" id="aba-doencas" onclick="trocarAba('doencas')">🦠 Doenças</button>
-      <button class="btn-aba" id="aba-tratamentos" onclick="trocarAba('tratamentos')">💉 Tratamentos</button>
-      <button class="btn-aba" id="aba-internacoes" onclick="trocarAba('internacoes')">🏨 Internações</button>
+      <button class="btn-aba ativa" id="aba-doencas" onclick="trocarAba('doencas')" data-i18n="hist.doencas">🦠 Doenças</button>
+      <button class="btn-aba" id="aba-tratamentos" onclick="trocarAba('tratamentos')" data-i18n="hist.tratamentos">💉 Tratamentos</button>
+      <button class="btn-aba" id="aba-internacoes" onclick="trocarAba('internacoes')" data-i18n="hist.internacoes">🏨 Internações</button>
     </div>
 
     <div id="conteudo-doencas" class="aba-conteudo">
@@ -1281,7 +1281,7 @@
     <div class="form" style="padding:0">
       <div class="campo" style="text-align:center">
         <div id="foto-preview-cadastro" onclick="document.getElementById('inp-foto-cadastro').click()" style="width:90px;height:90px;border-radius:50%;background:#e8f7f1;border:3px dashed #1a9e6e;display:flex;align-items:center;justify-content:center;font-size:36px;cursor:pointer;margin:0 auto 8px;overflow:hidden">👤</div>
-        <div style="font-size:12px;color:#6b7280">Toque para adicionar foto</div>
+        <div style="font-size:12px;color:#6b7280"><span data-i18n="criar.foto">Toque para adicionar foto</span></div>
         <input type="file" id="inp-foto-cadastro" accept="image/*" style="display:none" onchange="previewFotoCadastro(this)">
       </div>
       <div class="campo"><label>Nome</label><input id="inp-nome-familia" type="text" placeholder="Ex: Anderson"></div>
@@ -1660,8 +1660,8 @@
   <div class="modal">
     <div class="modal-titulo">🩺 Pressão Arterial</div>
     <div class="form" style="padding:0">
-      <div class="campo"><label>Sistólica (mmHg)</label><input id="pr-sist" type="number" placeholder="Ex: 120"></div>
-      <div class="campo"><label>Diastólica (mmHg)</label><input id="pr-diast" type="number" placeholder="Ex: 80"></div>
+      <div class="campo"><label><span data-i18n="pressao.sist">Sistólica (mmHg)</span></label><input id="pr-sist" type="number" placeholder="Ex: 120"></div>
+      <div class="campo"><label><span data-i18n="pressao.diast">Diastólica (mmHg)</span></label><input id="pr-diast" type="number" placeholder="Ex: 80"></div>
       <div class="campo"><label>Observações</label><input id="pr-obs" type="text" placeholder="Opcional"></div>
       <button class="btn btn-verde btn-block" onclick="salvarSinal('pressao', 'pr-sist', 'pr-diast', 'mmHg', 'pr-obs')">Salvar</button>
       <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-pressao')">Cancelar</button>
@@ -1674,7 +1674,7 @@
   <div class="modal">
     <div class="modal-titulo">🩸 Glicemia</div>
     <div class="form" style="padding:0">
-      <div class="campo"><label>Valor (mg/dL)</label><input id="gl-valor" type="number" placeholder="Ex: 100"></div>
+      <div class="campo"><label><span data-i18n="glicemia.valor">Valor (mg/dL)</span></label><input id="gl-valor" type="number" placeholder="Ex: 100"></div>
       <div class="campo"><label>Momento</label>
         <select id="gl-momento">
           <option>Em jejum</option><option>Pós-prandial</option><option>Aleatório</option>
@@ -1691,7 +1691,7 @@
   <div class="modal">
     <div class="modal-titulo">⚖️ Peso</div>
     <div class="form" style="padding:0">
-      <div class="campo"><label>Peso (kg)</label><input id="pe-valor" type="number" step="0.1" placeholder="Ex: 70.5"></div>
+      <div class="campo"><label><span data-i18n="peso.valor">Peso (kg)</span></label><input id="pe-valor" type="number" step="0.1" placeholder="Ex: 70.5"></div>
       <button class="btn btn-verde btn-block" onclick="salvarSinalSimples('peso', 'pe-valor', 'kg')">Salvar</button>
       <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-peso')">Cancelar</button>
     </div>
@@ -1703,7 +1703,7 @@
   <div class="modal">
     <div class="modal-titulo">💨 Oximetria</div>
     <div class="form" style="padding:0">
-      <div class="campo"><label>Saturação (%)</label><input id="ox-valor" type="number" placeholder="Ex: 98"></div>
+      <div class="campo"><label><span data-i18n="oximetria.valor">Saturação (%)</span></label><input id="ox-valor" type="number" placeholder="Ex: 98"></div>
       <button class="btn btn-verde btn-block" onclick="salvarSinalSimples('oximetria', 'ox-valor', '%')">Salvar</button>
       <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-oximetria')">Cancelar</button>
     </div>
@@ -1876,7 +1876,7 @@
 
       <div class="bv-slide" style="position:absolute;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;box-sizing:border-box;background:linear-gradient(135deg,#0f6647,#1a9e6e)">
         <div style="font-size:80px;margin-bottom:24px">🌿</div>
-        <div style="font-size:28px;font-weight:800;color:#fff;text-align:center;margin-bottom:16px">Bem-vindo ao AP+ Saude</div>
+        <div style="font-size:28px;font-weight:800;color:#fff;text-align:center;margin-bottom:16px"><span data-i18n="onboard.titulo1">Bem-vindo ao AP+ Saúde</span></div>
         <div style="font-size:16px;color:rgba(255,255,255,0.85);text-align:center;line-height:1.6">O app completo para cuidar da saude da sua familia — medicamentos, agenda, sinais vitais e muito mais.</div>
       </div>
 
@@ -1894,10 +1894,10 @@
 
       <div class="bv-slide" style="position:absolute;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;box-sizing:border-box;background:linear-gradient(135deg,#0f6647,#1a9e6e);transform:translateX(200%)">
         <div style="font-size:80px;margin-bottom:24px">🚀</div>
-        <div style="font-size:28px;font-weight:800;color:#fff;text-align:center;margin-bottom:16px">Pronto para comecar?</div>
+        <div style="font-size:28px;font-weight:800;color:#fff;text-align:center;margin-bottom:16px"><span data-i18n="onboard.titulo3">Pronto para começar?</span></div>
         <div style="font-size:16px;color:rgba(255,255,255,0.85);text-align:center;line-height:1.6;margin-bottom:32px">Crie seu perfil agora e comece a cuidar da saude da sua familia.</div>
-        <button onclick="fecharBoasVindas(true)" style="background:#fff;color:#0f6647;border:none;border-radius:16px;padding:18px 40px;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.15)">Criar meu perfil 🌿</button>
-        <button onclick="fecharBoasVindas(false)" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:14px;cursor:pointer;margin-top:16px">Ja tenho conta</button>
+        <button onclick="fecharBoasVindas(true)" style="background:#fff;color:#0f6647;border:none;border-radius:16px;padding:18px 40px;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.15)"><span data-i18n="onboard.criar">Criar meu perfil 🌿</span></button>
+        <button onclick="fecharBoasVindas(false)" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:14px;cursor:pointer;margin-top:16px"><span data-i18n="onboard.ja_tenho">Já tenho conta</span></button>
       </div>
 
     </div>
@@ -1907,8 +1907,8 @@
         <div id="bv-dot-1" style="width:10px;height:10px;border-radius:50%;background:#d1d5db"></div>
         <div id="bv-dot-2" style="width:10px;height:10px;border-radius:50%;background:#d1d5db"></div>
       </div>
-      <button id="bv-btn-proximo" onclick="proximoSlide()" style="background:#0f6647;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:16px;font-weight:700;cursor:pointer">Proximo →</button>
-      <button onclick="fecharBoasVindas(false)" style="background:none;border:none;color:#9ca3af;font-size:14px;cursor:pointer">Pular</button>
+      <button id="bv-btn-proximo" onclick="proximoSlide()" style="background:#0f6647;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:16px;font-weight:700;cursor:pointer"><span data-i18n="onboard.proximo">Próximo →</span></button>
+      <button onclick="fecharBoasVindas(false)" style="background:none;border:none;color:#9ca3af;font-size:14px;cursor:pointer" data-i18n="onboard.pular">Pular</button>
     </div>
   </div>
 </body>
