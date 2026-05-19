@@ -18,7 +18,6 @@ router.get('/:membro_id', async (req, res) => {
 
 // Criar ou atualizar perfil
 router.post('/', async (req, res) => {
-  console.log('PERFIL POST recebido:', JSON.stringify(req.body));
   const {
     membro_id, nome_completo, data_nascimento, tipo_sanguineo,
     alergias, cpf, cartao_sus, convenio,
