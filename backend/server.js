@@ -171,6 +171,24 @@ app.get('/api/fix-perfil-89', async (req, res) => {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+app.get('/api/admin-ver-tudo', async (req, res) => {
+  try {
+    const familias = await pool.query('SELECT * FROM familias ORDER BY id');
+    const membros = await pool.query('SELECT id, familia_id, nome, tipo, id_pessoal FROM membros ORDER BY id');
+    const perfis = await pool.query('SELECT id, membro_id, nome_completo, tipo_sanguineo, cpf FROM perfil_idoso ORDER BY id');
+    res.json({ familias: familias.rows, membros: membros.rows, perfis: perfis.rows });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.get('/api/admin-limpar-tudo', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM perfil_idoso WHERE membro_id != 89');
+    await pool.query('DELETE FROM membros WHERE familia_id != 50 OR id != 89');
+    await pool.query('DELETE FROM familias WHERE id != 50');
+    res.json({ ok: true, mensagem: 'Banco limpo. Mantido: familia 50, membro 89' });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 app.get("/ping", (req, res) => {
   res.json({ status: "ok", uptime: Math.floor(process.uptime()) + "s", hora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) });
 });
