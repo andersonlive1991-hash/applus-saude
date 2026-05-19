@@ -1315,6 +1315,19 @@ function abrirTrocarIdioma() {
   document.getElementById('app-page').style.display = 'none';
 }
 
+
+function baixarPDFMedicamentos() {
+  if (!APP.membroId) return alerta('Faça login primeiro');
+  const url = '/api/pdf/medicamentos/' + APP.membroId;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'relatorio-medicamentos.pdf';
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 function sair() {
   localStorage.clear();
   window.location.href = '/';

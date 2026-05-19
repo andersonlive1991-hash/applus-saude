@@ -367,6 +367,8 @@ const TRANSLATIONS = {
     'ia.powered': 'Powered by Gemini',
     'ia.boas_vindas': '¡Hola! Soy el asistente de salud de AP+ Salud. Puedo ayudar con preguntas sobre medicamentos, cuidados y salud en general. ¿Cómo puedo ayudar?',
     'ia.placeholder': 'Haz una pregunta...',
+    'med.pdf': 'Baixar relatório PDF',
+    'med.pdf': 'Descargar informe PDF',
     'idioma.continuar': 'Continuar',
   },
   en: {
@@ -589,6 +591,7 @@ const TRANSLATIONS = {
     'ia.powered': 'Powered by Gemini',
     'ia.boas_vindas': 'Hello! I am the AP+ Health assistant. I can help with questions about medications, care and health in general. How can I help?',
     'ia.placeholder': 'Ask a question...',
+    'med.pdf': 'Download PDF report',
     'idioma.continuar': 'Continue',
   },
   es: {
@@ -896,6 +899,7 @@ const TRANSLATIONS = {
     'ia.powered': 'Powered by Gemini',
     'ia.boas_vindas': 'Bonjour! Je suis l\'assistant santé d\'AP+ Santé. Je peux aider avec des questions sur les médicaments, les soins et la santé en général. Comment puis-je vous aider?',
     'ia.placeholder': 'Posez une question...',
+    'med.pdf': 'Télécharger rapport PDF',
     'idioma.continuar': 'Continuer',
   },
   de: {
@@ -1118,6 +1122,7 @@ const TRANSLATIONS = {
     'ia.powered': 'Powered by Gemini',
     'ia.boas_vindas': 'Hallo! Ich bin der AP+ Gesundheitsassistent. Ich kann bei Fragen zu Medikamenten, Pflege und Gesundheit helfen. Wie kann ich helfen?',
     'ia.placeholder': 'Stellen Sie eine Frage...',
+    'med.pdf': 'PDF-Bericht herunterladen',
     'idioma.continuar': 'Weiter',
   }
 };
