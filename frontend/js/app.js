@@ -1309,6 +1309,11 @@ async function confirmarExcluirTodos() {
   }
 }
 
+function abrirTrocarIdioma() {
+  document.getElementById('idioma-page').style.display = 'flex';
+  document.getElementById('app-page').style.display = 'none';
+}
+
 function sair() {
   localStorage.clear();
   window.location.href = '/';

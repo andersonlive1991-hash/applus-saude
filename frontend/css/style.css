@@ -804,3 +804,10 @@ html, body {
   color: white;
   border-color: var(--verde);
 }
+
+/* ── Idioma ── */
+.idioma-btn.ativo {
+  background: rgba(255,255,255,0.35) !important;
+  border-color: white !important;
+  transform: scale(1.03);
+}
