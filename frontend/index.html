@@ -941,9 +941,9 @@
       <!-- Abas -->
       <div style="display:flex;gap:0.4rem;overflow-x:auto;margin-bottom:1rem;padding-bottom:0.5rem;position:relative;z-index:10">
         <button class="btn-aba ativa" id="aba-meudia-agua" onclick="trocarAbaMeuDia('agua')">💧 Água</button>
-        <button class="btn-aba" id="aba-meudia-refeicao" onclick="trocarAbaMeuDia('refeicao')">🍽️ Refeições</button>
+        <button class="btn-aba" id="aba-meudia-refeicao" onclick="trocarAbaMeuDia('refeicao')"><span data-i18n="meu_dia.refeicoes">🍽️ Refeições</span></button>
         <button class="btn-aba" id="aba-meudia-sono" onclick="trocarAbaMeuDia('sono')">😴 Sono</button>
-        <button class="btn-aba" id="aba-meudia-atividade" onclick="trocarAbaMeuDia('atividade')">🚶 Atividade</button>
+        <button class="btn-aba" id="aba-meudia-atividade" onclick="trocarAbaMeuDia('atividade')"><span data-i18n="meu_dia.atividade">🚶 Atividade</span></button>
         <button class="btn-aba" id="aba-meudia-humor" onclick="trocarAbaMeuDia('humor')">😊 Humor</button>
       </div>
 
@@ -951,14 +951,14 @@
       <div id="meudia-agua">
         <div style="background:white;border-radius:16px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center">
           <div style="font-size:3rem;font-weight:bold;color:#2563eb" id="meudia-total-agua">0</div>
-          <div style="color:#666;margin-bottom:1rem">copos hoje (meta: <span id="meudia-meta-agua">8</span>)</div>
+          <div style="color:#666;margin-bottom:1rem"><span data-i18n="agua.meta">copos hoje (meta: </span><span id="meudia-meta-agua">8</span>)</div>
           <div style="background:#f0f0f0;border-radius:99px;height:12px;overflow:hidden;margin-bottom:1rem">
             <div id="meudia-barra-agua" style="height:12px;border-radius:99px;background:#2563eb;width:0%;transition:width 0.5s"></div>
           </div>
           <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap">
-            <button onclick="meudiaRegistrarAgua(1)" class="btn btn-verde">+ 1 copo</button>
-            <button onclick="meudiaRegistrarAgua(2)" class="btn btn-verde">+ 2 copos</button>
-            <button onclick="meudiaRegistrarAgua(-1)" class="btn" style="background:#fff0f0;color:#e74c3c;border:1px solid #e74c3c">- 1 copo</button>
+            <button onclick="meudiaRegistrarAgua(1)" class="btn btn-verde"><span data-i18n="agua.mais1">+ 1 copo</span></button>
+            <button onclick="meudiaRegistrarAgua(2)" class="btn btn-verde"><span data-i18n="agua.mais2">+ 2 copos</span></button>
+            <button onclick="meudiaRegistrarAgua(-1)" class="btn" style="background:#fff0f0;color:#e74c3c;border:1px solid #e74c3c"><span data-i18n="agua.menos1">- 1 copo</span></button>
           </div>
         </div>
       </div>
@@ -1479,8 +1479,8 @@
   <div class="modal">
     <div class="modal-titulo">💊 Novo medicamento</div>
     <div class="form" style="padding:0">
-      <div class="campo"><label>Nome</label><input id="med-nome" type="text" placeholder="Ex: Losartana"></div>
-      <div class="campo"><label>Dosagem</label><input id="med-dosagem" type="text" placeholder="Ex: 50mg"></div>
+      <div class="campo"><label data-i18n="med.nome">Nome</label><input id="med-nome" type="text" placeholder="Ex: Losartana"></div>
+      <div class="campo"><label data-i18n="med.dosagem">Dosagem</label><input id="med-dosagem" type="text" placeholder="Ex: 50mg"></div>
       <div class="campo">
         <label>Horários</label>
         <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -1496,7 +1496,7 @@
           <option>Tópica</option><option>Inalatória</option><option>Outra</option>
         </select>
       </div>
-      <div class="campo"><label>Estoque (comprimidos)</label><input id="med-estoque" type="number" placeholder="0"></div>
+      <div class="campo"><label data-i18n="med.estoque">Estoque (comprimidos)</label><input id="med-estoque" type="number" placeholder="0"></div>
       <button class="btn btn-verde btn-block" onclick="salvarMedicamento()">Salvar</button>
       <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-med')">Cancelar</button>
     </div>
