@@ -832,7 +832,7 @@ async function salvarMedicamento() {
     limparFormMed();
     carregarMedicamentos();
     iniciarAlarmes();
-    api('POST', '/api/interacoes/verificar', { membro_id: APP.membroId, nome_novo: nome }).then(r => { if (r && r.alerta) alert('⚠️ Interação\n\n' + r.alerta); }).catch(() => {});
+    api('POST', '/api/interacoes/verificar', { membro_id: APP.membroId, nome_novo: nome }).then(r => { if (r && r.alerta) alerta('⚠️ ' + r.alerta, 'warning'); }).catch(() => {});
   } catch (e) {
     alerta('Erro ao salvar: ' + e.message);
   }
