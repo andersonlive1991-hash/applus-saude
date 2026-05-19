@@ -1,4 +1,4 @@
-const CACHE = 'applus-v17';
+const CACHE = 'applus-v18';
 const ARQUIVOS = [
   '/', '/index.html', '/css/style.css',
   '/js/app.js', '/js/modulos.js', '/manifest.json'
