@@ -518,50 +518,57 @@ function iniciarApp() {
 
 async function carregarPerfil() {
   try {
-    const res = await fetch('/api/perfil/' + APP.membroAtivo.id);
-    if (!res.ok) return; // sem perfil ainda, tudo vazio
-    const p = await res.json();
-    document.getElementById('pf-nome').value = p.nome_completo || '';
-    if (p.data_nascimento) {
-      const d = new Date(p.data_nascimento);
-      document.getElementById('pf-nasc-dia').value = String(d.getUTCDate());
-      document.getElementById('pf-nasc-mes').value = String(d.getUTCMonth() + 1).padStart(2, '0');
-      document.getElementById('pf-nasc-ano').value = String(d.getUTCFullYear());
-    } else {
-      document.getElementById('pf-nasc-dia').value = '';
-      document.getElementById('pf-nasc-mes').value = '';
-      document.getElementById('pf-nasc-ano').value = '';
+    const idPessoal = APP.idPessoal || (APP.membroAtivo && APP.membroAtivo.id_pessoal);
+    if (!idPessoal) { console.log('sem idPessoal'); return; }
+    const mem = await api('GET', '/api/membros/id/' + idPessoal);
+    if (!mem || !mem.id) return;
+    APP.membroAtivo = mem;
+    document.getElementById('pf-nome').value = mem.nome || '';
+    const res = await fetch('/api/perfil/' + mem.id);
+    if (res.ok) {
+      const p = await res.json();
+      if (p && !p.erro) {
+        document.getElementById('pf-nome').value = p.nome_completo || mem.nome || '';
+        if (p.data_nascimento) {
+          const d = new Date(p.data_nascimento);
+          document.getElementById('pf-nasc-dia').value = String(d.getUTCDate());
+          document.getElementById('pf-nasc-mes').value = String(d.getUTCMonth() + 1).padStart(2, '0');
+          document.getElementById('pf-nasc-ano').value = String(d.getUTCFullYear());
+        }
+        document.getElementById('pf-sangue').value = p.tipo_sanguineo || '';
+        document.getElementById('pf-alergias').value = p.alergias || '';
+        document.getElementById('pf-cpf').value = p.cpf || '';
+        document.getElementById('pf-sus').value = p.cartao_sus || '';
+        document.getElementById('pf-convenio').value = p.convenio || '';
+        document.getElementById('pf-contato').value = p.contato_emergencia || '';
+        document.getElementById('pf-tel').value = p.tel_emergencia || '';
+      }
     }
-    document.getElementById('pf-sangue').value = p.tipo_sanguineo || '';
-    document.getElementById('pf-alergias').value = p.alergias || '';
-    document.getElementById('pf-cpf').value = p.cpf || '';
-    document.getElementById('pf-sus').value = p.cartao_sus || '';
-    document.getElementById('pf-convenio').value = p.convenio || '';
-    document.getElementById('pf-contato').value = p.contato_emergencia || '';
-    document.getElementById('pf-tel').value = p.tel_emergencia || '';
-  } catch(e) {}
+  } catch(e) { console.log('carregarPerfil erro:', e.message); }
 }
 
 async function salvarPerfil() {
-  alerta("DEBUG membroAtivo: " + JSON.stringify(APP.membroAtivo));
-  const pfDia = document.getElementById('pf-nasc-dia').value;
-  const pfMes = document.getElementById('pf-nasc-mes').value;
-  const pfAno = document.getElementById('pf-nasc-ano').value;
-  const dataNascRaw = (pfDia && pfMes && pfAno) ? pfAno + '-' + pfMes + '-' + pfDia : null;
-  const dados = {
-    membro_id: APP.membroAtivo.id,
-    nome_completo: document.getElementById('pf-nome').value.trim() || APP.membroAtivo.nome,
-    data_nascimento: dataNascRaw,
-    tipo_sanguineo: document.getElementById('pf-sangue').value || null,
-    alergias: document.getElementById('pf-alergias').value.trim() || null,
-    cpf: document.getElementById('pf-cpf').value.trim() || null,
-    cartao_sus: document.getElementById('pf-sus').value.trim() || null,
-    convenio: document.getElementById('pf-convenio').value.trim() || null,
-    contato_emergencia: document.getElementById('pf-contato').value.trim() || null,
-    tel_emergencia: document.getElementById('pf-tel').value.trim() || null
-  };
-  alerta('ID: ' + (APP.membroAtivo ? APP.membroAtivo.id : 'NULL'));
   try {
+    const idPessoal = APP.idPessoal || (APP.membroAtivo && APP.membroAtivo.id_pessoal);
+    if (!idPessoal) { alerta('Sessao expirada. Saia e entre novamente.'); return; }
+    const mem = await api('GET', '/api/membros/id/' + idPessoal);
+    if (!mem || !mem.id) { alerta('Nao foi possivel identificar o membro.'); return; }
+    const pfDia = document.getElementById('pf-nasc-dia').value;
+    const pfMes = document.getElementById('pf-nasc-mes').value;
+    const pfAno = document.getElementById('pf-nasc-ano').value;
+    const dataNasc = (pfDia && pfMes && pfAno) ? pfAno + '-' + pfMes.padStart(2,'0') + '-' + pfDia.padStart(2,'0') : null;
+    const dados = {
+      membro_id: mem.id,
+      nome_completo: document.getElementById('pf-nome').value.trim() || mem.nome,
+      data_nascimento: dataNasc,
+      tipo_sanguineo: document.getElementById('pf-sangue').value || null,
+      alergias: document.getElementById('pf-alergias').value.trim() || null,
+      cpf: document.getElementById('pf-cpf').value.trim() || null,
+      cartao_sus: document.getElementById('pf-sus').value.trim() || null,
+      convenio: document.getElementById('pf-convenio').value.trim() || null,
+      contato_emergencia: document.getElementById('pf-contato').value.trim() || null,
+      tel_emergencia: document.getElementById('pf-tel').value.trim() || null
+    };
     const resp = await fetch('/api/perfil', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -571,13 +578,12 @@ async function salvarPerfil() {
     if (json.erro) {
       alerta('Erro: ' + json.erro);
     } else {
-      alerta('✅ Perfil salvo com sucesso!');
+      alerta('Perfil salvo com sucesso!');
     }
   } catch(e) {
-    alerta('ERRO DETALHADO: ' + e.name + ' - ' + e.message + ' - ' + e.stack);
+    alerta('Erro: ' + e.message);
   }
 }
-
 
 // ── BEM-ESTAR DO CUIDADOR ──
 let beHumor = 0;
