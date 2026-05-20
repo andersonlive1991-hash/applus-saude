@@ -256,9 +256,11 @@ setInterval(async () => {
 
     console.log('[Agendador] Verificando:', horaAtual);
     const meds = await pool.query('SELECT * FROM medicamentos WHERE horarios IS NOT NULL');
+    console.log('[Agendador] Meds encontrados:', meds.rows.length);
 
     for (const med of meds.rows) {
       const horarios = typeof med.horarios === 'string' ? JSON.parse(med.horarios) : med.horarios;
+      console.log('[Agendador] Med:', med.nome, '| horarios:', JSON.stringify(horarios), '| horaAtual:', horaAtual, '| match:', horarios.includes(horaAtual));
       if (!Array.isArray(horarios) || !horarios.includes(horaAtual)) continue;
 
       const subRes = await pool.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [med.membro_id]);
