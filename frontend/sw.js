@@ -52,8 +52,8 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(titulo, {
       body: corpo,
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      
+      
       vibrate: [800, 300, 800, 300, 800, 300, 800],
       requireInteraction: true,
       tag: isMed ? 'medicamento' : 'geral',
