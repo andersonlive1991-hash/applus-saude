@@ -519,7 +519,8 @@ function iniciarApp() {
 function _continuarIniciarApp() {
   iniciarAlarmes();
   if (Notification.permission === 'granted') {
-    inscreverPush();
+    const jaInscrito = localStorage.getItem('push_inscrito_' + APP.membroId);
+    if (!jaInscrito) inscreverPush();
   } else if (Notification.permission !== 'denied') {
     Notification.requestPermission().then(perm => {
       if (perm === 'granted') inscreverPush();
