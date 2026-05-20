@@ -1,3 +1,4 @@
+// v2 - force update
 const CACHE = 'applus-v18';
 const ARQUIVOS = [
   '/', '/index.html', '/css/style.css',

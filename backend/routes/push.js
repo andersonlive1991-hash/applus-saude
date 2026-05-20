@@ -64,6 +64,12 @@ router.post('/enviar-membro', async (req, res) => {
     await webpush.sendNotification(sub, payload);
     res.json({ ok: true });
   } catch (e) {
+    if (e.statusCode === 404 || e.statusCode === 410 || e.message.includes('unexpected response')) {
+      await db.query('DELETE FROM push_subscriptions WHERE membro_id = $1', [membro_id]);
+      console.log('[Push] Inscricao invalida removida para membro', membro_id);
+    }
+    res.status(500).json({ erro: e.message });
+  } catch (e) {
     res.status(500).json({ erro: e.message });
   }
 });
