@@ -490,6 +490,21 @@ async function carregarHistorico(membro) {
         </div>`).join('') : '<div class="vazio">Nenhuma vacina registrada</div>'}
     </div>`;
 
+    // Proxima consulta em destaque
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const proximas = eventos.filter(e => new Date(e.data + 'T00:00:00') >= hoje).sort((a,b) => new Date(a.data) - new Date(b.data));
+    const anteriores = eventos.filter(e => new Date(e.data + 'T00:00:00') < hoje).sort((a,b) => new Date(b.data) - new Date(a.data));
+    if (proximas.length > 0) {
+      const p = proximas[0];
+      html += '<div style="background:#eff6ff;border:2px solid #3b82f6;border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px">'
+            + '<span style="font-size:28px">📅</span>'
+            + '<div>'
+            + '<div style="color:#1d4ed8;font-weight:700;font-size:15px;margin-bottom:4px">PRÓXIMA CONSULTA</div>'
+            + '<div style="color:#1e3a8a;font-size:15px;font-weight:600">' + p.titulo + '</div>'
+            + '<div style="color:#3b82f6;font-size:13px;margin-top:2px">' + formatarData(p.data) + (p.hora ? ' às ' + p.hora : '') + (p.local ? ' · ' + p.local : '') + '</div>'
+            + '</div></div>';
+    }
+
     // Agenda
     html += `<div class="paciente-card">
       <div class="card-titulo">📅 Histórico de Consultas</div>
