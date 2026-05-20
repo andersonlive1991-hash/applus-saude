@@ -71,6 +71,26 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+
+router.get('/aderencia/:membro_id', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT m.id, m.nome, m.dosagem,
+        COUNT(h.id) FILTER (WHERE h.status = 'tomado') as tomadas,
+        COUNT(h.id) as total
+       FROM medicamentos m
+       LEFT JOIN historico_meds h ON h.med_id = m.id
+         AND h.criado_em >= NOW() - INTERVAL '30 days'
+       WHERE m.membro_id = $1
+       GROUP BY m.id, m.nome, m.dosagem`,
+      [req.params.membro_id]
+    );
+    res.json(result.rows);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 module.exports = router;
 
 // ── AGENDADOR PUSH MEDICAMENTOS ──

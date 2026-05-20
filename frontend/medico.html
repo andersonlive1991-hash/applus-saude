@@ -410,9 +410,10 @@ async function carregarHistorico(membro) {
   content.innerHTML = '<p style="text-align:center;color:#6b7280;padding:20px">Carregando histórico...</p>';
 
   try {
-    const [perfil, meds, sinais, vacinas, eventos, doencas, tratamentos, internacoes, dadosTEA] = await Promise.all([
+    const [perfil, meds, aderencia, sinais, vacinas, eventos, doencas, tratamentos, internacoes, dadosTEA] = await Promise.all([
       fetch(`/api/perfil/${membro.id}`).then(r => r.ok ? r.json() : null),
       fetch(`/api/medicamentos/${membro.familia_id}?membro_id=${membro.id}`).then(r => r.json()),
+      fetch(`/api/medicamentos/aderencia/${membro.id}`).then(r => r.json()).catch(() => []),
       fetch(`/api/sinais/${membro.id}`).then(r => r.json()),
       fetch(`/api/vacinas/${membro.id}`).then(r => r.json()),
       fetch(`/api/eventos/${membro.familia_id}?membro_id=${membro.id}`).then(r => r.json()),
@@ -457,14 +458,19 @@ async function carregarHistorico(membro) {
     // Medicamentos
     html += `<div class="paciente-card">
       <div class="card-titulo">💊 Medicamentos em Uso</div>
-      ${meds.length ? meds.map(m => `
-        <div class="item-med">
-          <span style="font-size:22px">💊</span>
-          <div class="item-med-info">
-            <div class="item-med-nome">${m.nome} ${m.dosagem || ''}</div>
-            <div class="item-med-sub">${formatarHorarios(m.horarios)} · ${m.via || 'Oral'}</div>
-          </div>
-        </div>`).join('') : '<div class="vazio">Nenhum medicamento cadastrado</div>'}
+      ${meds.length ? meds.map(m => {
+        const ad = aderencia.find(a => a.id === m.id);
+        const pct = ad && ad.total > 0 ? Math.round((ad.tomadas / ad.total) * 100) : null;
+        const cor = pct === null ? '#9ca3af' : pct >= 80 ? '#16a34a' : pct >= 50 ? '#f59e0b' : '#dc2626';
+        return '<div class="item-med">'
+          + '<span style="font-size:22px">💊</span>'
+          + '<div class="item-med-info" style="flex:1">'
+          + '<div class="item-med-nome">' + m.nome + ' ' + (m.dosagem || '') + '</div>'
+          + '<div class="item-med-sub">' + formatarHorarios(m.horarios) + ' · ' + (m.via || 'Oral') + '</div>'
+          + (pct !== null ? '<div style="margin-top:6px"><div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-bottom:2px"><span>Aderência 30 dias</span><span style="color:' + cor + ';font-weight:600">' + pct + '%</span></div>'
+          + '<div style="background:#e5e7eb;border-radius:4px;height:6px"><div style="background:' + cor + ';width:' + pct + '%;height:6px;border-radius:4px"></div></div></div>' : '')
+          + '</div></div>';
+      }).join('') : '<div class="vazio">Nenhum medicamento cadastrado</div>'}
     </div>`;
 
     // Sinais vitais
