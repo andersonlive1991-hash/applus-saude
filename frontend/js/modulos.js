@@ -957,12 +957,13 @@ let _videoMudo = false;
 let _videoCamOff = false;
 
 async function abrirModalVideo() {
-  alerta('familiaId: ' + APP.familiaId + ' | modal: ' + !!document.getElementById('modal-video-membros'));
   try {
     const membros = await api('GET', '/api/membros/familia/' + APP.familiaId);
+    alerta('membros: ' + membros.length + ' | outros: ' + membros.filter(m => m.id !== APP.membroId).length);
     const outros = membros.filter(m => m.id !== APP.membroId);
     const lista = document.getElementById('lista-membros-video');
     if (!outros.length) { alerta('Nenhum outro membro na família'); return; }
+    abrirModal('modal-video-membros');
     lista.innerHTML = outros.map(m => `
       <button onclick="iniciarVideoChamada(${m.id}, '${m.nome.replace(/'/g,"\\'")}'); fecharModal('modal-video-membros')"
         style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;border:1px solid #e5e7eb;background:white;cursor:pointer;width:100%;font-size:14px">
