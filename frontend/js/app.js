@@ -2756,3 +2756,131 @@ async function atualizarAvatarHeader(foto) {
     avatar.innerHTML = '👤';
   }
 }
+
+// ── PIN DE SEGURANÇA ──
+let _pinAtual = '';
+let _pinModo = 'verificar';
+let _pinTemp = '';
+
+async function verificarPinAoEntrar() {
+  if (!APP.membroId) return true;
+  try {
+    const r = await api('GET', '/api/membros/pin/tem/' + APP.membroId);
+    if (!r.tem) return true;
+    return new Promise((resolve) => {
+      window._pinResolve = resolve;
+      _pinModo = 'verificar';
+      _pinAtual = '';
+      atualizarPontos();
+      document.getElementById('pin-entrada-nome').textContent = APP.membroNome || 'AP+ Saúde';
+      document.getElementById('pin-erro').textContent = '';
+      document.getElementById('tela-pin').style.display = 'flex';
+    });
+  } catch(e) { return true; }
+}
+
+function pinDigito(d) {
+  if (_pinAtual.length >= 4) return;
+  _pinAtual += d;
+  atualizarPontos();
+  if (_pinAtual.length === 4) setTimeout(() => processarPin(), 200);
+}
+
+function pinApagar() {
+  _pinAtual = _pinAtual.slice(0, -1);
+  atualizarPontos();
+}
+
+function atualizarPontos() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('pin-dot-' + i);
+    if (dot) dot.style.background = i < _pinAtual.length ? 'white' : 'transparent';
+  }
+}
+
+async function processarPin() {
+  if (_pinModo === 'verificar') {
+    try {
+      const r = await api('POST', '/api/membros/pin/verificar', { membro_id: APP.membroId, pin: _pinAtual });
+      if (r.ok) {
+        document.getElementById('tela-pin').style.display = 'none';
+        if (window._pinResolve) { window._pinResolve(true); window._pinResolve = null; }
+      } else {
+        document.getElementById('pin-erro').textContent = 'PIN incorreto. Tente novamente.';
+        _pinAtual = '';
+        atualizarPontos();
+      }
+    } catch(e) {
+      document.getElementById('pin-erro').textContent = 'Erro. Tente novamente.';
+      _pinAtual = '';
+      atualizarPontos();
+    }
+  } else if (_pinModo === 'definir') {
+    _pinTemp = _pinAtual;
+    _pinAtual = '';
+    _pinModo = 'confirmar';
+    atualizarPontos();
+    document.getElementById('pin-erro').textContent = '';
+    document.getElementById('pin-entrada-nome').textContent = 'Confirme o PIN';
+  } else if (_pinModo === 'confirmar') {
+    if (_pinAtual === _pinTemp) {
+      try {
+        await api('POST', '/api/membros/pin/salvar', { membro_id: APP.membroId, pin: _pinAtual });
+        document.getElementById('tela-pin').style.display = 'none';
+        fecharModal('modal-config-pin');
+        carregarStatusPin();
+        alerta('✅ PIN ativado com sucesso!');
+        if (window._pinResolve) { window._pinResolve(true); window._pinResolve = null; }
+      } catch(e) {
+        document.getElementById('pin-erro').textContent = 'Erro ao salvar PIN.';
+        _pinAtual = ''; _pinTemp = '';
+        atualizarPontos();
+      }
+    } else {
+      document.getElementById('pin-erro').textContent = 'PINs não coincidem. Tente novamente.';
+      _pinAtual = ''; _pinTemp = '';
+      _pinModo = 'definir';
+      atualizarPontos();
+      document.getElementById('pin-entrada-nome').textContent = 'Defina seu PIN';
+    }
+  }
+}
+
+async function abrirConfigPin() {
+  try {
+    const r = await api('GET', '/api/membros/pin/tem/' + APP.membroId).catch(() => ({ tem: false }));
+    document.getElementById('config-pin-sem-pin').style.display = r.tem ? 'none' : 'block';
+    document.getElementById('config-pin-com-pin').style.display = r.tem ? 'block' : 'none';
+    abrirModal('modal-config-pin');
+  } catch(e) {
+    alerta('Erro: ' + e.message);
+  }
+}
+
+function iniciarDefinirPin() {
+  _pinModo = 'definir';
+  _pinAtual = '';
+  _pinTemp = '';
+  atualizarPontos();
+  document.getElementById('pin-entrada-nome').textContent = 'Defina seu PIN';
+  document.getElementById('pin-erro').textContent = '';
+  fecharModal('modal-config-pin');
+  document.getElementById('tela-pin').style.display = 'flex';
+}
+
+async function removerPin() {
+  try {
+    await api('POST', '/api/membros/pin/remover', { membro_id: APP.membroId });
+    fecharModal('modal-config-pin');
+    carregarStatusPin();
+    alerta('PIN removido.');
+  } catch(e) { alerta('Erro ao remover PIN.'); }
+}
+
+async function carregarStatusPin() {
+  try {
+    const r = await api('GET', '/api/membros/pin/tem/' + APP.membroId);
+    const el = document.getElementById('pin-status-texto');
+    if (el) el.textContent = r.tem ? '🔒 Ativo' : '🔓 Desativado';
+  } catch(e) {}
+}
