@@ -275,7 +275,7 @@ setInterval(async () => {
         medId: med.id,
         medNome: med.nome
       });
-      webpush.sendNotification(sub, payload).catch(e => console.log('Erro push:', e.message));
+      webpush.sendNotification(sub, payload).then(() => console.log('[Push OK] membro', med.membro_id)).catch(e => { console.log('[Push ERRO]', e.statusCode, e.message); if(e.statusCode===410||e.statusCode===404){pool.query('DELETE FROM push_subscriptions WHERE membro_id=$1',[med.membro_id]).catch(()=>{}); } });
     }
   } catch(e) {
     console.log('Erro agendador:', e.message);

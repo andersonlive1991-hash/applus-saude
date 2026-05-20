@@ -82,3 +82,14 @@ router.post('/erro-log', async (req, res) => {
 });
 
 module.exports = router;
+
+// Rota temporária - limpar inscrição inválida
+router.delete('/limpar/:membro_id', async (req, res) => {
+  try {
+    await db.query('DELETE FROM push_subscriptions WHERE membro_id = $1', [req.params.membro_id]);
+    res.json({ ok: true, mensagem: 'Inscrição removida' });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
