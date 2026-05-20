@@ -948,6 +948,188 @@ async function iniciarSOSCompleto() {
   await iniciarChamadaSOS();
 }
 
+
+// ── VIDEOCHAMADA ENTRE MEMBROS ──
+let _videoPC = null;
+let _videoStream = null;
+let _videoTimer = null;
+let _videoMudo = false;
+let _videoCamOff = false;
+
+async function abrirModalVideo() {
+  try {
+    const membros = await api('GET', '/api/membros/familia/' + APP.familiaId);
+    const outros = membros.filter(m => m.id !== APP.membroId);
+    const lista = document.getElementById('lista-membros-video');
+    if (!outros.length) { alerta('Nenhum outro membro na família'); return; }
+    lista.innerHTML = outros.map(m => `
+      <button onclick="iniciarVideoChamada(${m.id}, '${m.nome.replace(/'/g,"\\'")}'); fecharModal('modal-video-membros')"
+        style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;border:1px solid #e5e7eb;background:white;cursor:pointer;width:100%;font-size:14px">
+        <span style="font-size:24px">${avatarMembro(m.nome, m.tipo)}</span>
+        <div style="text-align:left">
+          <div style="font-weight:600">${m.nome}</div>
+          <div style="font-size:12px;color:#666">${m.tipo}</div>
+        </div>
+        <span style="margin-left:auto">📹</span>
+      </button>
+    `).join('');
+    abrirModal('modal-video-membros');
+  } catch(e) {
+    alerta('Erro ao carregar membros: ' + e.message);
+  }
+}
+
+async function iniciarVideoChamada(membroId, membroNome) {
+  try {
+    _videoStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    const videoLocal = document.getElementById('video-local');
+    videoLocal.srcObject = _videoStream;
+
+    _videoPC = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    _videoStream.getTracks().forEach(t => _videoPC.addTrack(t, _videoStream));
+
+    _videoPC.onicecandidate = (e) => {
+      if (e.candidate) APP.socket.emit('video-ice', { familiaId: APP.familiaId, candidate: e.candidate });
+    };
+    _videoPC.ontrack = (e) => {
+      const videoRemoto = document.getElementById('video-remoto');
+      videoRemoto.srcObject = e.streams[0];
+    };
+
+    const offer = await _videoPC.createOffer();
+    await _videoPC.setLocalDescription(offer);
+    APP.socket.emit('video-chamar', {
+      familiaId: APP.familiaId,
+      membroId: APP.membroId,
+      nome: APP.membroNome,
+      offer
+    });
+
+    mostrarTelaVideo('chamando', membroNome);
+  } catch(e) {
+    alerta('Erro ao acessar câmera: ' + e.message);
+  }
+}
+
+async function atenderVideoChamada() {
+  try {
+    _videoStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    const videoLocal = document.getElementById('video-local');
+    videoLocal.srcObject = _videoStream;
+
+    _videoStream.getTracks().forEach(t => _videoPC.addTrack(t, _videoStream));
+    _videoPC.ontrack = (e) => {
+      const videoRemoto = document.getElementById('video-remoto');
+      if (e.streams && e.streams[0]) videoRemoto.srcObject = e.streams[0];
+    };
+
+    const answer = await _videoPC.createAnswer();
+    await _videoPC.setLocalDescription(answer);
+    APP.socket.emit('video-answer', { familiaId: APP.familiaId, answer });
+    mostrarTelaVideo('conectado', window._videoNomeQuemChamou || 'Familiar');
+    iniciarTimerVideo();
+  } catch(e) {
+    alerta('Erro ao atender vídeo: ' + e.message);
+  }
+}
+
+function encerrarVideoChamada() {
+  if (_videoPC) { _videoPC.close(); _videoPC = null; }
+  if (_videoStream) { _videoStream.getTracks().forEach(t => t.stop()); _videoStream = null; }
+  if (_videoTimer) { clearInterval(_videoTimer); _videoTimer = null; }
+  APP.socket.emit('video-encerrar', { familiaId: APP.familiaId });
+  fecharTelaVideo();
+}
+
+function mostrarTelaVideo(estado, nome) {
+  const tela = document.getElementById('tela-video-chamada');
+  tela.style.display = 'flex';
+  const btnAtender = document.getElementById('btn-video-atender');
+  if (estado === 'chamando') {
+    document.getElementById('video-chamada-titulo').textContent = '📹 Chamando ' + nome + '...';
+    document.getElementById('video-chamada-sub').textContent = 'Aguardando resposta';
+    btnAtender.style.display = 'none';
+  } else if (estado === 'recebendo') {
+    document.getElementById('video-chamada-titulo').textContent = '📹 ' + nome + ' está chamando';
+    document.getElementById('video-chamada-sub').textContent = 'Toque para atender';
+    btnAtender.style.display = 'flex';
+  } else if (estado === 'conectado') {
+    document.getElementById('video-chamada-titulo').textContent = '📹 ' + nome;
+    document.getElementById('video-chamada-sub').textContent = 'Conectado';
+    btnAtender.style.display = 'none';
+    iniciarTimerVideo();
+  }
+}
+
+function fecharTelaVideo() {
+  document.getElementById('tela-video-chamada').style.display = 'none';
+  document.getElementById('video-chamada-timer').textContent = '';
+  const vr = document.getElementById('video-remoto');
+  const vl = document.getElementById('video-local');
+  if (vr) vr.srcObject = null;
+  if (vl) vl.srcObject = null;
+  _videoMudo = false;
+  _videoCamOff = false;
+}
+
+function iniciarTimerVideo() {
+  let seg = 0;
+  _videoTimer = setInterval(() => {
+    seg++;
+    const m = String(Math.floor(seg/60)).padStart(2,'0');
+    const s = String(seg%60).padStart(2,'0');
+    document.getElementById('video-chamada-timer').textContent = m + ':' + s;
+  }, 1000);
+}
+
+function toggleMudo() {
+  if (!_videoStream) return;
+  _videoMudo = !_videoMudo;
+  _videoStream.getAudioTracks().forEach(t => t.enabled = !_videoMudo);
+  document.getElementById('btn-video-mudo').textContent = _videoMudo ? '🔇' : '🎙️';
+}
+
+function toggleCamera() {
+  if (!_videoStream) return;
+  _videoCamOff = !_videoCamOff;
+  _videoStream.getVideoTracks().forEach(t => t.enabled = !_videoCamOff);
+  document.getElementById('btn-video-cam').textContent = _videoCamOff ? '🚫' : '📷';
+}
+
+function registrarEventosVideo() {
+  APP.socket.on('video-recebendo', async (data) => {
+    window._videoNomeQuemChamou = data.nome;
+    _videoPC = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    _videoPC.onicecandidate = (e) => {
+      if (e.candidate) APP.socket.emit('video-ice', { familiaId: APP.familiaId, candidate: e.candidate });
+    };
+    _videoPC.ontrack = (e) => {
+      const videoRemoto = document.getElementById('video-remoto');
+      if (e.streams && e.streams[0]) videoRemoto.srcObject = e.streams[0];
+    };
+    await _videoPC.setRemoteDescription(new RTCSessionDescription(data.offer));
+    mostrarTelaVideo('recebendo', data.nome);
+  });
+  APP.socket.on('video-answer', async (data) => {
+    if (_videoPC) {
+      await _videoPC.setRemoteDescription(new RTCSessionDescription(data.answer));
+      mostrarTelaVideo('conectado', window._videoNomeQuemChamou || 'Familiar');
+    }
+  });
+  APP.socket.on('video-ice', async (data) => {
+    if (_videoPC && data.candidate) {
+      await _videoPC.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+  });
+  APP.socket.on('video-encerrado', () => {
+    if (_videoPC) { _videoPC.close(); _videoPC = null; }
+    if (_videoStream) { _videoStream.getTracks().forEach(t => t.stop()); _videoStream = null; }
+    if (_videoTimer) { clearInterval(_videoTimer); _videoTimer = null; }
+    fecharTelaVideo();
+    alerta('Chamada encerrada');
+  });
+}
+
 // ── PICTOGRAMAS PERSONALIZADOS TEA ──
 async function adicionarPictoPersonalizado() {
   const emoji = document.getElementById('picto-emoji').value.trim();

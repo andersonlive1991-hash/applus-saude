@@ -137,6 +137,26 @@ io.on('connection', (socket) => {
   socket.on('sos-ice', (data) => {
     socket.to(String(data.familiaId)).emit('sos-ice', data);
   });
+  
+  // ── Videochamada entre membros ──
+  socket.on('video-chamar', (data) => {
+    socket.to('familia_' + data.familiaId).emit('video-recebendo', {
+      offer: data.offer,
+      nome: data.nome,
+      membroId: data.membroId,
+      familiaId: data.familiaId
+    });
+  });
+  socket.on('video-answer', (data) => {
+    socket.to('familia_' + data.familiaId).emit('video-answer', { answer: data.answer });
+  });
+  socket.on('video-ice', (data) => {
+    socket.to('familia_' + data.familiaId).emit('video-ice', { candidate: data.candidate });
+  });
+  socket.on('video-encerrar', (data) => {
+    socket.to('familia_' + data.familiaId).emit('video-encerrado');
+  });
+
   socket.on('sos-encerrar', (data) => {
     socket.to(String(data.familiaId)).emit('sos-encerrado', data);
   });

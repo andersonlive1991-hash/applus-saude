@@ -1065,6 +1065,7 @@ function conectarSocket() {
   APP.socket = io();
   APP.socket.emit('entrar-familia', APP.familiaId);
   registrarEventosSOS();
+  if (typeof registrarEventosVideo === 'function') registrarEventosVideo();
 
   APP.socket.on('nova-mensagem', (msg) => {
     if (msg.autor_id !== APP.idPessoal) {
