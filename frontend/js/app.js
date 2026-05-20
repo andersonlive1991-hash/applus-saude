@@ -776,7 +776,7 @@ async function carregarHome() {
     console.log('Erro home:', e);
   }
   atualizarBadgeRemedios();
-  gerarResumoIA();
+  buscarResumoSalvo();
 }
 
 function iconeTipoEvento(tipo) {
@@ -2510,6 +2510,23 @@ function filtrarMedicamentos(termo) {
       </div>
       <button onclick="excluirMed(${m.id})" style="background:none;border:none;font-size:18px;cursor:pointer">🗑️</button>
     </div>`).join('');
+}
+
+async function buscarResumoSalvo() {
+  const card = document.getElementById('card-resumo-ia');
+  const texto = document.getElementById('resumo-texto');
+  if (!card || !texto) return;
+  try {
+    const r = await api('GET', '/api/ia/resumo-salvo/' + APP.membroId);
+    if (r && r.resumo) {
+      texto.innerHTML = renderMarkdown(r.resumo);
+      document.getElementById('resumo-humor').textContent = '😊';
+    } else {
+      texto.textContent = 'Resumo disponível às 20h após registrar seus dados do dia.';
+    }
+  } catch (e) {
+    texto.textContent = 'Resumo disponível às 20h.';
+  }
 }
 
 async function gerarResumoIA() {

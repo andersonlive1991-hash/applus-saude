@@ -295,3 +295,72 @@ setInterval(async () => {
   }
 }, 60000);
 
+
+// ── Agendador resumo diário às 20:00 (Brasília) ──
+setInterval(async () => {
+  try {
+    const agora = new Date();
+    const horaBrasil = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const hora = horaBrasil.getHours();
+    const minuto = horaBrasil.getMinutes();
+    if (hora !== 20 || minuto !== 0) return;
+
+    console.log('[Resumo Diário] Gerando resumos das 20h...');
+    const membros = await pool.query('SELECT DISTINCT membro_id FROM push_subscriptions');
+    
+    for (const row of membros.rows) {
+      const membro_id = row.membro_id;
+      try {
+        // Verificar se já gerou hoje
+        const jaGerou = await pool.query(
+          'SELECT id FROM resumo_diario WHERE membro_id = $1 AND data = CURRENT_DATE',
+          [membro_id]
+        );
+        if (jaGerou.rows.length) continue;
+
+        // Buscar dados do membro
+        const memRes = await pool.query('SELECT nome FROM membros WHERE id = $1', [membro_id]);
+        if (!memRes.rows.length) continue;
+        const nome = memRes.rows[0].nome;
+
+        // Buscar dados do dia
+        const hoje = new Date().toISOString().split('T')[0];
+        const hidRes = await pool.query('SELECT COALESCE(SUM(quantidade_ml)/250,0) as copos, MAX(meta_ml)/250 as meta FROM hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE', [membro_id]);
+        const copos = Math.round(hidRes.rows[0].copos || 0);
+        const metaAgua = Math.round(hidRes.rows[0].meta || 8);
+
+        const sonoRes = await pool.query('SELECT * FROM cuidados_sono WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1', [membro_id]);
+        const sonoInfo = sonoRes.rows.length ? (sonoRes.rows[0].qualidade || 'registrado') : 'nao registrado';
+
+        const humorRes = await pool.query('SELECT humor FROM cuidados_humor WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1', [membro_id]);
+        const humorTexto = humorRes.rows.length ? humorRes.rows[0].humor : 'nao registrado';
+
+        const sinaisRes = await pool.query('SELECT tipo, valor FROM sinais_vitais WHERE membro_id=$1 ORDER BY criado_em DESC LIMIT 3', [membro_id]);
+        const sinaisTexto = sinaisRes.rows.length ? sinaisRes.rows.map(s => s.tipo+': '+s.valor).join(', ') : 'nenhum';
+
+        const medsRes = await pool.query('SELECT nome FROM medicamentos WHERE membro_id=$1 AND ativo=true', [membro_id]);
+        const medsTexto = medsRes.rows.length ? medsRes.rows.map(m => m.nome).join(', ') : 'nenhum';
+
+        const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de ' + nome + ' e faca um resumo em portugues brasileiro. DADOS: Agua: ' + copos + ' copos (meta: ' + metaAgua + '). Sono: ' + sonoInfo + '. Humor: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica. Seja direto e acolhedor.';
+
+        const geminiRes = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }
+        );
+        const geminiData = await geminiRes.json();
+        const resumo = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'Nao foi possivel gerar analise.';
+
+        await pool.query(
+          'INSERT INTO resumo_diario (membro_id, data, resumo, dados) VALUES ($1, CURRENT_DATE, $2, $3)',
+          [membro_id, resumo, JSON.stringify({ copos, metaAgua, sonoInfo, humorTexto })]
+        );
+        console.log('[Resumo Diário] Gerado para membro', membro_id);
+      } catch (e) {
+        console.log('[Resumo Diário] Erro membro', membro_id, e.message);
+      }
+    }
+  } catch (e) {
+    console.log('[Resumo Diário] Erro geral:', e.message);
+  }
+}, 60000);

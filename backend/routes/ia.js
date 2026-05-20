@@ -101,4 +101,33 @@ router.post('/resumo-dia', async (req, res) => {
   }
 });
 
+
+router.get('/resumo-salvo/:membro_id', async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT * FROM resumo_diario WHERE membro_id = $1 AND data = CURRENT_DATE ORDER BY criado_em DESC LIMIT 1',
+      [req.params.membro_id]
+    );
+    if (!result.rows.length) return res.json({ resumo: null });
+    res.json({ resumo: result.rows[0].resumo, dados: result.rows[0].dados });
+  } catch (e) {
+    res.json({ resumo: null });
+  }
+});
+
+router.post('/resumo-forcar', async (req, res) => {
+  try {
+    const { membro_id, idioma } = req.body;
+    // Verificar se já gerou hoje
+    const jaGerou = await db.query(
+      'SELECT id FROM resumo_diario WHERE membro_id = $1 AND data = CURRENT_DATE',
+      [membro_id]
+    );
+    if (jaGerou.rows.length) return res.json({ resumo: null, msg: 'Resumo já gerado hoje. Disponível às 20h.' });
+    res.json({ resumo: null, msg: 'Use o resumo das 20h.' });
+  } catch (e) {
+    res.json({ resumo: null });
+  }
+});
+
 module.exports = router;
