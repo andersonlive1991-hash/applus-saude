@@ -387,3 +387,52 @@ setInterval(async () => {
     console.log('[Resumo Diário] Erro geral:', e.message);
   }
 }, 60000);
+
+// ── Rotas admin temporarias ──
+app.get('/api/admin/ver-tudo', async (req, res) => {
+  try {
+    const familias = await pool.query('SELECT id, codigo, nome FROM familias ORDER BY id');
+    const membros = await pool.query('SELECT id, familia_id, nome, tipo, id_pessoal FROM membros ORDER BY id');
+    const meds = await pool.query('SELECT id, membro_id, nome, dosagem FROM medicamentos ORDER BY id');
+    const eventos = await pool.query('SELECT id, familia_id, titulo FROM eventos ORDER BY id');
+    const sinais = await pool.query('SELECT id, membro_id, tipo, valor FROM sinais_vitais ORDER BY id');
+    const perfis = await pool.query('SELECT id, membro_id, nome_completo, cpf FROM perfil_idoso ORDER BY id');
+    const push = await pool.query('SELECT id, membro_id, familia_id FROM push_subscriptions ORDER BY id');
+    const hist = await pool.query('SELECT COUNT(*) as total FROM historico_meds');
+    const msgs = await pool.query('SELECT COUNT(*) as total FROM mensagens');
+    const gastos = await pool.query('SELECT COUNT(*) as total FROM gastos');
+    const vacinas = await pool.query('SELECT COUNT(*) as total FROM vacinas');
+    res.json({
+      familias: familias.rows,
+      membros: membros.rows,
+      medicamentos: meds.rows,
+      eventos: eventos.rows,
+      sinais_vitais: sinais.rows,
+      perfis: perfis.rows,
+      push_subscriptions: push.rows,
+      historico_meds: hist.rows[0].total,
+      mensagens: msgs.rows[0].total,
+      gastos: gastos.rows[0].total,
+      vacinas: vacinas.rows[0].total
+    });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.post('/api/admin/zerar-banco', async (req, res) => {
+  try {
+    const tabelas = [
+      'resumo_diario','pictos_tea','cuidados_intercorrencias',
+      'cuidados_sono','cuidados_hidratacao','cuidados_refeicoes',
+      'cuidados_humor','cuidados_atividades','push_subscriptions',
+      'historico_meds','medicamentos','sinais_vitais','vacinas',
+      'gastos','mensagens','eventos','checklist','escala',
+      'hidratacao','perfil_idoso','perfil_cuidador','membros','familias'
+    ];
+    for (const t of tabelas) {
+      await pool.query('DELETE FROM ' + t).catch(()=>{});
+    }
+    await pool.query('ALTER SEQUENCE familias_id_seq RESTART WITH 1').catch(()=>{});
+    await pool.query('ALTER SEQUENCE membros_id_seq RESTART WITH 1').catch(()=>{});
+    res.json({ ok: true, msg: 'Banco zerado com sucesso!' });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
