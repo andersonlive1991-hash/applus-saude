@@ -521,9 +521,13 @@ function _continuarIniciarApp() {
   if (Notification.permission === 'granted') {
     inscreverPush();
   } else if (Notification.permission === 'default') {
-    Notification.requestPermission().then(perm => {
-      if (perm === 'granted') inscreverPush();
-    });
+    // Pede permissão apenas uma vez por sessão
+    if (!sessionStorage.getItem('push_permission_asked')) {
+      sessionStorage.setItem('push_permission_asked', '1');
+      Notification.requestPermission().then(perm => {
+        if (perm === 'granted') inscreverPush();
+      });
+    }
   }
   atualizarDropdown();
   navegarPara('home');
