@@ -19,7 +19,6 @@ async function setup() {
         tipo VARCHAR(20) NOT NULL,
         relacao VARCHAR(50),
         id_pessoal VARCHAR(20) UNIQUE NOT NULL,
-        pin_hash VARCHAR(64),
         criado_em TIMESTAMP DEFAULT NOW()
       );
 
