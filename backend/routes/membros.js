@@ -73,3 +73,40 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ erro: e.message });
   }
 });
+
+const crypto = require('crypto');
+function hashPin(pin, membro_id) {
+  return crypto.createHash('sha256').update(String(pin) + String(membro_id)).digest('hex');
+}
+router.post('/pin/salvar', async (req, res) => {
+  const { membro_id, pin } = req.body;
+  if (!membro_id || !pin || String(pin).length !== 4) return res.status(400).json({ erro: 'PIN deve ter 4 digitos' });
+  try {
+    await db.query('ALTER TABLE membros ADD COLUMN IF NOT EXISTS pin_hash VARCHAR(64)').catch(()=>{});
+    await db.query('UPDATE membros SET pin_hash=$1 WHERE id=$2', [hashPin(pin, membro_id), membro_id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+router.post('/pin/verificar', async (req, res) => {
+  const { membro_id, pin } = req.body;
+  if (!membro_id || !pin) return res.json({ ok: false });
+  try {
+    const r = await db.query('SELECT pin_hash FROM membros WHERE id=$1', [membro_id]);
+    if (!r.rows.length) return res.json({ ok: false });
+    res.json({ ok: r.rows[0].pin_hash === hashPin(pin, membro_id) });
+  } catch(e) { res.json({ ok: false }); }
+});
+router.post('/pin/remover', async (req, res) => {
+  const { membro_id } = req.body;
+  try {
+    await db.query('UPDATE membros SET pin_hash=NULL WHERE id=$1', [membro_id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+router.get('/pin/tem/:membro_id', async (req, res) => {
+  try {
+    await db.query('ALTER TABLE membros ADD COLUMN IF NOT EXISTS pin_hash VARCHAR(64)').catch(()=>{});
+    const r = await db.query('SELECT pin_hash FROM membros WHERE id=$1', [req.params.membro_id]);
+    res.json({ tem: r.rows.length > 0 && r.rows[0].pin_hash !== null });
+  } catch(e) { res.json({ tem: false }); }
+});

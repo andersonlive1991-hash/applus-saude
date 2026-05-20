@@ -501,8 +501,22 @@ async function recuperarAcesso() {
 
 // ── INICIAR APP ──
 function iniciarApp() {
+  // Verificar PIN antes de entrar
+  if (typeof verificarPinAoEntrar === 'function') {
+    verificarPinAoEntrar().then(ok => {
+      if (!ok) return;
+      mostrarApp();
+      conectarSocket();
+      _continuarIniciarApp();
+    });
+    return;
+  }
   mostrarApp();
   conectarSocket();
+  _continuarIniciarApp();
+}
+
+function _continuarIniciarApp() {
   iniciarAlarmes();
   if (Notification.permission === 'granted') {
     inscreverPush();
@@ -513,6 +527,7 @@ function iniciarApp() {
   }
   atualizarDropdown();
   navegarPara('home');
+  if (typeof carregarStatusPin === 'function') carregarStatusPin();
 }
 
 // ── NAVEGAÇÃO ──
