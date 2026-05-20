@@ -436,3 +436,18 @@ app.post('/api/admin/zerar-banco', async (req, res) => {
     res.json({ ok: true, msg: 'Banco zerado com sucesso!' });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
+
+app.post('/api/admin/resetar-sequences', async (req, res) => {
+  try {
+    const tabelas = [
+      'familias','membros','medicamentos','historico_meds',
+      'eventos','mensagens','gastos','sinais_vitais','vacinas',
+      'push_subscriptions','perfil_idoso','perfil_cuidador',
+      'checklist','escala','hidratacao','resumo_diario','pictos_tea'
+    ];
+    for (const t of tabelas) {
+      await pool.query(`ALTER SEQUENCE IF EXISTS ${t}_id_seq RESTART WITH 1`).catch(()=>{});
+    }
+    res.json({ ok: true, msg: 'Sequences resetadas! Próximo ID será 1.' });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
