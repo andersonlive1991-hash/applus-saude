@@ -689,6 +689,13 @@ async function carregarHistoricoBemEstar() {
   } catch(e) {}
 }
 
+function preencherNomePerfil() {
+  const campoNome = document.getElementById('pf-nome');
+  if (campoNome && !campoNome.value && APP.membroNome) {
+    campoNome.value = APP.membroNome;
+  }
+}
+
 function navegarPara(pagina) {
   document.querySelectorAll('.pagina').forEach(p => p.classList.remove('ativa'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
@@ -705,7 +712,7 @@ function navegarPara(pagina) {
   if (pagina === 'agenda') carregarAgenda();
   if (pagina === 'chat') carregarChat();
   if (pagina === 'mais') carregarMais();
-  if (pagina === 'perfil') carregarPerfil();
+  if (pagina === 'perfil') { carregarPerfil(); setTimeout(preencherNomePerfil, 500); }
   if (pagina === 'bem-estar') carregarHistoricoBemEstar();
   if (pagina === 'checklist') carregarChecklist();
   if (pagina === 'escala') carregarEscala();
