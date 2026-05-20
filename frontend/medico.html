@@ -492,8 +492,8 @@ async function carregarHistorico(membro) {
 
     // Proxima consulta em destaque
     const hoje = new Date(); hoje.setHours(0,0,0,0);
-    const proximas = eventos.filter(e => new Date(e.data + 'T00:00:00') >= hoje).sort((a,b) => new Date(a.data) - new Date(b.data));
-    const anteriores = eventos.filter(e => new Date(e.data + 'T00:00:00') < hoje).sort((a,b) => new Date(b.data) - new Date(a.data));
+    const proximas = eventos.filter(e => new Date(e.data.substring(0,10)) >= hoje).sort((a,b) => new Date(a.data) - new Date(b.data));
+    const anteriores = eventos.filter(e => new Date(e.data.substring(0,10)) < hoje).sort((a,b) => new Date(b.data) - new Date(a.data));
     if (proximas.length > 0) {
       const p = proximas[0];
       html += '<div style="background:#eff6ff;border:2px solid #3b82f6;border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px">'
