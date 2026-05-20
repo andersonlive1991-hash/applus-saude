@@ -140,7 +140,7 @@ io.on('connection', (socket) => {
   
   // ── Videochamada entre membros ──
   socket.on('video-chamar', (data) => {
-    socket.to('familia_' + data.familiaId).emit('video-recebendo', {
+    socket.to(String(data.familiaId)).emit('video-recebendo', {
       offer: data.offer,
       nome: data.nome,
       membroId: data.membroId,
@@ -148,13 +148,13 @@ io.on('connection', (socket) => {
     });
   });
   socket.on('video-answer', (data) => {
-    socket.to('familia_' + data.familiaId).emit('video-answer', { answer: data.answer });
+    socket.to(String(data.familiaId)).emit('video-answer', { answer: data.answer });
   });
   socket.on('video-ice', (data) => {
-    socket.to('familia_' + data.familiaId).emit('video-ice', { candidate: data.candidate });
+    socket.to(String(data.familiaId)).emit('video-ice', { candidate: data.candidate });
   });
   socket.on('video-encerrar', (data) => {
-    socket.to('familia_' + data.familiaId).emit('video-encerrado');
+    socket.to(String(data.familiaId)).emit('video-encerrado');
   });
 
   socket.on('sos-encerrar', (data) => {

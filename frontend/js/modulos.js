@@ -989,7 +989,7 @@ async function iniciarVideoChamada(membroId, membroNome) {
     _videoStream.getTracks().forEach(t => _videoPC.addTrack(t, _videoStream));
 
     _videoPC.onicecandidate = (e) => {
-      if (e.candidate) APP.socket.emit('video-ice', { familiaId: APP.familiaId, candidate: e.candidate });
+      if (e.candidate) APP.socket.emit('video-ice', { familiaId: String(APP.familiaId), candidate: e.candidate });
     };
     _videoPC.ontrack = (e) => {
       const videoRemoto = document.getElementById('video-remoto');
@@ -999,7 +999,7 @@ async function iniciarVideoChamada(membroId, membroNome) {
     const offer = await _videoPC.createOffer();
     await _videoPC.setLocalDescription(offer);
     APP.socket.emit('video-chamar', {
-      familiaId: APP.familiaId,
+      familiaId: String(APP.familiaId),
       membroId: APP.membroId,
       nome: APP.membroNome,
       offer
@@ -1025,7 +1025,7 @@ async function atenderVideoChamada() {
 
     const answer = await _videoPC.createAnswer();
     await _videoPC.setLocalDescription(answer);
-    APP.socket.emit('video-answer', { familiaId: APP.familiaId, answer });
+    APP.socket.emit('video-answer', { familiaId: String(APP.familiaId), answer });
     mostrarTelaVideo('conectado', window._videoNomeQuemChamou || 'Familiar');
     iniciarTimerVideo();
   } catch(e) {
@@ -1037,7 +1037,7 @@ function encerrarVideoChamada() {
   if (_videoPC) { _videoPC.close(); _videoPC = null; }
   if (_videoStream) { _videoStream.getTracks().forEach(t => t.stop()); _videoStream = null; }
   if (_videoTimer) { clearInterval(_videoTimer); _videoTimer = null; }
-  APP.socket.emit('video-encerrar', { familiaId: APP.familiaId });
+  APP.socket.emit('video-encerrar', { familiaId: String(APP.familiaId) });
   fecharTelaVideo();
 }
 
