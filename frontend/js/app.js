@@ -2516,6 +2516,7 @@ async function buscarResumoSalvo() {
   const card = document.getElementById('card-resumo-ia');
   const texto = document.getElementById('resumo-texto');
   if (!card || !texto) return;
+  card.style.display = 'block';
   try {
     const r = await api('GET', '/api/ia/resumo-salvo/' + APP.membroId);
     if (r && r.resumo) {
