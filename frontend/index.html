@@ -404,6 +404,14 @@
       </div>
     </div>
     <div class="secao">
+      <div class="item-lista" onclick="abrirConfigPin()">
+        <span style="font-size:24px">🔒</span>
+        <div class="item-info">
+          <div class="item-nome">PIN de segurança</div>
+          <div class="item-sub" id="pin-status-texto">Carregando...</div>
+        </div>
+        <span>›</span>
+      </div>
       <button class="btn btn-block" onclick="excluirPerfil()" style="background:#fff0f0;color:#e74c3c;border:2px solid #e74c3c;margin-bottom:0.5rem">🗑️ Excluir perfil</button>
       <button class="btn btn-outline btn-block" onclick="sair()" data-i18n="mais.sair_trocar">Sair / Trocar conta</button>
     </div>
@@ -1953,6 +1961,60 @@
     <p style="font-size:13px;color:#666;margin-bottom:16px">Escolha com quem falar:</p>
     <div id="lista-membros-video" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto"></div>
     <button class="btn btn-cinza btn-block" style="margin-top:12px" onclick="fecharModal('modal-video-membros')">Cancelar</button>
+  </div>
+</div>
+
+
+<!-- ── TELA PIN ── -->
+<div id="tela-pin" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(160deg,#0f6647,#1a9e6e);z-index:99999;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px">
+  <div style="font-size:48px;margin-bottom:16px">🔒</div>
+  <div style="font-size:20px;font-weight:700;color:white;margin-bottom:8px" id="pin-entrada-nome">AP+ Saúde</div>
+  <div style="font-size:14px;color:rgba(255,255,255,0.8);margin-bottom:32px">Digite seu PIN de 4 dígitos</div>
+  <div style="display:flex;gap:16px;margin-bottom:32px" id="pin-pontos">
+    <div style="width:20px;height:20px;border-radius:50%;border:2px solid white;background:transparent" id="pin-dot-0"></div>
+    <div style="width:20px;height:20px;border-radius:50%;border:2px solid white;background:transparent" id="pin-dot-1"></div>
+    <div style="width:20px;height:20px;border-radius:50%;border:2px solid white;background:transparent" id="pin-dot-2"></div>
+    <div style="width:20px;height:20px;border-radius:50%;border:2px solid white;background:transparent" id="pin-dot-3"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,80px);gap:12px;margin-bottom:16px">
+    <button onclick="pinDigito('1')" style="height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:24px;font-weight:700;cursor:pointer">1</button>
+    <button onclick="pinDigito('2')" style="height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:24px;font-weight:700;cursor:pointer">2</button>
+    <button onclick="pinDigito('3')" style="height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:24px;font-weight:700;cursor:pointer">3</button>
+    <button onclick="pinDigito('4')" style="height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:24px;font-weight:700;cursor:pointer">4</button>
+    <button onclick="pinDigito('5')" style="height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:24px;font-weight:700;cursor:pointer">5</button>
+    <button onclick="pinDigito('6')" style="height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:24px;font-weight:700;cursor:pointer">6</button>
+    <button onclick="pinDigito('7')" style="height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:24px;font-weight:700;cursor:pointer">7</button>
+    <button onclick="pinDigito('8')" style="height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:24px;font-weight:700;cursor:pointer">8</button>
+    <button onclick="pinDigito('9')" style="height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:24px;font-weight:700;cursor:pointer">9</button>
+    <button onclick="pinApagar()" style="height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:20px;cursor:pointer">⌫</button>
+    <button onclick="pinDigito('0')" style="height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:24px;font-weight:700;cursor:pointer">0</button>
+    <div></div>
+  </div>
+  <div id="pin-erro" style="color:#fca5a5;font-size:13px;min-height:20px;text-align:center"></div>
+</div>
+
+<!-- Modal Config PIN -->
+<div id="modal-config-pin" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🔒 PIN de segurança</div>
+    <div id="config-pin-conteudo">
+      <p style="font-size:13px;color:#666;margin-bottom:16px">O PIN protege seus dados de saúde. Será pedido toda vez que abrir o app.</p>
+      <div id="config-pin-sem-pin">
+        <button class="btn btn-verde btn-block" onclick="iniciarDefinirPin()">🔒 Ativar PIN</button>
+      </div>
+      <div id="config-pin-com-pin" style="display:none">
+        <button class="btn btn-block" style="background:#fff8f0;color:#f97316;border:1.5px solid #f97316;margin-bottom:8px" onclick="iniciarAlterarPin()">✏️ Alterar PIN</button>
+        <button class="btn btn-block" style="background:#fff0f0;color:#e74c3c;border:1.5px solid #e74c3c" onclick="removerPin()">🗑️ Remover PIN</button>
+      </div>
+      <div id="config-pin-form" style="display:none">
+        <p style="font-size:13px;color:#666;margin-bottom:12px" id="config-pin-instrucao">Digite um PIN de 4 dígitos:</p>
+        <input id="config-pin-input" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]*"
+          style="width:100%;text-align:center;font-size:32px;letter-spacing:16px;padding:16px;border:2px solid #e5e7eb;border-radius:12px;margin-bottom:8px"
+          placeholder="••••" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        <button class="btn btn-verde btn-block" onclick="confirmarPin()">Confirmar</button>
+      </div>
+    </div>
+    <button class="btn btn-cinza btn-block" style="margin-top:8px" onclick="fecharModal('modal-config-pin')">Fechar</button>
   </div>
 </div>
 
