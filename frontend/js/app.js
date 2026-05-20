@@ -521,14 +521,9 @@ function _continuarIniciarApp() {
   if (Notification.permission === 'granted') {
     inscreverPush();
   } else if (Notification.permission === 'default') {
-    // Só pede permissão uma vez — salva no localStorage
-    const jaPediu = localStorage.getItem('push_pediu_permissao');
-    if (!jaPediu) {
-      localStorage.setItem('push_pediu_permissao', '1');
-      Notification.requestPermission().then(perm => {
-        if (perm === 'granted') inscreverPush();
-      });
-    }
+    Notification.requestPermission().then(perm => {
+      if (perm === 'granted') inscreverPush();
+    });
   }
   atualizarDropdown();
   navegarPara('home');
