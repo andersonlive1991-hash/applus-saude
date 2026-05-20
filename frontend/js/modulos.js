@@ -957,6 +957,9 @@ let _videoMudo = false;
 let _videoCamOff = false;
 
 async function abrirModalVideo() {
+  console.log('[Video] abrirModalVideo chamada');
+  console.log('[Video] familiaId:', APP.familiaId);
+  console.log('[Video] modal existe:', !!document.getElementById('modal-video-membros'));
   try {
     const membros = await api('GET', '/api/membros/familia/' + APP.familiaId);
     const outros = membros.filter(m => m.id !== APP.membroId);
