@@ -453,3 +453,10 @@ app.post('/api/admin/resetar-sequences', async (req, res) => {
     res.json({ ok: true, msg: 'Sequences resetadas! Próximo ID será 1.' });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
+
+app.post('/api/admin/limpar-push', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM push_subscriptions');
+    res.json({ ok: true, msg: 'Push subscriptions limpas!' });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
