@@ -1365,7 +1365,7 @@ async function inscreverPush() {
   if (!('PushManager' in window)) return;
   try {
     const reg = await navigator.serviceWorker.ready;
-    const VAPID_PUBLIC_KEY = 'BO6JXBRmtjSjiM9OAa7NSy2CtZS6x_caWM582FMie8idIzpapx8McDuQl62PChqMHxQAELiE1ja1kHDmK91nLGE';
+    const VAPID_PUBLIC_KEY = 'BFpHhhK6LGFVPakgXU_RYPsMTkmMladUq7GTfVVk7L5iwOkbJ6w2eqOFI5pC2qi2YbYkw4WYF28tQHOvBge8kNc';
     // Sempre criar nova inscrição para evitar tokens expirados
     let sub = await reg.pushManager.getSubscription();
     if (sub) {
