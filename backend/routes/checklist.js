@@ -22,11 +22,11 @@ router.get('/:familia_id', async (req, res) => {
 
 // Criar tarefa
 router.post('/', async (req, res) => {
-  const { familia_id, membro_id, tarefa } = req.body;
+  const { familia_id, membro_id, tarefa, data } = req.body;
   try {
     const result = await db.query(
-      'INSERT INTO checklist (familia_id, membro_id, tarefa) VALUES ($1,$2,$3) RETURNING *',
-      [familia_id, membro_id, tarefa]
+      'INSERT INTO checklist (familia_id, membro_id, tarefa, data) VALUES ($1,$2,$3,$4) RETURNING *',
+      [familia_id, membro_id, tarefa, data || new Date().toISOString().split("T")[0]]
     );
     res.json(result.rows[0]);
   } catch (e) {

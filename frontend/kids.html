@@ -542,7 +542,7 @@ let _kidsEstrelas = 0;
 
 async function carregarTarefasKids() {
   try {
-    const hoje = new Date().toISOString().split("T")[0];
+    const hoje = new Date().toLocaleDateString("sv-SE");
     const tarefas = await fetch("/api/checklist/" + KIDS.familiaId + "?data=" + hoje)
       .then(r => r.json()).catch(() => []);
     const minhas = tarefas;
