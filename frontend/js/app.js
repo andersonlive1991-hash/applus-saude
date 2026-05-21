@@ -1285,6 +1285,7 @@ async function perguntarIA() {
 // ── MAIS (perfil, sinais, vacinas, etc.) ──
 function carregarMais() {
   document.getElementById('mais-nome').textContent = APP.membroNome;
+  carregarIdSOS();
   document.getElementById('mais-id').textContent = APP.idPessoal;
   document.getElementById('mais-familia').textContent = APP.codigoFamilia;
 
@@ -1450,6 +1451,65 @@ function urlBase64ToUint8Array(base64String) {
 
 
 // ── ATIVAR PUSH MANUALMENTE ──
+
+// ── ID SOS E CONTATOS SOS ──
+async function carregarIdSOS() {
+  try {
+    const r = await api("GET", "/api/sos/meu-id/" + APP.membroId);
+    const el = document.getElementById("meu-id-sos");
+    if (el) el.textContent = r.id_sos;
+    carregarContatosSOS();
+  } catch(e) { console.log("Erro ID SOS:", e); }
+}
+
+function copiarIdSOS() {
+  const el = document.getElementById("meu-id-sos");
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    alerta("ID SOS copiado!", "ok");
+  }).catch(() => {
+    alerta("Seu ID SOS: " + el.textContent, "ok");
+  });
+}
+
+async function carregarContatosSOS() {
+  try {
+    const lista = await api("GET", "/api/sos/contatos/" + APP.membroId);
+    const container = document.getElementById("lista-contatos-sos");
+    if (!container) return;
+    if (!lista.length) {
+      container.innerHTML = '<p style="font-size:12px;color:#6b7280">Nenhum contato SOS cadastrado</p>';
+      return;
+    }
+    container.innerHTML = lista.map(c => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:white;border-radius:8px;margin-bottom:6px;border:1px solid #fca5a5">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#111827">${c.nome_contato}</div>
+          <div style="font-size:11px;color:#6b7280">${c.id_sos_contato}</div>
+        </div>
+        <button onclick="removerContatoSOS(${c.id})" style="background:#fee2e2;border:none;border-radius:6px;padding:6px 10px;color:#dc2626;font-size:12px;cursor:pointer">Remover</button>
+      </div>
+    `).join("");
+  } catch(e) { console.log("Erro contatos SOS:", e); }
+}
+
+async function adicionarContatoSOS() {
+  const input = document.getElementById("input-id-sos");
+  const idSos = input.value.trim().toUpperCase();
+  if (!idSos) return alerta("Digite o ID SOS do contato");
+  try {
+    const r = await api("POST", "/api/sos/contatos", { membro_id: APP.membroId, id_sos_contato: idSos });
+    input.value = "";
+    alerta("Contato " + r.nome + " adicionado!", "ok");
+    carregarContatosSOS();
+  } catch(e) { alerta("ID SOS não encontrado. Verifique e tente novamente."); }
+}
+
+async function removerContatoSOS(id) {
+  await api("DELETE", "/api/sos/contatos/" + id);
+  carregarContatosSOS();
+}
+
 async function ativarNotificacoes() {
   if (Notification.permission === 'granted') {
     await inscreverPush();

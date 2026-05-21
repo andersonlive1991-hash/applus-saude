@@ -130,6 +130,27 @@ io.on('connection', (socket) => {
         const sub = typeof row.subscription === 'string' ? JSON.parse(row.subscription) : row.subscription;
         webpush.sendNotification(sub, payload).catch(e => console.log('Push SOS erro:', e.message));
       }
+    // Push para contatos SOS externos
+    try {
+      if (data.membroId) {
+        const contatos = await pool.query("SELECT id_sos_contato FROM contatos_sos WHERE membro_id=$1", [data.membroId]);
+        for (const c of contatos.rows) {
+          const memRes = await pool.query("SELECT id FROM membros WHERE id_sos=$1", [c.id_sos_contato]);
+          if (!memRes.rows.length) continue;
+          const subRes = await pool.query("SELECT subscription FROM push_subscriptions WHERE membro_id=$1", [memRes.rows[0].id]);
+          for (const row of subRes.rows) {
+            const sub = typeof row.subscription === "string" ? JSON.parse(row.subscription) : row.subscription;
+            const payloadSOS = JSON.stringify({
+              titulo: "🚨 EMERGÊNCIA EXTERNA — SOS!",
+              corpo: (data.nome || "Alguém") + " está em emergência e precisa de ajuda!",
+              url: "/",
+              urgente: true
+            });
+            webpush.sendNotification(sub, payloadSOS).catch(e => console.log("Push SOS externo erro:", e.message));
+          }
+        }
+      }
+    } catch(e) { console.log("Erro push SOS extatos:", e.message); }
     } catch(e) { console.log('Erro push SOS:', e.message); }
   });
   socket.on('sos-offer', (data) => {
@@ -208,6 +229,81 @@ pool.query(`
     criado_em TIMESTAMP DEFAULT NOW()
   )
 `).catch(e => console.log('Tabela pictos_tea:', e.message));
+
+// ── ID SOS E CONTATOS SOS ──
+pool.query(`ALTER TABLE membros ADD COLUMN IF NOT EXISTS id_sos VARCHAR(20) UNIQUE`).catch(()=>{});
+
+pool.query(`
+  CREATE TABLE IF NOT EXISTS contatos_sos (
+    id SERIAL PRIMARY KEY,
+    membro_id INTEGER REFERENCES membros(id) ON DELETE CASCADE,
+    id_sos_contato VARCHAR(20),
+    nome_contato VARCHAR(100),
+    criado_em TIMESTAMP DEFAULT NOW()
+  )
+`).catch(e => console.log("Tabela contatos_sos:", e.message));
+
+// Gerar ID SOS único
+function gerarIdSOS() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let id = "SOS-";
+  for (let i = 0; i < 5; i++) id += chars[Math.floor(Math.random() * chars.length)];
+  return id;
+}
+
+// Buscar ou criar ID SOS do membro
+app.get("/api/sos/meu-id/:membro_id", async (req, res) => {
+  try {
+    const r = await pool.query("SELECT id_sos FROM membros WHERE id=$1", [req.params.membro_id]);
+    if (!r.rows.length) return res.status(404).json({ erro: "Membro não encontrado" });
+    let idSos = r.rows[0].id_sos;
+    if (!idSos) {
+      // Gerar novo ID SOS único
+      let novo, existe = true;
+      while (existe) {
+        novo = gerarIdSOS();
+        const check = await pool.query("SELECT id FROM membros WHERE id_sos=$1", [novo]);
+        existe = check.rows.length > 0;
+      }
+      await pool.query("UPDATE membros SET id_sos=$1 WHERE id=$2", [novo, req.params.membro_id]);
+      idSos = novo;
+    }
+    res.json({ id_sos: idSos });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+// Listar contatos SOS do membro
+app.get("/api/sos/contatos/:membro_id", async (req, res) => {
+  try {
+    const r = await pool.query("SELECT * FROM contatos_sos WHERE membro_id=$1 ORDER BY criado_em", [req.params.membro_id]);
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+// Adicionar contato SOS
+app.post("/api/sos/contatos", async (req, res) => {
+  const { membro_id, id_sos_contato } = req.body;
+  try {
+    // Verificar se o ID SOS existe
+    const check = await pool.query("SELECT id, nome FROM membros WHERE id_sos=$1", [id_sos_contato]);
+    if (!check.rows.length) return res.status(404).json({ erro: "ID SOS não encontrado" });
+    const nome_contato = check.rows[0].nome;
+    const r = await pool.query(
+      "INSERT INTO contatos_sos (membro_id, id_sos_contato, nome_contato) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING RETURNING *",
+      [membro_id, id_sos_contato, nome_contato]
+    );
+    res.json({ ok: true, nome: nome_contato });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+// Remover contato SOS
+app.delete("/api/sos/contatos/:id", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM contatos_sos WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 
 app.get('/api/pictos-tea/:membro_id', async (req, res) => {
   try {

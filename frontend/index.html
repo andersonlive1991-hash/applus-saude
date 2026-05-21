@@ -418,6 +418,23 @@
         </div>
         <span>›</span>
       </div>
+      <!-- ID SOS -->
+      <div class="secao" style="background:#fff5f5;border-radius:16px;padding:16px;margin-bottom:12px;border:2px solid #fca5a5">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#dc2626">🆘 Meu ID SOS</div>
+            <div style="font-size:12px;color:#6b7280">Compartilhe com amigos para receber SOS seu</div>
+          </div>
+          <div id="meu-id-sos" style="font-size:16px;font-weight:800;color:#dc2626;cursor:pointer" onclick="copiarIdSOS()">...</div>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">📋 Contatos SOS</div>
+        <div id="lista-contatos-sos" style="margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="input-id-sos" type="text" placeholder="ID SOS do contato (ex: SOS-AB3X9)" style="flex:1;padding:10px;border:1.5px solid #fca5a5;border-radius:8px;font-size:13px;text-transform:uppercase">
+          <button onclick="adicionarContatoSOS()" style="padding:10px 14px;background:#dc2626;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+</button>
+        </div>
+      </div>
+
       <button class="btn btn-block" onclick="ativarNotificacoes()" style="background:#eff6ff;color:#1d4ed8;border:2px solid #3b82f6;margin-bottom:0.5rem">🔔 Ativar notificações push</button>
       <button class="btn btn-block" onclick="excluirPerfil()" style="background:#fff0f0;color:#e74c3c;border:2px solid #e74c3c;margin-bottom:0.5rem">🗑️ Excluir perfil</button>
       <button class="btn btn-outline btn-block" onclick="sair()" data-i18n="mais.sair_trocar">Sair / Trocar conta</button>
