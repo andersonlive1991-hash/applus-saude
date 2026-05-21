@@ -282,6 +282,56 @@ setInterval(async () => {
   }
 }, 60000);
 
+// ── AGENDADOR DOSE PERDIDA — avisa família após 30min sem confirmação ──
+setInterval(async () => {
+  try {
+    const agora = new Date();
+    const horaBrasil = new Date(agora.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const horaAtual = String(horaBrasil.getHours()).padStart(2,"0") + ":" + String(horaBrasil.getMinutes()).padStart(2,"0");
+    // Horário de 30 minutos atrás
+    const antes = new Date(horaBrasil.getTime() - 30 * 60000);
+    const horaAntes = String(antes.getHours()).padStart(2,"0") + ":" + String(antes.getMinutes()).padStart(2,"0");
+    const meds = await pool.query("SELECT * FROM medicamentos WHERE horarios IS NOT NULL");
+    for (const med of meds.rows) {
+      const horarios = typeof med.horarios === "string" ? JSON.parse(med.horarios) : med.horarios;
+      if (!Array.isArray(horarios) || !horarios.includes(horaAntes)) continue;
+      // Verificar se foi confirmado
+      const hoje = horaBrasil.toISOString().split("T")[0];
+      const conf = await pool.query(
+        "SELECT id FROM historico_meds WHERE med_id=$1 AND membro_id=$2 AND DATE(criado_em AT TIME ZONE 'America/Sao_Paulo')=$3 AND status='tomado'",
+        [med.id, med.membro_id, hoje]
+      );
+      if (conf.rows.length > 0) continue; // Já confirmado
+      // Buscar familia do membro
+      const membroRes = await pool.query("SELECT familia_id, nome FROM membros WHERE id=$1", [med.membro_id]);
+      if (!membroRes.rows.length) continue;
+      const { familia_id, nome } = membroRes.rows[0];
+      // Buscar inscrições de OUTROS membros da família
+      const subs = await pool.query(
+        "SELECT membro_id, subscription FROM push_subscriptions WHERE familia_id=$1 AND membro_id!=$2",
+        [familia_id, med.membro_id]
+      );
+      if (!subs.rows.length) continue;
+      const payload = JSON.stringify({
+        titulo: "⚠️ Dose não confirmada",
+        corpo: nome + " não confirmou " + med.nome + " às " + horaAntes,
+        url: "/#remedios",
+        medicamento: false
+      });
+      for (const row of subs.rows) {
+        const sub = typeof row.subscription === "string" ? JSON.parse(row.subscription) : row.subscription;
+        webpush.sendNotification(sub, payload).catch(e => {
+          if (e.statusCode === 410 || e.statusCode === 404) {
+            pool.query("DELETE FROM push_subscriptions WHERE membro_id=$1", [row.membro_id]).catch(()=>{});
+          }
+        });
+      }
+      console.log("[Dose perdida] " + nome + " nao confirmou " + med.nome + " as " + horaAntes);
+    }
+  } catch(e) { console.log("Erro agendador dose perdida:", e.message); }
+}, 5 * 60000); // a cada 5 minutos
+
+
 // ── AGENDADOR DE EVENTOS ──
 setInterval(async () => {
   try {
