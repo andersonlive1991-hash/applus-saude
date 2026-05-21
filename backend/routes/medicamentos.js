@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const webpush = require("web-push");
 const db = require('../db');
 
 // Confirmar dose (rota fixa — deve vir antes de /:familia_id)
@@ -10,6 +11,35 @@ router.post('/historico', async (req, res) => {
       'INSERT INTO historico_meds (med_id, status, motivo, membro_id) VALUES ($1,$2,$3,$4) RETURNING *',
       [med_id, status, motivo, membro_id]
     );
+    // Se dose pulada, avisar família
+    if (status === "pulado") {
+      try {
+        const memRes = await db.query("SELECT familia_id, nome FROM membros WHERE id=$1", [membro_id]);
+        if (memRes.rows.length) {
+          const { familia_id, nome } = memRes.rows[0];
+          const medRes = await db.query("SELECT nome FROM medicamentos WHERE id=$1", [med_id]);
+          const medNome = medRes.rows.length ? medRes.rows[0].nome : "medicamento";
+          const subs = await db.query(
+            "SELECT membro_id, subscription FROM push_subscriptions WHERE familia_id=$1 AND membro_id!=$2",
+            [familia_id, membro_id]
+          );
+          const payload = JSON.stringify({
+            titulo: "⚠️ Dose pulada",
+            corpo: nome + " pulou " + medNome,
+            url: "/#remedios",
+            medicamento: false
+          });
+          for (const row of subs.rows) {
+            const sub = typeof row.subscription === "string" ? JSON.parse(row.subscription) : row.subscription;
+            webpush.sendNotification(sub, payload).catch(e => {
+              if (e.statusCode === 410 || e.statusCode === 404) {
+                db.query("DELETE FROM push_subscriptions WHERE membro_id=$1", [row.membro_id]).catch(()=>{});
+              }
+            });
+          }
+        }
+      } catch(ep) { console.log("Erro push dose pulada:", ep.message); }
+    }
     res.json(result.rows[0]);
   } catch (e) {
     res.status(500).json({ erro: e.message });
