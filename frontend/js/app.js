@@ -911,12 +911,7 @@ function limparFormMed() {
 }
 
 // ── ALARMES ──
-// Carregar alarmes confirmados do sessionStorage
-const _confirmadosSalvos = sessionStorage.getItem('alarmesConfirmados');
-APP.alarmesConfirmados = new Set(_confirmadosSalvos ? JSON.parse(_confirmadosSalvos) : []);
-function _salvarConfirmados() {
-  sessionStorage.setItem('alarmesConfirmados', JSON.stringify([...APP.alarmesConfirmados]));
-}
+APP.alarmesConfirmados = APP.alarmesConfirmados || new Set();
 
 async function iniciarAlarmes() {
   if (APP.alarmeInterval) clearInterval(APP.alarmeInterval);
@@ -944,8 +939,7 @@ async function verificarAlarmes() {
         const diffMin = (agora - horarioDate) / 60000;
         if (diffMin >= 0 && diffMin < 30) {
           APP.alarmesConfirmados.add(chave);
-          _salvarConfirmados();
-          med._horarioAtivo = horario; dispararAlarme(med);
+          dispararAlarme(med);
           break;
         }
       }
@@ -986,7 +980,6 @@ function dispararAlarme(med) {
   }, 120000);
 
   overlay.dataset.medId = med.id;
-  overlay.dataset.horario = med._horarioAtivo || '';
 }
 
 function falarAlarme(texto) {
@@ -1006,10 +999,6 @@ async function confirmarDose(status) {
   pararSomAlarme();
   document.getElementById('alarme-overlay').classList.remove('ativo');
   APP.alarmeAtivo = null;
-  // Remover chave do sessionStorage para nao repetir
-  const _chaveAtiva = `${medId}-${document.getElementById("alarme-overlay").dataset.horario}`;
-  APP.alarmesConfirmados.delete(_chaveAtiva);
-  _salvarConfirmados();
 
   await api('POST', '/api/medicamentos/historico', {
     med_id: medId,
@@ -1024,11 +1013,6 @@ function lembrarDepois() {
   speechSynthesis.cancel();
   pararSomAlarme();
   document.getElementById('alarme-overlay').classList.remove('ativo');
-  // Remover confirmacao para reativar em 15 min
-  const _medIdLembrar = document.getElementById("alarme-overlay").dataset.medId;
-  const _chaveLembrar = `${_medIdLembrar}-${document.getElementById("alarme-overlay").dataset.horario}`;
-  APP.alarmesConfirmados.delete(_chaveLembrar);
-  _salvarConfirmados();
   setTimeout(() => {
     const medId = document.getElementById('alarme-overlay').dataset.medId;
     api('GET', `/api/medicamentos/${APP.familiaId}?membro_id=${APP.membroId}`).then(meds => {
