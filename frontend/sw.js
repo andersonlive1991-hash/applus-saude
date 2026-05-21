@@ -1,5 +1,5 @@
 // v2 - force update
-const CACHE = 'applus-v20';
+const CACHE = 'applus-v21';
 const ARQUIVOS = [
   '/', '/index.html', '/css/style.css',
   '/js/app.js', '/js/modulos.js', '/manifest.json'
@@ -53,13 +53,15 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(titulo, {
       body: corpo,
-      
-      
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
       vibrate: [800, 300, 800, 300, 800, 300, 800],
       requireInteraction: true,
       tag: isMed ? 'medicamento' : 'geral',
       renotify: true,
+      silent: false,
       data: { url: data.url || '/', medicamento: isMed, corpo, titulo, medId: data.medId, medNome: data.medNome }
+    })
     })
   );
 });
