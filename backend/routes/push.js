@@ -89,4 +89,31 @@ router.delete('/limpar/:membro_id', async (req, res) => {
   }
 });
 
+
+// Enviar push SOS para contato externo pelo ID SOS
+router.post("/enviar-sos-externo", async (req, res) => {
+  const { id_sos_contato, nome, membro_id } = req.body;
+  try {
+    // Buscar membro pelo ID SOS
+    const memRes = await db.query("SELECT id FROM membros WHERE id_sos=$1", [id_sos_contato]);
+    if (!memRes.rows.length) return res.json({ ok: false, erro: "ID SOS não encontrado" });
+    const membroIdContato = memRes.rows[0].id;
+    // Buscar inscrição push
+    const subRes = await db.query("SELECT subscription FROM push_subscriptions WHERE membro_id=$1", [membroIdContato]);
+    if (!subRes.rows.length) return res.json({ ok: false, erro: "Sem inscrição push" });
+    const sub = typeof subRes.rows[0].subscription === "string" ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
+    const payload = JSON.stringify({
+      titulo: "🚨 EMERGÊNCIA EXTERNA — SOS!",
+      corpo: (nome || "Alguém") + " está em emergência e precisa de ajuda!",
+      url: "/",
+      urgente: true
+    });
+    await webpush.sendNotification(sub, payload);
+    res.json({ ok: true });
+  } catch(e) {
+    console.log("Erro push SOS externo:", e.message);
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 module.exports = router;

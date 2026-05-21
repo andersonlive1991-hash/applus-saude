@@ -814,7 +814,7 @@ async function iniciarChamadaSOS() {
     };
     const offer = await _sosPC.createOffer();
     await _sosPC.setLocalDescription(offer);
-    APP.socket.emit('sos-chamar', { familiaId: APP.familiaId, nome: APP.membroNome, offer });
+    APP.socket.emit('sos-chamar', { familiaId: APP.familiaId, membroId: APP.membroId, nome: APP.membroNome, offer });
     mostrarTelaChamada('chamando');
     _sosChamando = true;
   } catch(e) {
@@ -945,6 +945,18 @@ async function iniciarSOSCompleto() {
       url: '/#emergencia'
     });
   } catch(e) { console.log('Push erro:', e); }
+  // 2.5 Envia push para contatos SOS externos
+  try {
+    const contatos = await api("GET", "/api/sos/contatos/" + APP.membroId);
+    for (const c of contatos) {
+      await api("POST", "/api/push/enviar-sos-externo", {
+        id_sos_contato: c.id_sos_contato,
+        nome: APP.membroNome || "Alguém",
+        membro_id: APP.membroId
+      }).catch(() => {});
+    }
+  } catch(e) { console.log("Erro push SOS externo:", e); }
+
   // 3. Inicia chamada de voz automaticamente
   await iniciarChamadaSOS();
 }
