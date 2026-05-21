@@ -140,7 +140,8 @@ async function salvarTarefa() {
     await api('POST', '/api/checklist', {
       familia_id: APP.familiaId,
       membro_id: APP.membroId,
-      tarefa
+      tarefa,
+      data: new Date().toISOString().split("T")[0]
     });
     fecharModal('modal-add-tarefa');
     document.getElementById('tar-nome').value = '';
