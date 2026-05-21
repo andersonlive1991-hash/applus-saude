@@ -611,6 +611,15 @@ async function carregarHistorico(membro) {
       html += '</div>';
     }
 
+    // Prescrições
+    html += `
+      <div class="card-historico">
+        <div class="card-titulo">📋 Prescrições Médicas</div>
+        <div id="lista-prescricoes"><p class="vazio">Carregando...</p></div>
+        <button onclick="abrirFormPrescricao()" style="width:100%;padding:12px;background:#1a6eb5;color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:12px">+ Nova Prescrição</button>
+      </div>
+    `;
+
     html += `
       <button class="btn-sair" onclick="gerarPDF()" style="margin-bottom:8px;background:#e0f2fe;color:#0369a1">📄 Gerar Relatório PDF</button>
     <a href="#" onclick="consultarOutro()" style="display:block;text-align:center;padding:14px;color:#1a6eb5;font-weight:600;text-decoration:none">🔍 Consultar outro paciente</button>
@@ -618,6 +627,7 @@ async function carregarHistorico(membro) {
     `;
 
     content.innerHTML = html;
+    carregarPrescricoes();
 
     // Carregar prontuários de cada internação
     for (const i of internacoes) {
@@ -771,6 +781,74 @@ function voltarLogin() {
   document.getElementById("portal-medico").style.display = "none";
   document.getElementById("login-medico").style.display = "flex";
   document.getElementById("med-id-paciente").value = "";
+}
+
+
+// ── PRESCRIÇÕES ──
+async function carregarPrescricoes() {
+  try {
+    const lista = await fetch("/api/prescricoes/" + MEDICO.pacienteMembroId).then(r => r.json());
+    const container = document.getElementById("lista-prescricoes");
+    if (!container) return;
+    if (!lista.length) { container.innerHTML = '<p class="vazio">Nenhuma prescrição registrada</p>'; return; }
+    container.innerHTML = lista.map(p => `
+      <div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:8px;border-left:4px solid #1a6eb5">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:13px;font-weight:700;color:#1a6eb5">Dr(a). ${p.medico_nome} — ${p.medico_crm}</div>
+          <div style="font-size:11px;color:#6b7280">${new Date(p.criado_em).toLocaleDateString("pt-BR")}</div>
+        </div>
+        <div style="font-size:13px;color:#111827;margin-bottom:4px"><strong>Medicamentos:</strong> ${p.medicamentos || "—"}</div>
+        <div style="font-size:13px;color:#374151;margin-bottom:4px"><strong>Orientações:</strong> ${p.orientacoes || "—"}</div>
+        ${p.validade ? `<div style="font-size:11px;color:#f59e0b">Válido até: ${new Date(p.validade).toLocaleDateString("pt-BR")}</div>` : ""}
+      </div>
+    `).join("");
+  } catch(e) { console.log("Erro carregar prescricoes:", e); }
+}
+
+function abrirFormPrescricao() {
+  const modal = document.getElementById("modal-prescricao");
+  if (modal) { modal.style.display = "flex"; return; }
+  const div = document.createElement("div");
+  div.id = "modal-prescricao";
+  div.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center";
+  div.innerHTML = `
+    <div style="background:white;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
+      <h3 style="color:#1a6eb5;margin-bottom:16px">📋 Nova Prescrição</h3>
+      <label style="font-size:13px;font-weight:600;color:#374151">Medicamentos prescritos</label>
+      <textarea id="presc-meds" placeholder="Ex: Losartana 50mg 1x ao dia, Aspirina 100mg..." style="width:100%;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;margin:4px 0 12px;min-height:80px;box-sizing:border-box"></textarea>
+      <label style="font-size:13px;font-weight:600;color:#374151">Orientações e observações</label>
+      <textarea id="presc-orient" placeholder="Ex: Tomar após as refeições, evitar álcool..." style="width:100%;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;margin:4px 0 12px;min-height:80px;box-sizing:border-box"></textarea>
+      <label style="font-size:13px;font-weight:600;color:#374151">Validade da prescrição</label>
+      <input type="date" id="presc-validade" style="width:100%;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;margin:4px 0 16px;box-sizing:border-box">
+      <button onclick="salvarPrescricao()" style="width:100%;padding:14px;background:#1a6eb5;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px">💾 Salvar Prescrição</button>
+      <button onclick="document.getElementById('modal-prescricao').style.display='none'" style="width:100%;padding:12px;background:#f1f5f9;color:#374151;border:none;border-radius:10px;font-size:14px;cursor:pointer">Cancelar</button>
+    </div>
+  `;
+  document.body.appendChild(div);
+}
+
+async function salvarPrescricao() {
+  const meds = document.getElementById("presc-meds").value.trim();
+  const orient = document.getElementById("presc-orient").value.trim();
+  const validade = document.getElementById("presc-validade").value;
+  if (!meds) { alert("Preencha os medicamentos prescritos"); return; }
+  try {
+    await fetch("/api/prescricoes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        membro_id: MEDICO.pacienteMembroId,
+        medico_nome: MEDICO.nome,
+        medico_crm: MEDICO.crm,
+        medicamentos: meds,
+        orientacoes: orient,
+        validade: validade || null
+      })
+    });
+    document.getElementById("modal-prescricao").style.display = "none";
+    carregarPrescricoes();
+    alert("Prescrição salva com sucesso!");
+  } catch(e) { alert("Erro ao salvar prescrição: " + e.message); }
 }
 
 </script>

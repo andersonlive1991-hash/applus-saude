@@ -92,6 +92,7 @@ app.use('/api/membros/id', limiterBuscarId);
 
 app.use('/api/bem-estar', require('./routes/bem_estar'));
 app.use('/api/perfil', require('./routes/perfil'));
+app.use('/api/prescricoes', require('./routes/prescricoes'));
 app.use('/api/perfil-cuidador', require('./routes/perfil_cuidador'));
 app.use('/api/qrcode', require('./routes/qrcode'));
 app.use('/api/cuidados', require('./routes/cuidados'));
