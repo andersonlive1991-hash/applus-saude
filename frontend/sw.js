@@ -1,5 +1,5 @@
 // v2 - force update
-const CACHE = 'applus-v19';
+const CACHE = 'applus-v20';
 const ARQUIVOS = [
   '/', '/index.html', '/css/style.css',
   '/js/app.js', '/js/modulos.js', '/manifest.json'
