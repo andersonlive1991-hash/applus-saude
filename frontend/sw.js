@@ -24,7 +24,7 @@ self.addEventListener('fetch', e => {
   e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
 });
 
-self.addEventListener('push', e => {
+undefined
   const data = e.data ? e.data.json() : {};
   const titulo = data.titulo || 'AP+ Saúde';
   const corpo = data.corpo || '';
