@@ -456,6 +456,17 @@ body {
 
       <!-- Comunicar -->
       <div id="tea-comunicar" style="display:none">
+        <!-- Barra de frase -->
+        <div id="barra-frase" style="background:#1e3a5f;border-radius:16px;padding:12px;margin-bottom:12px;min-height:60px;display:flex;flex-direction:column;gap:8px">
+          <div id="frase-atual" style="display:flex;flex-wrap:wrap;gap:6px;min-height:32px;align-items:center">
+            <span style="color:#64748b;font-size:13px;font-style:italic">Toque nos pictogramas para montar uma frase...</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onclick="falarFraseCompleta()" style="flex:1;padding:10px;background:#1a9e6e;border:none;border-radius:10px;color:white;font-size:14px;font-weight:700;cursor:pointer">🔊 Falar frase</button>
+            <button onclick="limparFrase()" style="padding:10px 14px;background:#dc2626;border:none;border-radius:10px;color:white;font-size:14px;cursor:pointer">🗑️</button>
+          </div>
+        </div>
+
         <div class="pict-grid" id="pict-grid">
           <!-- Gerado via JS -->
         </div>
@@ -1010,6 +1021,78 @@ function mostrarToastRotina(emoji, nome) {
   }, 6000);
 }
 
+
+// ── COMUNICAÇÃO AUMENTATIVA ──
+let _fraseAtual = [];
+
+function adicionarAFrase(emoji, texto) {
+  _fraseAtual.push({ emoji, texto });
+  renderizarFrase();
+}
+
+function renderizarFrase() {
+  const container = document.getElementById("frase-atual");
+  if (!_fraseAtual.length) {
+    container.innerHTML = '<span style="color:#64748b;font-size:13px;font-style:italic">Toque nos pictogramas para montar uma frase...</span>';
+    return;
+  }
+  container.innerHTML = _fraseAtual.map((p, i) => `
+    <div onclick="removerDaFrase(${i})" style="background:#0ea5e9;border-radius:10px;padding:6px 10px;display:flex;align-items:center;gap:4px;cursor:pointer">
+      <span style="font-size:20px">${p.emoji}</span>
+      <span style="color:white;font-size:12px;font-weight:600">${p.texto}</span>
+      <span style="color:rgba(255,255,255,0.6);font-size:10px">✕</span>
+    </div>
+  `).join("");
+}
+
+function removerDaFrase(index) {
+  _fraseAtual.splice(index, 1);
+  renderizarFrase();
+}
+
+function limparFrase() {
+  _fraseAtual = [];
+  renderizarFrase();
+}
+
+function falarFraseCompleta() {
+  if (!_fraseAtual.length) return;
+  const frase = _fraseAtual.map(p => p.texto).join(". ");
+  const emojis = _fraseAtual.map(p => p.emoji).join(" ");
+  // Notificar família
+  if (TEA.socket) {
+    TEA.socket.emit("tea-comunicou", {
+      familiaId: TEA.familiaId,
+      nome: TEA.membroNome,
+      emoji: emojis,
+      texto: frase,
+      hora: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+    });
+  }
+  fetch("/api/push/enviar-familia", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      familia_id: TEA.familiaId,
+      titulo: emojis + " " + (TEA.membroNome || "Criança") + " comunicou",
+      corpo: (TEA.membroNome || "Criança") + " disse: " + frase,
+      url: "/"
+    })
+  }).catch(() => {});
+  // Falar
+  if ("speechSynthesis" in window) {
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(frase);
+    utterance.lang = "pt-BR";
+    utterance.rate = 0.8;
+    speechSynthesis.speak(utterance);
+  }
+  // Mostrar overlay
+  document.getElementById("voz-emoji").textContent = emojis;
+  document.getElementById("voz-texto").textContent = frase;
+  document.getElementById("voz-overlay").classList.add("ativo");
+}
+
 function trocarAbaTea(aba) {
   ['rotina','comunicar','humor','sos'].forEach(a => {
     document.getElementById(`tea-${a}`).style.display = a === aba ? 'block' : 'none';
@@ -1020,6 +1103,8 @@ function trocarAbaTea(aba) {
 }
 
 function falarPictograma(emoji, texto) {
+  // Adicionar à frase composta
+  adicionarAFrase(emoji, texto);
   // Notificar família
   if (TEA.socket) {
     TEA.socket.emit('tea-comunicou', {
