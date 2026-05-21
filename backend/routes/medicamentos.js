@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const webpush = require("web-push");
 const db = require('../db');
 
 // Confirmar dose (rota fixa — deve vir antes de /:familia_id)
