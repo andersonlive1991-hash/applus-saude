@@ -815,6 +815,7 @@ async function carregarMedicamentos() {
   try {
     const meds = await api('GET', `/api/medicamentos/${APP.familiaId}?membro_id=${APP.membroId}`);
     window._listaMedsCache = meds;
+    carregarGraficoAderencia();
     const lista = document.getElementById('lista-medicamentos');
     lista.innerHTML = meds.length
       ? meds.map(m => `
@@ -830,6 +831,31 @@ async function carregarMedicamentos() {
   } catch (e) {
     console.log('Erro meds:', e);
   }
+}
+
+
+async function carregarGraficoAderencia() {
+  try {
+    const dados = await api("GET", "/api/medicamentos/aderencia/" + APP.membroId);
+    const secao = document.getElementById("secao-aderencia");
+    const container = document.getElementById("grafico-aderencia");
+    if (!dados || !dados.length) { secao.style.display = "none"; return; }
+    secao.style.display = "block";
+    container.innerHTML = dados.map(m => {
+      const total = parseInt(m.total) || 0;
+      const tomadas = parseInt(m.tomadas) || 0;
+      const pct = total > 0 ? Math.round((tomadas / total) * 100) : 0;
+      const cor = pct >= 80 ? "#1a9e6e" : pct >= 50 ? "#f59e0b" : "#dc2626";
+      return "<div style='margin-bottom:14px'>" +
+        "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px'>" +
+        "<span style='font-size:13px;font-weight:600;color:#111827'>" + m.nome + " " + (m.dosagem||"") + "</span>" +
+        "<span style='font-size:13px;font-weight:700;color:" + cor + "'>" + pct + "%</span></div>" +
+        "<div style='background:#e5e7eb;border-radius:8px;height:10px;overflow:hidden'>" +
+        "<div style='width:" + pct + "%;background:" + cor + ";height:100%;border-radius:8px;transition:width 0.5s'></div></div>" +
+        "<div style='font-size:11px;color:#6b7280;margin-top:3px'>" + tomadas + " de " + total + " doses confirmadas</div>" +
+        "</div>";
+    }).join("");
+  } catch(e) { console.log("Erro aderencia:", e); }
 }
 
 function formatarHorarios(horarios) {
