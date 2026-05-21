@@ -330,6 +330,15 @@ body {
     </div>
     <div class="curva"></div>
 
+    <!-- Lista de pacientes recentes -->
+    <div id="lista-pacientes-recentes" style="padding:12px 16px 0;display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:600;color:#1a6eb5">📋 Pacientes recentes</span>
+        <button onclick="voltarLogin()" style="background:#1a6eb5;color:white;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">+ Novo paciente</button>
+      </div>
+      <div id="cards-pacientes-recentes"></div>
+    </div>
+
     <div class="portal-content" id="portal-content">
       <!-- Preenchido via JS -->
     </div>
@@ -399,6 +408,8 @@ async function acessarPortal() {
     document.getElementById('login-medico').style.display = 'none';
     document.getElementById('portal-medico').classList.add('ativo');
 
+    salvarPacienteRecente(membro);
+    carregarPacientesRecentes();
     await carregarHistorico(membro);
   } catch (e) {
     (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('ID do paciente não encontrado. Verifique e tente novamente.');
@@ -704,6 +715,63 @@ function nomeSinal(tipo) {
   const nomes = { pressao: 'Pressão Arterial', glicemia: 'Glicemia', peso: 'Peso', oximetria: 'Saturação O2', temperatura: 'Temperatura' };
   return nomes[tipo] || tipo;
 }
+
+// ── MÚLTIPLOS PACIENTES ──
+function salvarPacienteRecente(membro) {
+  const key = "medico_pacientes_" + MEDICO.crm;
+  let lista = JSON.parse(sessionStorage.getItem(key) || "[]");
+  // Remove se já existe
+  lista = lista.filter(p => p.id_pessoal !== membro.id_pessoal);
+  // Adiciona no topo
+  lista.unshift({ id: membro.id, nome: membro.nome, id_pessoal: membro.id_pessoal, familia_id: membro.familia_id });
+  // Máximo 5 pacientes
+  if (lista.length > 5) lista = lista.slice(0, 5);
+  sessionStorage.setItem(key, JSON.stringify(lista));
+}
+
+function carregarPacientesRecentes() {
+  const key = "medico_pacientes_" + MEDICO.crm;
+  const lista = JSON.parse(sessionStorage.getItem(key) || "[]");
+  const container = document.getElementById("cards-pacientes-recentes");
+  const box = document.getElementById("lista-pacientes-recentes");
+  if (!lista.length || !MEDICO.crm) { box.style.display = "none"; return; }
+  box.style.display = "block";
+  container.innerHTML = lista.map(p => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:${p.id_pessoal === MEDICO.pacienteId ? "#dbeafe" : "#f8fafc"};border-radius:10px;margin-bottom:6px;border:1.5px solid ${p.id_pessoal === MEDICO.pacienteId ? "#1a6eb5" : "#e2e8f0"}">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:#111827">${p.nome}</div>
+        <div style="font-size:12px;color:#6b7280">${p.id_pessoal}</div>
+      </div>
+      ${p.id_pessoal === MEDICO.pacienteId
+        ? `<span style="font-size:12px;color:#1a6eb5;font-weight:600">Atual</span>`
+        : `<button onclick="trocarPaciente('${p.id_pessoal}')" style="background:#1a6eb5;color:white;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">Ver</button>`
+      }
+    </div>
+  `).join("");
+}
+
+async function trocarPaciente(idPessoal) {
+  try {
+    const res = await fetch(`/api/membros/id/${idPessoal}`);
+    const membro = await res.json();
+    MEDICO.pacienteId = idPessoal;
+    MEDICO.pacienteMembroId = membro.id;
+    MEDICO.familiaId = membro.familia_id;
+    MEDICO.pacienteNome = membro.nome;
+    document.getElementById("portal-paciente-nome").textContent = membro.nome;
+    document.getElementById("portal-paciente-id").textContent = `ID: ${idPessoal}`;
+    salvarPacienteRecente(membro);
+    carregarPacientesRecentes();
+    await carregarHistorico(membro);
+  } catch(e) { console.log("Erro trocar paciente:", e); }
+}
+
+function voltarLogin() {
+  document.getElementById("portal-medico").style.display = "none";
+  document.getElementById("login-medico").style.display = "flex";
+  document.getElementById("med-id-paciente").value = "";
+}
+
 </script>
 </body>
 </html>
