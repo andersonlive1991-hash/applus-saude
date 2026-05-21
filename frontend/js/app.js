@@ -930,8 +930,14 @@ async function verificarAlarmes() {
       if (!Array.isArray(horarios)) continue;
 
       for (const horario of horarios) {
-        const chave = `${med.id}-${horario}-${horaAtual}`;
-        if (horario === horaAtual && !APP.alarmesConfirmados.has(chave)) {
+        const chave = `${med.id}-${horario}`;
+        if (APP.alarmesConfirmados.has(chave)) continue;
+        // Verifica horario exato ou ate 30 minutos atrasado
+        const [hh, mm] = horario.split(":").map(Number);
+        const horarioDate = new Date();
+        horarioDate.setHours(hh, mm, 0, 0);
+        const diffMin = (agora - horarioDate) / 60000;
+        if (diffMin >= 0 && diffMin < 30) {
           APP.alarmesConfirmados.add(chave);
           dispararAlarme(med);
           break;
