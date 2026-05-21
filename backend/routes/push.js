@@ -90,3 +90,10 @@ router.delete('/limpar/:membro_id', async (req, res) => {
 });
 
 module.exports = router;
+
+router.get('/debug/:membro_id', async (req, res) => {
+  const result = await db.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [req.params.membro_id]);
+  if (!result.rows.length) return res.json({ erro: 'Sem inscricao' });
+  const sub = typeof result.rows[0].subscription === 'string' ? JSON.parse(result.rows[0].subscription) : result.rows[0].subscription;
+  res.json({ endpoint: sub.endpoint, keys: Object.keys(sub.keys || {}) });
+});
