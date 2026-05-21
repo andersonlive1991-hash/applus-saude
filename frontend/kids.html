@@ -354,6 +354,22 @@ body {
         <span class="sos-sub">Toca aqui se precisar de ajuda</span>
       </button>
 
+      <!-- Videochamada -->
+      <button onclick="iniciarVideoKids()" style="width:100%;padding:18px;background:linear-gradient(135deg,#f97316,#ea580c);border:none;border-radius:20px;color:white;font-size:18px;font-weight:700;cursor:pointer;margin-bottom:16px;box-shadow:0 4px 16px rgba(249,115,22,0.4)">
+        📹 Ver a família
+      </button>
+
+      <!-- Tela videochamada kids -->
+      <div id="tela-video-kids" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:9999;flex-direction:column;align-items:center;justify-content:center">
+        <video id="video-remoto-kids" autoplay playsinline style="width:100%;max-height:60vh;object-fit:cover"></video>
+        <video id="video-local-kids" autoplay playsinline muted style="position:absolute;top:16px;right:16px;width:90px;height:120px;object-fit:cover;border-radius:12px;border:2px solid white"></video>
+        <div style="position:absolute;bottom:40px;display:flex;gap:20px">
+          <button id="kids-video-atender" onclick="atenderVideoKids()" style="display:none;padding:16px 28px;background:#1a9e6e;border:none;border-radius:50px;color:white;font-size:16px;font-weight:700;cursor:pointer">📹 Atender</button>
+          <button onclick="encerrarVideoKids()" style="padding:16px 28px;background:#dc2626;border:none;border-radius:50px;color:white;font-size:16px;font-weight:700;cursor:pointer">📵 Encerrar</button>
+        </div>
+        <div id="video-kids-status" style="position:absolute;top:40px;color:white;font-size:16px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,0.8)">📹 Conectando...</div>
+      </div>
+
       <!-- Chat com a família -->
       <div class="chat-kids-box">
         <div class="chat-kids-titulo">💬 Falar com a família</div>
@@ -470,6 +486,80 @@ function iniciarTimerKids() {
   }, 1000);
 }
 
+
+// ── VIDEOCHAMADA KIDS ──
+let _videoKidsPC = null;
+let _videoKidsStream = null;
+
+async function iniciarVideoKids() {
+  try {
+    _videoKidsStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    document.getElementById("video-local-kids").srcObject = _videoKidsStream;
+    _videoKidsPC = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+    _videoKidsStream.getTracks().forEach(t => _videoKidsPC.addTrack(t, _videoKidsStream));
+    _videoKidsPC.onicecandidate = (e) => {
+      if (e.candidate) KIDS.socket.emit("video-ice", { familiaId: KIDS.familiaId, candidate: e.candidate });
+    };
+    _videoKidsPC.ontrack = (e) => {
+      document.getElementById("video-remoto-kids").srcObject = e.streams[0];
+    };
+    const offer = await _videoKidsPC.createOffer();
+    await _videoKidsPC.setLocalDescription(offer);
+    KIDS.socket.emit("video-chamar", { familiaId: KIDS.familiaId, membroId: KIDS.membroId, nome: KIDS.membroNome, offer });
+    document.getElementById("tela-video-kids").style.display = "flex";
+    document.getElementById("video-kids-status").textContent = "📹 Chamando a família...";
+  } catch(e) {
+    alert("Erro ao acessar câmera: " + e.message);
+  }
+}
+
+async function atenderVideoKids() {
+  try {
+    _videoKidsStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    document.getElementById("video-local-kids").srcObject = _videoKidsStream;
+    _videoKidsStream.getTracks().forEach(t => _videoKidsPC.addTrack(t, _videoKidsStream));
+    _videoKidsPC.ontrack = (e) => {
+      if (e.streams && e.streams[0]) document.getElementById("video-remoto-kids").srcObject = e.streams[0];
+    };
+    const answer = await _videoKidsPC.createAnswer();
+    await _videoKidsPC.setLocalDescription(answer);
+    KIDS.socket.emit("video-answer", { familiaId: KIDS.familiaId, answer });
+    document.getElementById("video-kids-status").textContent = "📹 Conectado!";
+    document.getElementById("kids-video-atender").style.display = "none";
+  } catch(e) { console.log("Erro atender video kids:", e); }
+}
+
+function encerrarVideoKids() {
+  if (_videoKidsPC) { _videoKidsPC.close(); _videoKidsPC = null; }
+  if (_videoKidsStream) { _videoKidsStream.getTracks().forEach(t => t.stop()); _videoKidsStream = null; }
+  KIDS.socket.emit("video-encerrar", { familiaId: KIDS.familiaId });
+  document.getElementById("tela-video-kids").style.display = "none";
+}
+
+function registrarEventosVideoKids() {
+  KIDS.socket.on("video-recebendo", async (data) => {
+    _videoKidsPC = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+    _videoKidsPC.onicecandidate = (e) => {
+      if (e.candidate) KIDS.socket.emit("video-ice", { familiaId: KIDS.familiaId, candidate: e.candidate });
+    };
+    _videoKidsPC.ontrack = (e) => {
+      if (e.streams && e.streams[0]) document.getElementById("video-remoto-kids").srcObject = e.streams[0];
+    };
+    await _videoKidsPC.setRemoteDescription(new RTCSessionDescription(data.offer));
+    document.getElementById("tela-video-kids").style.display = "flex";
+    document.getElementById("video-kids-status").textContent = "📹 " + (data.nome || "Familiar") + " está chamando";
+    document.getElementById("kids-video-atender").style.display = "block";
+  });
+  KIDS.socket.on("video-answer", async (data) => {
+    if (_videoKidsPC) await _videoKidsPC.setRemoteDescription(new RTCSessionDescription(data.answer));
+    document.getElementById("video-kids-status").textContent = "📹 Conectado!";
+  });
+  KIDS.socket.on("video-ice", async (data) => {
+    if (_videoKidsPC && data.candidate) await _videoKidsPC.addIceCandidate(new RTCIceCandidate(data.candidate));
+  });
+  KIDS.socket.on("video-encerrado", () => { encerrarVideoKids(); });
+}
+
 function registrarEventosSOSKids() {
   KIDS.socket.on('sos-recebendo', async (data) => {
     _kidsPC = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
@@ -584,6 +674,7 @@ function conectarSocketKids() {
   KIDS.socket.on("reconnect", () => { KIDS.socket.emit("entrar-familia", KIDS.familiaId); });
   KIDS.socket.emit('entrar-familia', KIDS.familiaId);
   registrarEventosSOSKids();
+  registrarEventosVideoKids();
 
   KIDS.socket.on('nova-mensagem', (msg) => {
     if (msg.autor_id !== KIDS.idPessoal) {
