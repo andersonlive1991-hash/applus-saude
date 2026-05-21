@@ -911,7 +911,11 @@ function limparFormMed() {
 }
 
 // ── ALARMES ──
-APP.alarmesConfirmados = APP.alarmesConfirmados || new Set();
+const _salvos = sessionStorage.getItem('alarmesConfirmados');
+APP.alarmesConfirmados = new Set(_salvos ? JSON.parse(_salvos) : []);
+function _salvarConfirmados() {
+  sessionStorage.setItem('alarmesConfirmados', JSON.stringify([...APP.alarmesConfirmados]));
+}
 
 async function iniciarAlarmes() {
   if (APP.alarmeInterval) clearInterval(APP.alarmeInterval);
@@ -938,8 +942,7 @@ async function verificarAlarmes() {
         horarioDate.setHours(hh, mm, 0, 0);
         const diffMin = (agora - horarioDate) / 60000;
         if (diffMin >= 0 && diffMin < 30) {
-          APP.alarmesConfirmados.add(chave);
-          dispararAlarme(med);
+          med._horarioAtivo = horario; dispararAlarme(med);
           break;
         }
       }
@@ -980,6 +983,7 @@ function dispararAlarme(med) {
   }, 120000);
 
   overlay.dataset.medId = med.id;
+  overlay.dataset.horario = med._horarioAtivo || '';
 }
 
 function falarAlarme(texto) {
@@ -999,6 +1003,9 @@ async function confirmarDose(status) {
   pararSomAlarme();
   document.getElementById('alarme-overlay').classList.remove('ativo');
   APP.alarmeAtivo = null;
+  const _overlay = document.getElementById('alarme-overlay');
+  const _chave = (_overlay.dataset.medId || '') + '-' + (_overlay.dataset.horario || '');
+  if (_chave !== '-') { APP.alarmesConfirmados.add(_chave); _salvarConfirmados(); }
 
   await api('POST', '/api/medicamentos/historico', {
     med_id: medId,
