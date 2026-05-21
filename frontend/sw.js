@@ -1,12 +1,14 @@
-// v2 - force update
-const CACHE = 'applus-v21';
+// v3 - modo offline
+const CACHE = 'applus-v22';
 const ARQUIVOS = [
   '/', '/index.html', '/css/style.css',
-  '/js/app.js', '/js/modulos.js', '/manifest.json'
+  '/js/app.js', '/js/modulos.js', '/manifest.json',
+  '/icons/icon-192.png', '/icons/icon-512.png',
+  '/sounds/alarme.wav'
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ARQUIVOS)));
+  e.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ARQUIVOS).catch(() => {})));
   self.skipWaiting();
 });
 
@@ -20,8 +22,35 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('/api/')) return;
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+  const url = e.request.url;
+
+  // APIs — tenta online primeiro, se falhar usa cache
+  if (url.includes('/api/')) {
+    e.respondWith(
+      fetch(e.request.clone())
+        .then(res => {
+          // Salva resposta GET no cache
+          if (e.request.method === 'GET' && res.ok) {
+            const resClone = res.clone();
+            caches.open(CACHE).then(cache => cache.put(e.request, resClone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Arquivos estáticos — cache first
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      return cached || fetch(e.request).then(res => {
+        const resClone = res.clone();
+        caches.open(CACHE).then(cache => cache.put(e.request, resClone));
+        return res;
+      });
+    })
+  );
 });
 
 self.addEventListener('push', e => {
@@ -40,8 +69,7 @@ self.addEventListener('push', e => {
           medicamento: isMed,
           alarme: isEvento,
           eventoNome: data.eventoNome || '',
-          corpo: corpo,
-          titulo: titulo,
+          corpo, titulo,
           medId: data.medId,
           medNome: data.medNome,
           url: data.url || '/'
@@ -61,7 +89,6 @@ self.addEventListener('push', e => {
       renotify: true,
       silent: false,
       data: { url: data.url || '/', medicamento: isMed, corpo, titulo, medId: data.medId, medNome: data.medNome }
-    })
     })
   );
 });

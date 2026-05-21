@@ -30,6 +30,21 @@ document.addEventListener('DOMContentLoaded', () => {
   registrarSW();
 });
 
+// ── MODO OFFLINE ──
+function atualizarStatusOffline() {
+  const bar = document.getElementById("offline-bar");
+  if (!bar) return;
+  if (!navigator.onLine) {
+    bar.style.display = "block";
+  } else {
+    bar.style.display = "none";
+  }
+}
+window.addEventListener("online", atualizarStatusOffline);
+window.addEventListener("offline", atualizarStatusOffline);
+window.addEventListener("load", atualizarStatusOffline);
+
+
 function salvarSessaoFamilia() {
   localStorage.setItem('applus_familia', JSON.stringify({
     familiaId: APP.familiaId,
