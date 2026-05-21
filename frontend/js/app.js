@@ -1366,14 +1366,16 @@ async function inscreverPush() {
   try {
     const reg = await navigator.serviceWorker.ready;
     const VAPID_PUBLIC_KEY = 'BO6JXBRmtjSjiM9OAa7NSy2CtZS6x_caWM582FMie8idIzpapx8McDuQl62PChqMHxQAELiE1ja1kHDmK91nLGE';
-    // Reutilizar inscrição existente
+    // Sempre re-envia inscricao ao servidor
     let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      sub = await reg.pushManager.subscribe({
+    if (sub) {
+      await sub.unsubscribe();
+      sub = null;
+    }
+    sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
-    }
     console.log('Push: inscricao ok');
     await api('POST', '/api/push/inscrever', {
       membro_id: APP.membroId,
