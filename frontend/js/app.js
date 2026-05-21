@@ -518,9 +518,7 @@ function iniciarApp() {
 
 function _continuarIniciarApp() {
   iniciarAlarmes();
-  if (Notification.permission === 'granted') {
-    inscreverPush();
-  } else if (Notification.permission === 'default') {
+  undefined else if (Notification.permission === 'default') {
     // Pede permissão apenas uma vez por sessão
     if (!sessionStorage.getItem('push_permission_asked')) {
       sessionStorage.setItem('push_permission_asked', '1');
@@ -1377,6 +1375,7 @@ async function inscreverPush() {
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
     console.log('Push: nova inscrição criada');
+    sessionStorage.setItem('push_inscrito', '1');
     await api('POST', '/api/push/inscrever', {
       membro_id: APP.membroId,
       familia_id: APP.familiaId,
