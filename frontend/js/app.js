@@ -91,7 +91,7 @@ function salvarSessao() {
 async function registrarSW() {
   if ('serviceWorker' in navigator) {
     try {
-      await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.register('/sw2.js');
       console.log('SW registrado');
       navigator.serviceWorker.addEventListener('message', (e) => {
         if (e.data && e.data.tipo === 'tocar-alarme') iniciarSomAlarme();
