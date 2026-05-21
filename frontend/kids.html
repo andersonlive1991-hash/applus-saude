@@ -545,7 +545,7 @@ async function carregarTarefasKids() {
     const hoje = new Date().toISOString().split("T")[0];
     const tarefas = await fetch("/api/checklist/" + KIDS.familiaId + "?data=" + hoje)
       .then(r => r.json()).catch(() => []);
-    const minhas = tarefas.filter(t => !t.membro_id || t.membro_id == KIDS.membroId);
+    const minhas = tarefas;
     const box = document.getElementById("kids-tarefas-box");
     const lista = document.getElementById("kids-lista-tarefas");
     if (!minhas.length) { box.style.display = "none"; return; }
