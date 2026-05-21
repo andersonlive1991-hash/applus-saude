@@ -371,6 +371,7 @@ window.addEventListener('DOMContentLoaded', () => {
     fetch(`/api/membros/id/${dados.pacienteId}`)
       .then(r => r.json())
       .then(membro => carregarHistorico(membro));
+    carregarPacientesRecentes();
   }
 });
 
