@@ -1366,17 +1366,15 @@ async function inscreverPush() {
   try {
     const reg = await navigator.serviceWorker.ready;
     const VAPID_PUBLIC_KEY = 'BO6JXBRmtjSjiM9OAa7NSy2CtZS6x_caWM582FMie8idIzpapx8McDuQl62PChqMHxQAELiE1ja1kHDmK91nLGE';
-    // Sempre criar nova inscrição para evitar tokens expirados
+    // Reutilizar inscrição existente
     let sub = await reg.pushManager.getSubscription();
-    if (sub) {
-      await sub.unsubscribe();
-      console.log('Push: inscrição antiga removida');
-    }
-    sub = await reg.pushManager.subscribe({
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
-    console.log('Push: nova inscrição criada');
+    }
+    console.log('Push: inscricao ok');
     await api('POST', '/api/push/inscrever', {
       membro_id: APP.membroId,
       familia_id: APP.familiaId,
