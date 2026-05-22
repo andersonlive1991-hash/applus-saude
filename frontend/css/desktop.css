@@ -1,0 +1,426 @@
+@media (min-width: 768px) {
+
+  /* ── BODY ── */
+  body { background: #f0ede7; }
+
+  /* ── APP WRAPPER: vira layout com sidebar ── */
+  .app {
+    max-width: 100%;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: var(--desk-header-h, 56px) 1fr;
+    min-height: 100vh;
+    background: #f0ede7;
+  }
+
+  /* ── ESCONDE nav bottom no desktop ── */
+  .nav-bottom { display: none !important; }
+
+  /* ── SIDEBAR FIXA ── */
+  .app::before {
+    content: '';
+    display: block;
+    grid-column: 1;
+    grid-row: 1 / -1;
+  }
+
+  /* ── PÁGINAS: ocupam coluna direita ── */
+  .pagina {
+    grid-column: 2;
+    padding-bottom: 0;
+    min-height: calc(100vh - 56px);
+  }
+
+  /* ── SIDEBAR LATERAL (menu novo) ── */
+  #desk-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 240px;
+    height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    z-index: 150;
+    overflow-y: auto;
+  }
+
+  #desk-sidebar .sb-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+  }
+
+  #desk-sidebar .sb-logo-icon {
+    width: 36px;
+    height: 36px;
+    background: #1a9e6e;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  #desk-sidebar .sb-logo-text { font-family: 'Sora', sans-serif; }
+  #desk-sidebar .sb-logo-text .ap { font-size: 16px; font-weight: 800; color: #1a1f2e; }
+  #desk-sidebar .sb-logo-text .ap span { color: #1a9e6e; }
+  #desk-sidebar .sb-logo-text .sub { font-size: 10px; color: #6b7280; letter-spacing: 1px; }
+
+  /* Perfis no sidebar */
+  #desk-sidebar .sb-perfis {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+  }
+
+  #desk-sidebar .sb-perfis-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  #desk-sidebar .sb-membro {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  #desk-sidebar .sb-membro:hover { background: #f3f4f6; }
+  #desk-sidebar .sb-membro.ativo { background: #e8f7f1; }
+
+  #desk-sidebar .sb-av {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #e8f7f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  #desk-sidebar .sb-mem-info { flex: 1; min-width: 0; }
+  #desk-sidebar .sb-mem-nome { font-size: 13px; font-weight: 600; color: #1a1f2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #desk-sidebar .sb-mem-tipo { font-size: 11px; color: #6b7280; }
+  #desk-sidebar .sb-mem-dot { width: 7px; height: 7px; border-radius: 50%; background: #1a9e6e; flex-shrink: 0; }
+
+  /* Nav links */
+  #desk-sidebar .sb-nav { flex: 1; padding: 10px 10px; overflow-y: auto; }
+
+  #desk-sidebar .sb-group { margin-bottom: 18px; }
+
+  #desk-sidebar .sb-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0 8px;
+    margin-bottom: 4px;
+  }
+
+  #desk-sidebar .sb-link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #4b5563;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  #desk-sidebar .sb-link:hover { background: #f3f4f6; color: #1a1f2e; }
+
+  #desk-sidebar .sb-link.ativo { background: #e8f7f1; color: #0f6647; font-weight: 600; }
+
+  #desk-sidebar .sb-link .sb-icon { font-size: 18px; width: 22px; text-align: center; }
+
+  #desk-sidebar .sb-badge {
+    margin-left: auto;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+
+  #desk-sidebar .sb-bottom {
+    padding: 10px 10px;
+    border-top: 1px solid rgba(0,0,0,0.07);
+  }
+
+  /* ── TOPBAR DESKTOP ── */
+  #desk-topbar {
+    position: fixed;
+    top: 0;
+    left: 240px;
+    right: 0;
+    height: 56px;
+    background: #ffffff;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 12px;
+    z-index: 140;
+  }
+
+  #desk-topbar .tb-titulo {
+    font-family: 'Sora', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1f2e;
+    flex: 1;
+  }
+
+  #desk-topbar .tb-data {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  #desk-topbar .tb-sos {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: #fee2e2;
+    color: #991b1b;
+    border: none;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    transition: background 0.15s;
+  }
+
+  #desk-topbar .tb-sos:hover { background: #fecaca; }
+
+  #desk-topbar .tb-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  #desk-topbar .tb-btn:hover { background: #f3f4f6; }
+
+  /* ── CONTEÚDO DAS PÁGINAS ── */
+  .pagina {
+    margin-left: 240px;
+    margin-top: 56px;
+  }
+
+  /* ── HEADER VERDE: compacto no desktop ── */
+  .header-verde {
+    padding: 24px 28px 20px;
+    border-radius: 0 0 20px 20px;
+    margin-bottom: 4px;
+  }
+
+  .header-verde h1 { font-size: 20px; }
+
+  /* Esconde logo e perfil-selector do header no desktop
+     (eles ficam na sidebar) */
+  .logo-area { display: none; }
+  .perfil-selector { display: none; }
+
+  /* Esconde curva no desktop — fica estranho em tela larga */
+  .curva { display: none; }
+
+  /* ── GRID DE CARDS: 4 colunas no desktop ── */
+  .cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+    padding: 20px 24px;
+    gap: 14px;
+  }
+
+  .card.destaque {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    padding: 20px 24px;
+  }
+
+  /* ── SEÇÃO: mais padding lateral ── */
+  .secao { padding: 0 24px 20px; }
+
+  /* ── LISTA ITEMS: 2 colunas no desktop ── */
+  #lista-medicamentos,
+  #lista-eventos,
+  #lista-gastos,
+  #lista-vacinas,
+  #lista-sinais,
+  #lista-checklist {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ── FORMULÁRIOS: centralizar e limitar largura ── */
+  .form {
+    max-width: 600px;
+    padding: 20px 24px;
+  }
+
+  /* ── MODAL: centralizado no desktop (não bottom sheet) ── */
+  .modal-overlay {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal {
+    border-radius: 20px;
+    max-width: 520px;
+    max-height: 80vh;
+    width: 100%;
+  }
+
+  /* ── CHAT: largura máxima centrada ── */
+  #pag-chat.ativa .chat-input {
+    left: 240px;
+    max-width: calc(100% - 240px);
+  }
+
+  #pag-ia.ativa .chat-input {
+    left: 240px;
+    max-width: calc(100% - 240px);
+  }
+
+  .chat-mensagens { max-width: 760px; margin: 0 auto; width: 100%; }
+  .ia-mensagens { max-width: 760px; margin: 0 auto; width: 100%; }
+
+  /* ── SEÇÃO ADERÊNCIA E CONTEÚDO GERAL: max-width ── */
+  #pag-remedios .secao,
+  #pag-agenda .secao,
+  #pag-saude .secao,
+  #pag-mais .secao,
+  #pag-historico .secao,
+  #pag-financeiro .secao,
+  #pag-checklist .secao,
+  #pag-vacinas .secao {
+    max-width: 1000px;
+  }
+
+  /* ── CARDS SAÚDE: 3 colunas ── */
+  #pag-saude .cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1000px;
+  }
+
+  /* ── BUSCA MED: max-width ── */
+  #busca-med { max-width: 400px; }
+
+  /* ── ABAS: max-width e não overflow-x ── */
+  #pag-historico > div[style*="overflow-x"],
+  #pag-tea > div[style*="overflow-x"],
+  #pag-cuidados .conteudo > div[style*="overflow-x"],
+  #pag-meu-dia .conteudo > div[style*="overflow-x"],
+  #pag-mente-sa .conteudo > div[style*="overflow-x"] {
+    overflow-x: visible;
+    flex-wrap: wrap;
+  }
+
+  /* ── HOME: cards-grid sem destaque enorme ── */
+  #pag-home .cards-grid {
+    max-width: 1000px;
+  }
+
+  /* ── PERFIS LADO A LADO no header: esconde no desktop ── */
+  #perfis-header { display: none !important; }
+
+  /* ── BOTÕES BLOCK: limitar largura no desktop ── */
+  .btn-block {
+    max-width: 400px;
+  }
+
+  /* ── INPUTS E CAMPOS: limitar largura ── */
+  #pag-mais .campo input,
+  #pag-mais .campo select {
+    max-width: 400px;
+  }
+
+  /* ── TELA PIN: já funciona fullscreen, sem mudança ── */
+
+  /* ── LOGIN E ONBOARDING: centralizar ── */
+  .login-page {
+    justify-content: center;
+    align-items: center;
+  }
+
+  .login-bottom {
+    border-radius: 24px;
+    max-width: 440px;
+    width: 100%;
+  }
+
+  .login-top {
+    max-width: 440px;
+    width: 100%;
+  }
+
+  .perfil-page-bottom {
+    border-radius: 24px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .perfis-grid { grid-template-columns: repeat(4, 1fr); }
+
+  /* ── SOS BUTTON NA HOME: max-width ── */
+  #pag-home > button[onclick*="SOS"] {
+    max-width: 600px;
+    margin-left: 24px;
+    margin-right: 24px;
+    width: calc(100% - 48px);
+  }
+
+  /* ── RESUMO IA: max-width ── */
+  #card-resumo-ia {
+    margin: 0 24px 20px;
+    max-width: calc(1000px - 48px);
+  }
+
+  /* ── CUIDADOS / MEU DIA / MENTE SÃ: max-width no conteúdo ── */
+  .conteudo {
+    max-width: 900px;
+    padding: 20px 24px;
+  }
+}
+
+/* ── SIDEBAR E TOPBAR: só existem no desktop ── */
+#desk-sidebar { display: none; }
+#desk-topbar { display: none; }
+
+@media (min-width: 768px) {
+  #desk-sidebar { display: flex; }
+  #desk-topbar { display: flex; }
+}
