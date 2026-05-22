@@ -2870,7 +2870,18 @@ async function verificarPinAoEntrar() {
   if (!APP.membroId) return true;
   try {
     const r = await api('GET', '/api/membros/pin/tem/' + APP.membroId);
-    if (!r.tem) return true;
+    if (!r.tem) {
+      return new Promise((resolve) => {
+        window._pinResolve = resolve;
+        _pinModo = "definir";
+        _pinAtual = "";
+        _pinTemp = "";
+        atualizarPontos();
+        document.getElementById("pin-entrada-nome").textContent = "Crie seu PIN de seguranca";
+        document.getElementById("pin-erro").textContent = "Defina um PIN para proteger seus dados";
+        document.getElementById("tela-pin").style.display = "flex";
+      });
+    }
     return new Promise((resolve) => {
       window._pinResolve = resolve;
       _pinModo = 'verificar';
