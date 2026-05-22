@@ -839,7 +839,8 @@ async function carregarMedicamentos() {
           <span style="font-size:24px">💊</span>
           <div class="item-info">
             <div class="item-nome">${m.nome} ${m.dosagem || ''}</div>
-            <div class="item-sub">${formatarHorarios(m.horarios)} · ${m.via || 'Oral'}</div>
+            <div class="item-sub">${formatarHorarios(m.horarios) || '⚡ Conforme necessario'} · ${m.via || 'Oral'}</div>
+          ${(function(){ const h = m.horarios ? (typeof m.horarios === 'string' ? JSON.parse(m.horarios) : m.horarios) : []; return (!h || h.length === 0) ? `<button onclick="registrarDosePRN(${m.id}, '${m.nome}')" style="margin-top:6px;background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Registrar dose agora</button>` : ''; })()}
           ${m.estoque > 0 ? `<div style="font-size:12px;font-weight:600;margin-top:3px;color:${m.estoque <= 5 ? '#dc2626' : m.estoque <= 10 ? '#f59e0b' : '#6b7280'}">${m.estoque <= 5 ? '⚠️' : '💊'} ${m.estoque} comprimido${m.estoque !== 1 ? 's' : ''}</div>` : ''}
           </div>
           <button onclick="excluirMed(${m.id})" style="background:none;border:none;font-size:18px;cursor:pointer">🗑️</button>
@@ -888,7 +889,7 @@ async function salvarMedicamento() {
   const via = document.getElementById('med-via').value;
   const estoque = document.getElementById('med-estoque').value;
 
-  if (!nome || !horarios.length) return alerta('Preencha nome e horários');
+  if (!nome) return alerta('Preencha o nome do medicamento');
 
   try {
     await api('POST', '/api/medicamentos', {
@@ -951,6 +952,8 @@ function limparFormMed() {
   });
   horariosAdicionados = [];
   atualizarTagsHorario();
+  const prn = document.getElementById('med-prn');
+  if (prn) { prn.checked = false; togglePRN(); }
 }
 
 // ── ALARMES ──
@@ -2853,7 +2856,8 @@ function filtrarMedicamentos(termo) {
       <span style="font-size:24px">💊</span>
       <div class="item-info">
         <div class="item-nome">${m.nome} ${m.dosagem || ''}</div>
-        <div class="item-sub">${formatarHorarios(m.horarios)} · ${m.via || 'Oral'}</div>
+        <div class="item-sub">${formatarHorarios(m.horarios) || '⚡ Conforme necessario'} · ${m.via || 'Oral'}</div>
+          ${(function(){ const h = m.horarios ? (typeof m.horarios === 'string' ? JSON.parse(m.horarios) : m.horarios) : []; return (!h || h.length === 0) ? `<button onclick="registrarDosePRN(${m.id}, '${m.nome}')" style="margin-top:6px;background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Registrar dose agora</button>` : ''; })()}
       </div>
       <button onclick="excluirMed(${m.id})" style="background:none;border:none;font-size:18px;cursor:pointer">🗑️</button>
     </div>`).join('');
@@ -3236,4 +3240,33 @@ async function baixarPDFPlantao() {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+}
+
+function togglePRN() {
+  const prn = document.getElementById('med-prn').checked;
+  const campo = document.getElementById('med-horario-novo').closest('div.campo');
+  if (prn) {
+    document.getElementById('med-horario-novo').closest('div[style]').style.display = 'none';
+    document.getElementById('horarios-tags').style.display = 'none';
+    document.getElementById('med-horarios').value = '';
+    horariosAdicionados = [];
+  } else {
+    document.getElementById('med-horario-novo').closest('div[style]').style.display = 'flex';
+    document.getElementById('horarios-tags').style.display = 'flex';
+  }
+}
+
+async function registrarDosePRN(medId, medNome) {
+  try {
+    await api('POST', '/api/medicamentos/historico', {
+      med_id: medId,
+      membro_id: APP.membroId,
+      status: 'tomado',
+      motivo: 'PRN - dose manual'
+    });
+    alerta('Dose de ' + medNome + ' registrada!');
+    carregarMedicamentos();
+  } catch(e) {
+    alerta('Erro ao registrar dose: ' + e.message);
+  }
 }
