@@ -252,7 +252,16 @@
       <button class="btn btn-verde btn-block" onclick="abrirModal('modal-add-med')"><span data-i18n="med.adicionar">+ Adicionar medicamento</span></button>
       <button class="btn btn-block" onclick="baixarPDFMedicamentos()" style="background:#f0fdf4;color:#0f6647;border:1.5px solid #0f6647;margin-top:8px">📄 <span data-i18n="med.pdf">Baixar relatório PDF</span></button>
     </div>
-    <div class="secao">
+    <div id="streak-card" style="display:none;margin:0 16px 8px;background:linear-gradient(135deg,#1a4e9e,#2563eb);border-radius:16px;padding:14px 16px;color:white">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:32px">🔥</span>
+    <div>
+      <div style="font-size:22px;font-weight:700" id="streak-numero">0</div>
+      <div style="font-size:13px;opacity:.85" id="streak-texto">dias seguidos tomando todos os medicamentos</div>
+    </div>
+  </div>
+</div>
+<div class="secao">
       <input id="busca-med" type="text" placeholder="🔍 Buscar medicamento..." oninput="filtrarMedicamentos(this.value)" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:12px">
       <div id="lista-medicamentos"></div>
     </div>

@@ -832,6 +832,7 @@ async function carregarMedicamentos() {
     const meds = await api('GET', `/api/medicamentos/${APP.familiaId}?membro_id=${APP.membroId}`);
     window._listaMedsCache = meds;
     carregarGraficoAderencia();
+    carregarStreak();
     const lista = document.getElementById('lista-medicamentos');
     lista.innerHTML = meds.length
       ? meds.map(m => `
@@ -3268,5 +3269,24 @@ async function registrarDosePRN(medId, medNome) {
     carregarMedicamentos();
   } catch(e) {
     alerta('Erro ao registrar dose: ' + e.message);
+  }
+}
+
+async function carregarStreak() {
+  try {
+    const r = await api('GET', '/api/medicamentos/streak/' + APP.membroId);
+    const card = document.getElementById('streak-card');
+    const num = document.getElementById('streak-numero');
+    const txt = document.getElementById('streak-texto');
+    if (!card || !num || !txt) return;
+    if (r.streak >= 2) {
+      num.textContent = r.streak;
+      txt.textContent = r.streak === 1 ? 'dia seguido tomando todos os medicamentos' : 'dias seguidos tomando todos os medicamentos';
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  } catch(e) {
+    console.log('Erro streak:', e);
   }
 }

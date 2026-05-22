@@ -126,6 +126,43 @@ router.get('/aderencia/:membro_id', async (req, res) => {
 
 
 // Decrementar estoque ao confirmar dose
+
+router.get('/streak/:membro_id', async (req, res) => {
+  try {
+    const { membro_id } = req.params;
+    const result = await db.query(
+      `SELECT DATE(criado_em AT TIME ZONE 'America/Sao_Paulo') as dia,
+              COUNT(*) FILTER (WHERE status = 'tomado') as tomadas,
+              COUNT(*) as total
+       FROM historico_meds
+       WHERE membro_id = $1
+         AND criado_em >= NOW() - INTERVAL '30 days'
+       GROUP BY dia
+       ORDER BY dia DESC`,
+      [membro_id]
+    );
+    const rows = result.rows;
+    let streak = 0;
+    const hoje = new Date();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(hoje);
+      d.setDate(d.getDate() - i);
+      const dStr = d.toISOString().split('T')[0];
+      const dia = rows.find(r => r.dia === dStr);
+      if (dia && parseInt(dia.tomadas) > 0 && parseInt(dia.tomadas) >= parseInt(dia.total)) {
+        streak++;
+      } else if (i === 0) {
+        continue;
+      } else {
+        break;
+      }
+    }
+    res.json({ streak });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 router.put('/:id/estoque', async (req, res) => {
   try {
     const result = await db.query(
