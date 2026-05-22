@@ -107,6 +107,8 @@ io.on('connection', (socket) => {
     familiaId = String(familiaId);
     console.log('Entrou na sala:', familiaId);
     socket.join(familiaId);
+    // Avisar medico que paciente entrou na sala
+    socket.to(familiaId).emit('paciente-online', { familiaId });
   });
   socket.on('emergencia', (data) => {
     io.to(data.familiaId).emit('alerta-emergencia', data);

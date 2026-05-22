@@ -883,6 +883,20 @@ function conectarSocketMedico() {
     if (_medicoPC && data.candidate) await _medicoPC.addIceCandidate(new RTCIceCandidate(data.candidate));
   });
   _medicoSocket.on("video-encerrado", () => { encerrarVideoChamadaMedico(); });
+  // Quando paciente entra na sala — reenviar offer
+  _medicoSocket.on("paciente-online", async () => {
+    if (!_medicoPC || !_medicoStream) return;
+    console.log("[Medico] Paciente online — reenviando offer");
+    const offer = await _medicoPC.createOffer();
+    await _medicoPC.setLocalDescription(offer);
+    _medicoSocket.emit("video-chamar", {
+      familiaId: String(MEDICO.familiaId),
+      membroId: "medico-" + MEDICO.crm,
+      nome: "Dr(a). " + MEDICO.nome,
+      offer
+    });
+    document.getElementById("video-medico-status").textContent = "📹 Conectando com " + MEDICO.pacienteNome + "...";
+  });
 }
 
 async function iniciarVideoChamadaMedico() {
