@@ -287,51 +287,9 @@ body {
   color: #1e40af;
 }
 </style>
-  <link rel="stylesheet" href="/css/medico-desktop.css">
+  
 </head>
 <body>
-<div id="med-sidebar">
-  <div class="ms-logo">
-    <div class="ms-logo-icon">🩺</div>
-    <div>
-      <div class="ms-logo-title">Portal Medico</div>
-      <div class="ms-logo-sub">AP+ SAUDE</div>
-    </div>
-  </div>
-  <div class="ms-medico">
-    <div class="ms-medico-nome" id="ms-med-nome">—</div>
-    <div class="ms-medico-crm" id="ms-med-crm">—</div>
-  </div>
-  <div class="ms-section">
-    <div class="ms-section-label">Pacientes recentes</div>
-    <div id="ms-lista-pac"></div>
-    <button class="ms-novo-btn" onclick="voltarLogin()">+ Novo paciente</button>
-  </div>
-  <div class="ms-actions">
-    <button class="ms-btn verde" onclick="iniciarVideoChamadaMedico()">📹 Videochamada</button>
-    <button class="ms-btn azul" onclick="gerarPDF()">📄 Relatorio PDF</button>
-    <button class="ms-btn vermelho" onclick="encerrarSessao()">🚪 Encerrar sessao</button>
-  </div>
-</div>
-<script>
-function atualizarSidebarMedico(){
-  var n=document.getElementById("ms-med-nome");
-  var c=document.getElementById("ms-med-crm");
-  if(n&&MEDICO.nome)n.textContent="Dr(a). "+MEDICO.nome;
-  if(c&&MEDICO.crm)c.textContent=MEDICO.crm;
-  var lista=document.getElementById("ms-lista-pac");
-  var key="medico_pacientes_"+MEDICO.crm;
-  var pacs=JSON.parse(sessionStorage.getItem(key)||"[]");
-  lista.innerHTML=pacs.map(function(p){
-    var ativo=p.id_pessoal===MEDICO.pacienteId?"ativo":"";
-    return "<button class='ms-paciente "+ativo+"' onclick="trocarPaciente('"+p.id_pessoal+"')">"+
-      "<div class='ms-pac-av'>"+p.nome.substring(0,2).toUpperCase()+"</div>"+
-      "<div class='ms-pac-info'><div class='ms-pac-nome'>"+p.nome+"</div>"+
-      "<div class='ms-pac-id'>"+p.id_pessoal+"</div></div></button>";
-  }).join("");
-}
-document.addEventListener("DOMContentLoaded",function(){setTimeout(atualizarSidebarMedico,800);});
-</script>
 <div class="container">
 
   <!-- ── LOGIN MÉDICO ── -->
@@ -422,7 +380,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('login-medico').style.display = 'none';
     document.getElementById('portal-medico').classList.add('ativo');
 
-    if(typeof atualizarSidebarMedico==="function")setTimeout(atualizarSidebarMedico,300); fetch(`/api/membros/id/${dados.pacienteId}`)
+    fetch(`/api/membros/id/${dados.pacienteId}`)
       .then(r => r.json())
       .then(membro => carregarHistorico(membro));
     carregarPacientesRecentes();
@@ -465,7 +423,7 @@ async function acessarPortal() {
 
     salvarPacienteRecente(membro);
     carregarPacientesRecentes();
-    await carregarHistorico(membro); if(typeof atualizarSidebarMedico==="function")atualizarSidebarMedico();
+    await carregarHistorico(membro);
   } catch (e) {
     (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('ID do paciente não encontrado. Verifique e tente novamente.');
   }
@@ -828,7 +786,7 @@ async function trocarPaciente(idPessoal) {
     document.getElementById("portal-paciente-id").textContent = `ID: ${idPessoal}`;
     salvarPacienteRecente(membro);
     carregarPacientesRecentes();
-    await carregarHistorico(membro); if(typeof atualizarSidebarMedico==="function")atualizarSidebarMedico();
+    await carregarHistorico(membro);
   } catch(e) { console.log("Erro trocar paciente:", e); }
 }
 
