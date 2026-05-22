@@ -10,11 +10,19 @@ const pool = require('./db');
 // ── Firebase Admin (FCM) ──
 const admin = require('firebase-admin');
 try {
-  const serviceAccount = require('./firebase-credentials.json');
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
-  console.log('[FCM] Firebase Admin inicializado');
+  if (process.env.FIREBASE_CREDENTIALS) {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    console.log('[FCM] Firebase Admin inicializado via env');
+  } else {
+    try {
+      const serviceAccount = require('./firebase-credentials.json');
+      admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+      console.log('[FCM] Firebase Admin inicializado via arquivo');
+    } catch(e2) {
+      console.log('[FCM] firebase-credentials.json nao encontrado - FCM desativado');
+    }
+  }
 } catch(e) {
   console.log('[FCM] Erro ao inicializar Firebase:', e.message);
 }
