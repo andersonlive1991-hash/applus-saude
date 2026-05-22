@@ -290,6 +290,48 @@ body {
   <link rel="stylesheet" href="/css/medico-desktop.css">
 </head>
 <body>
+<div id="med-sidebar">
+  <div class="ms-logo">
+    <div class="ms-logo-icon">🩺</div>
+    <div>
+      <div class="ms-logo-title">Portal Medico</div>
+      <div class="ms-logo-sub">AP+ SAUDE</div>
+    </div>
+  </div>
+  <div class="ms-medico">
+    <div class="ms-medico-nome" id="ms-med-nome">—</div>
+    <div class="ms-medico-crm" id="ms-med-crm">—</div>
+  </div>
+  <div class="ms-section">
+    <div class="ms-section-label">Pacientes recentes</div>
+    <div id="ms-lista-pac"></div>
+    <button class="ms-novo-btn" onclick="voltarLogin()">+ Novo paciente</button>
+  </div>
+  <div class="ms-actions">
+    <button class="ms-btn verde" onclick="iniciarVideoChamadaMedico()">📹 Videochamada</button>
+    <button class="ms-btn azul" onclick="gerarPDF()">📄 Relatorio PDF</button>
+    <button class="ms-btn vermelho" onclick="encerrarSessao()">🚪 Encerrar sessao</button>
+  </div>
+</div>
+<script>
+function atualizarSidebarMedico(){
+  var n=document.getElementById("ms-med-nome");
+  var c=document.getElementById("ms-med-crm");
+  if(n&&MEDICO.nome)n.textContent="Dr(a). "+MEDICO.nome;
+  if(c&&MEDICO.crm)c.textContent=MEDICO.crm;
+  var lista=document.getElementById("ms-lista-pac");
+  var key="medico_pacientes_"+MEDICO.crm;
+  var pacs=JSON.parse(sessionStorage.getItem(key)||"[]");
+  lista.innerHTML=pacs.map(function(p){
+    var ativo=p.id_pessoal===MEDICO.pacienteId?"ativo":"";
+    return "<button class='ms-paciente "+ativo+"' onclick="trocarPaciente('"+p.id_pessoal+"')">"+
+      "<div class='ms-pac-av'>"+p.nome.substring(0,2).toUpperCase()+"</div>"+
+      "<div class='ms-pac-info'><div class='ms-pac-nome'>"+p.nome+"</div>"+
+      "<div class='ms-pac-id'>"+p.id_pessoal+"</div></div></button>";
+  }).join("");
+}
+document.addEventListener("DOMContentLoaded",function(){setTimeout(atualizarSidebarMedico,800);});
+</script>
 <div class="container">
 
   <!-- ── LOGIN MÉDICO ── -->
@@ -958,30 +1000,5 @@ function mutarMedico() {
 
 </script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script>
-function initMedicoDesktop(){
-  if(window.innerWidth<768)return;
-  if(document.getElementById("med-sidebar"))return;
-  var sb=document.createElement("div");
-  sb.id="med-sidebar";
-  sb.innerHTML="<div class='ms-logo'><div class='ms-logo-icon'>🩺</div><div><div class='ms-logo-title'>Portal Medico</div><div class='ms-logo-sub'>AP+ SAUDE</div></div></div><div class='ms-medico'><div class='ms-medico-nome' id='ms-med-nome'>-</div><div class='ms-medico-crm' id='ms-med-crm'>-</div></div><div class='ms-section'><div class='ms-section-label'>Pacientes recentes</div><div id='ms-lista-pac'></div><button class='ms-novo-btn' onclick='voltarLogin()'>+ Novo paciente</button></div><div class='ms-actions'><button class='ms-btn verde' onclick='iniciarVideoChamadaMedico()'>📹 Videochamada</button><button class='ms-btn azul' onclick='gerarPDF()'>📄 Relatorio PDF</button><button class='ms-btn vermelho' onclick='encerrarSessao()'>🚪 Encerrar sessao</button></div>";
-  document.body.appendChild(sb);
-  atualizarSidebarMedico();
-}
-function atualizarSidebarMedico(){
-  var n=document.getElementById("ms-med-nome");
-  var c=document.getElementById("ms-med-crm");
-  if(n&&MEDICO.nome)n.textContent="Dr(a). "+MEDICO.nome;
-  if(c&&MEDICO.crm)c.textContent=MEDICO.crm;
-  var lista=document.getElementById("ms-lista-pac");
-  var key="medico_pacientes_"+MEDICO.crm;
-  var pacs=JSON.parse(sessionStorage.getItem(key)||"[]");
-  lista.innerHTML=pacs.map(function(p){
-    var ativo=p.id_pessoal===MEDICO.pacienteId?"ativo":"";
-    return "<button class='ms-paciente "+ativo+"' onclick='trocarPaciente(""+p.id_pessoal+"")'><div class='ms-pac-av'>"+p.nome.substring(0,2).toUpperCase()+"</div><div class='ms-pac-info'><div class='ms-pac-nome'>"+p.nome+"</div><div class='ms-pac-id'>"+p.id_pessoal+"</div></div></button>";
-  }).join("");
-}
-document.addEventListener("DOMContentLoaded",function(){setTimeout(initMedicoDesktop,600);});
-</script>
 </body>
 </html>
