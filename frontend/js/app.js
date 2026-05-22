@@ -1287,6 +1287,55 @@ async function perguntarIA() {
 }
 
 
+
+// ── PASSAGEM DE PLANTÃO ──
+async function salvarPassagemPlantao() {
+  const turno = document.getElementById('passagem-turno').value;
+  const humor = document.getElementById('passagem-humor').value;
+  const resumo = document.getElementById('passagem-resumo').value.trim();
+  const intercorrencias = document.getElementById('passagem-intercorrencias').value.trim();
+  const medicamentos_ok = document.getElementById('passagem-meds-ok').checked;
+
+  if (!resumo) { alerta('Preencha o resumo do turno'); return; }
+
+  try {
+    await api('POST', '/api/passagem-plantao', {
+      familia_id: APP.familiaId,
+      cuidador_id: APP.membroId,
+      cuidador_nome: APP.nomeUsuario || 'Cuidador',
+      turno, humor, resumo, intercorrencias, medicamentos_ok
+    });
+    document.getElementById('passagem-resumo').value = '';
+    document.getElementById('passagem-intercorrencias').value = '';
+    document.getElementById('passagem-meds-ok').checked = true;
+    alerta('✅ Passagem registrada! Família notificada.');
+    carregarPassagens();
+  } catch(e) { alerta('Erro ao registrar passagem'); }
+}
+
+async function carregarPassagens() {
+  try {
+    const lista = await api('GET', '/api/passagem-plantao/' + APP.familiaId);
+    const el = document.getElementById('lista-passagens');
+    if (!el) return;
+    const humorEmoji = { otimo:'😄', bem:'🙂', regular:'😐', mal:'😔', pessimo:'😢' };
+    el.innerHTML = lista.length ? lista.map(p => {
+      const dt = new Date(p.criado_em);
+      const hora = dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+      return `<div style="background:white;border-radius:12px;padding:1rem;margin-bottom:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid #1a9e6e">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <span style="font-weight:700;font-size:0.95rem">🔄 ${p.cuidador_nome} — ${p.turno || ''}</span>
+          <span style="font-size:0.75rem;color:#666">${hora}</span>
+        </div>
+        <div style="font-size:0.9rem;color:#444;margin-bottom:0.4rem">Humor: ${humorEmoji[p.humor] || '😐'} ${p.humor || ''}</div>
+        <div style="font-size:0.9rem;color:#333;margin-bottom:0.4rem">${p.resumo}</div>
+        ${p.intercorrencias ? `<div style="font-size:0.85rem;color:#dc2626;background:#fff5f5;padding:0.5rem;border-radius:8px;margin-bottom:0.4rem">🚨 ${p.intercorrencias}</div>` : ''}
+        ${!p.medicamentos_ok ? `<div style="font-size:0.85rem;color:#f59e0b">⚠️ Medicamentos não administrados</div>` : `<div style="font-size:0.85rem;color:#16a34a">✅ Medicamentos ok</div>`}
+      </div>`;
+    }).join('') : '<p style="color:#999;font-size:0.9rem;text-align:center;padding:1rem">Nenhuma passagem registrada ainda</p>';
+  } catch(e) { console.log('Erro passagens:', e); }
+}
+
 // ── ESCALA DE DOR ──
 async function registrarDor(nivel) {
   const labels = ['Sem dor', 'Leve', 'Moderada', 'Intensa', 'Insuportável'];
@@ -1853,6 +1902,7 @@ function trocarAbaCuidados(aba) {
   if (aba === 'hidratacao') carregarHidratacao();
   if (aba === 'sono') carregarSono();
   if (aba === 'intercorrencias') carregarIntercorrencias();
+  if (aba === 'passagem') carregarPassagens();
 }
 
 // ATIVIDADES

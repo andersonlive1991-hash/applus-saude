@@ -817,6 +817,7 @@
         <button class="btn-aba" id="aba-cuid-hidratacao" onclick="trocarAbaCuidados('hidratacao')" data-i18n="cuidados.hidratacao">💧 Hidratação</button>
         <button class="btn-aba" id="aba-cuid-sono" onclick="trocarAbaCuidados('sono')" data-i18n="cuidados.sono">😴 Sono</button>
         <button class="btn-aba" id="aba-cuid-intercorrencias" onclick="trocarAbaCuidados('intercorrencias')" data-i18n="cuidados.intercorrencias">🚨 Intercorrências</button>
+        <button class="btn-aba" id="aba-cuid-passagem" onclick="trocarAbaCuidados('passagem')">🔄 Passagem</button>
       </div>
 
       <!-- Atividades -->
@@ -876,6 +877,46 @@
       <div id="cuid-sono" style="display:none">
         <button class="btn btn-verde btn-block" onclick="abrirModal('modal-novo-sono')">+ Registrar sono</button>
         <div id="lista-sono" style="margin-top:1rem"></div>
+      </div>
+
+      <!-- Passagem de Plantão -->
+      <div id="cuid-passagem" style="display:none">
+        <div style="background:white;border-radius:16px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+          <p style="font-weight:700;font-size:1rem;margin-bottom:1rem;text-align:center">🔄 Registrar Passagem de Plantão</p>
+          <div class="campo">
+            <label>Turno</label>
+            <select id="passagem-turno" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem">
+              <option value="manhã">🌅 Manhã</option>
+              <option value="tarde">☀️ Tarde</option>
+              <option value="noite">🌙 Noite</option>
+              <option value="integral">🕐 Integral</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Como o idoso ficou?</label>
+            <select id="passagem-humor" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem">
+              <option value="otimo">😄 Ótimo</option>
+              <option value="bem">🙂 Bem</option>
+              <option value="regular">😐 Regular</option>
+              <option value="mal">😔 Mal</option>
+              <option value="pessimo">😢 Péssimo</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Resumo do turno</label>
+            <textarea id="passagem-resumo" rows="3" placeholder="O que aconteceu durante o turno? Atividades, alimentação, sono..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem"></textarea>
+          </div>
+          <div class="campo">
+            <label>Intercorrências</label>
+            <textarea id="passagem-intercorrencias" rows="2" placeholder="Alguma situação especial? Deixe em branco se não houve." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem"></textarea>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
+            <input type="checkbox" id="passagem-meds-ok" checked style="width:18px;height:18px">
+            <label for="passagem-meds-ok" style="font-size:0.95rem">✅ Todos os medicamentos foram administrados</label>
+          </div>
+          <button class="btn btn-verde btn-block" onclick="salvarPassagemPlantao()">💾 Registrar passagem</button>
+        </div>
+        <div id="lista-passagens"></div>
       </div>
 
       <!-- Intercorrências -->
