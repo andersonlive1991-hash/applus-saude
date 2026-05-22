@@ -713,6 +713,10 @@ function preencherNomePerfil() {
 }
 
 function navegarPara(pagina) {
+  // Empurrar estado no histórico do navegador para o botão voltar do Android funcionar
+  if (history.state?.pagina !== pagina) {
+    history.pushState({ pagina }, '', '#' + pagina);
+  }
   document.querySelectorAll('.pagina').forEach(p => p.classList.remove('ativa'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
 
@@ -3341,3 +3345,29 @@ function fecharPortalIframe() {
   iframe.src = '';
   document.body.style.overflow = '';
 }
+
+// ── Botão voltar do Android ──
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.pagina) {
+    // Navegar para a página anterior sem empurrar novo estado
+    const pagina = e.state.pagina;
+    document.querySelectorAll('.pagina').forEach(p => p.classList.remove('ativa'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
+    const el = document.getElementById('pag-' + pagina);
+    if (el) el.classList.add('ativa');
+    const nav = document.querySelector('[data-nav="' + pagina + '"]');
+    if (nav) nav.classList.add('ativo');
+    if (pagina === 'home') carregarHome();
+    if (pagina === 'remedios') carregarMedicamentos();
+    if (pagina === 'agenda') carregarAgenda();
+    if (pagina === 'chat') carregarChat();
+    if (pagina === 'mais') carregarMais();
+    if (pagina === 'saude') carregarSinais();
+  } else {
+    // Se não tem estado, voltar para home em vez de sair
+    if (document.getElementById('pag-home') && !document.getElementById('pag-home').classList.contains('ativa')) {
+      history.pushState({ pagina: 'home' }, '', '#home');
+      navegarPara('home');
+    }
+  }
+});
