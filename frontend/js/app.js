@@ -839,6 +839,7 @@ async function carregarMedicamentos() {
           <div class="item-info">
             <div class="item-nome">${m.nome} ${m.dosagem || ''}</div>
             <div class="item-sub">${formatarHorarios(m.horarios)} · ${m.via || 'Oral'}</div>
+          ${m.estoque > 0 ? `<div style="font-size:12px;font-weight:600;margin-top:3px;color:${m.estoque <= 5 ? '#dc2626' : m.estoque <= 10 ? '#f59e0b' : '#6b7280'}">${m.estoque <= 5 ? '⚠️' : '💊'} ${m.estoque} comprimido${m.estoque !== 1 ? 's' : ''}</div>` : ''}
           </div>
           <button onclick="excluirMed(${m.id})" style="background:none;border:none;font-size:18px;cursor:pointer">🗑️</button>
         </div>`).join('')
@@ -1054,6 +1055,9 @@ async function confirmarDose(status) {
     status,
     motivo: status === 'pulado' ? 'Usuário pulou' : null
   });
+  if (status === 'tomado') {
+    api('PUT', '/api/medicamentos/' + medId + '/estoque', {}).catch(() => {});
+  }
 }
 
 function lembrarDepois() {

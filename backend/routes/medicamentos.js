@@ -124,4 +124,39 @@ router.get('/aderencia/:membro_id', async (req, res) => {
   }
 });
 
+
+// Decrementar estoque ao confirmar dose
+router.put('/:id/estoque', async (req, res) => {
+  try {
+    const result = await db.query(
+      'UPDATE medicamentos SET estoque = GREATEST(estoque - 1, 0) WHERE id = $1 AND estoque > 0 RETURNING *',
+      [req.params.id]
+    );
+    if (!result.rows.length) return res.json({ ok: true, estoque: 0 });
+    const med = result.rows[0];
+    if (med.estoque <= 5) {
+      try {
+        const subRes = await db.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [med.membro_id]);
+        if (subRes.rows.length) {
+          const sub = typeof subRes.rows[0].subscription === 'string' ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
+          const payload = JSON.stringify({
+            titulo: '💊 Estoque baixo',
+            corpo: med.nome + ' — restam apenas ' + med.estoque + ' comprimido(s). Hora de comprar!',
+            url: '/#remedios',
+            medicamento: false
+          });
+          webpush.sendNotification(sub, payload).catch(e => {
+            if (e.statusCode === 410 || e.statusCode === 404) {
+              db.query('DELETE FROM push_subscriptions WHERE membro_id=$1', [med.membro_id]).catch(()=>{});
+            }
+          });
+        }
+      } catch(ep) { console.log('Erro push estoque:', ep.message); }
+    }
+    res.json({ ok: true, estoque: med.estoque });
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 module.exports = router;
