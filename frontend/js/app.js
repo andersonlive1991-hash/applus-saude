@@ -1737,7 +1737,7 @@ async function atualizarDropdown() {
     container.innerHTML = membrosVisiveis.map(m => {
       const ativo = m.id == APP.membroId;
       const av = m.foto ? `<img src="${m.foto}" style="width:32px;height:32px;object-fit:cover;border-radius:50%">` : `<span style="font-size:14px">${avatarMembro(m.nome, m.tipo)}</span>`;
-      return `<div onclick="trocarParaPerfil(${m.id},'${m.nome.split(' ')[0]}','${m.tipo}','${m.id_pessoal}')" style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer">
+      return `<div data-mid="${m.id}" data-nome="${m.nome.split(' ')[0]}" data-tipo="${m.tipo}" data-pid="${m.id_pessoal}" onclick="trocarParaPerfil(parseInt(this.dataset.mid), this.dataset.nome, this.dataset.tipo, this.dataset.pid)" style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer">
         <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:${ativo?'white':'rgba(255,255,255,0.3)'};border:2px solid ${ativo?'white':'transparent'}">${av}</div>
         <span style="font-size:9px;color:${ativo?'white':'rgba(255,255,255,0.7)'};font-weight:${ativo?700:400}">${m.nome.split(' ')[0]}</span>
       </div>`;
