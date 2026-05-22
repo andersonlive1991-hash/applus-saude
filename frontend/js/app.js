@@ -1361,35 +1361,58 @@ async function excluirPerfil() {
   }
 }
 
+// Variável de controle da exclusão pendente
+let _exclusaoPendente = null;
+
 async function confirmarExcluirMembro(membroId, nome) {
-  if (!confirm('Tem certeza que deseja excluir o perfil de ' + nome + '? Esta ação não pode ser desfeita.')) return;
+  _exclusaoPendente = { tipo: 'membro', membroId, nome };
+  const msg = document.getElementById('msg-confirmar-exclusao');
+  const inp = document.getElementById('inp-confirmar-exclusao');
+  msg.textContent = 'Você está prestes a excluir o perfil de ' + nome + '. Esta ação não pode ser desfeita.';
+  inp.value = '';
+  fecharModal('modal-excluir-perfil');
+  abrirModal('modal-confirmar-exclusao');
+  return;
+}
+
+async function executarExclusaoConfirmada() {
+  const inp = document.getElementById('inp-confirmar-exclusao');
+  if (inp.value.trim().toUpperCase() !== 'EXCLUIR') {
+    alerta('Digite EXCLUIR para confirmar.');
+    return;
+  }
+  const { tipo, membroId, nome } = _exclusaoPendente;
+  _exclusaoPendente = null;
+  fecharModal('modal-confirmar-exclusao');
   try {
-    await api('DELETE', '/api/membros/' + membroId);
-    alerta('Perfil de ' + nome + ' excluído com sucesso!');
-    // Se excluiu o próprio perfil, sair
-    if (membroId == APP.membroId) {
-      fecharModal('modal-excluir-perfil');
+    if (tipo === 'todos') {
+      await api('DELETE', '/api/familias/' + APP.familiaId);
       sair();
     } else {
-      // Excluiu outro perfil — atualiza a lista sem sair
+      await api('DELETE', '/api/membros/' + membroId);
+      alerta('Perfil de ' + nome + ' excluído com sucesso!');
+      if (membroId == APP.membroId) {
+        sair();
+      } else {
         const membros = await api('GET', '/api/membros/familia/' + APP.familiaId);
         const lista = document.getElementById('lista-excluir-perfis');
         lista.innerHTML = membros.map(m => '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;border:1px solid #eee;border-radius:8px;margin-bottom:0.5rem"><div><strong>' + m.nome.split(' ')[0] + '</strong><span style="font-size:0.8rem;color:#999;margin-left:0.5rem">' + m.tipo + '</span></div><button onclick="confirmarExcluirMembro(' + m.id + ', \'' + m.nome.split(' ')[0] + '\')" style="background:#fff0f0;color:#e74c3c;border:1px solid #e74c3c;border-radius:6px;padding:0.3rem 0.7rem;cursor:pointer">Excluir</button></div>').join('');
+        abrirModal('modal-excluir-perfil');
+      }
     }
   } catch(e) {
-    alerta('Erro ao excluir perfil: ' + e.message);
+    alerta('Erro ao excluir: ' + e.message);
   }
 }
 
 async function confirmarExcluirTodos() {
-  if (!confirm('Tem certeza que deseja excluir TODOS os perfis da família? Esta ação não pode ser desfeita.')) return;
-  try {
-    await api('DELETE', '/api/familias/' + APP.familiaId);
-    fecharModal('modal-excluir-perfil');
-    sair();
-  } catch(e) {
-    alerta('Erro ao excluir família: ' + e.message);
-  }
+  _exclusaoPendente = { tipo: 'todos' };
+  const msg = document.getElementById('msg-confirmar-exclusao');
+  const inp = document.getElementById('inp-confirmar-exclusao');
+  msg.textContent = 'Você está prestes a excluir TODOS os perfis da família. Esta ação não pode ser desfeita.';
+  inp.value = '';
+  fecharModal('modal-excluir-perfil');
+  abrirModal('modal-confirmar-exclusao');
 }
 
 function abrirTrocarIdioma() {

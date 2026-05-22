@@ -518,6 +518,18 @@
     </div>
   </div>
 
+  <!-- Modal confirmação exclusão -->
+  <div id="modal-confirmar-exclusao" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-titulo" style="color:#e74c3c">⚠️ Confirmar exclusão</div>
+      <p id="msg-confirmar-exclusao" style="color:#666;font-size:0.9rem;margin-bottom:1rem"></p>
+      <p style="font-size:0.85rem;color:#e74c3c;font-weight:600;margin-bottom:0.5rem">Digite EXCLUIR para confirmar:</p>
+      <input id="inp-confirmar-exclusao" type="text" placeholder="EXCLUIR" style="width:100%;padding:10px;border:2px solid #e74c3c;border-radius:8px;font-size:1rem;margin-bottom:1rem;box-sizing:border-box">
+      <button class="btn btn-block" onclick="executarExclusaoConfirmada()" style="background:#e74c3c;color:#fff;margin-bottom:0.5rem">Excluir definitivamente</button>
+      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-confirmar-exclusao')">Cancelar</button>
+    </div>
+  </div>
+
   <!-- ── EMERGÊNCIA ── -->
   <div id="pag-emergencia" class="pagina">
     <div class="header-verde" style="background:linear-gradient(145deg,#7f1d1d,#c0392b,#e74c3c)">
