@@ -1,23 +1,15 @@
-/* ═══════════════════════════════════════════════════════════
-   AP+ Saúde — Portal Médico Desktop
-   Só ativa acima de 768px — mobile não muda nada
-═══════════════════════════════════════════════════════════ */
+#med-sidebar { display: none; }
 
 @media (min-width: 768px) {
 
   body { background: #e8edf4; }
 
-  /* ── CONTAINER: largura total no desktop ── */
   .container {
     max-width: 100%;
-    display: grid;
-    grid-template-columns: 260px 1fr;
     min-height: 100vh;
   }
 
-  /* ── LOGIN: centralizado no desktop ── */
   .login-page {
-    grid-column: 1 / -1;
     flex-direction: row;
     align-items: stretch;
   }
@@ -28,6 +20,7 @@
     flex-shrink: 0;
     padding: 60px 48px;
     border-radius: 0;
+    justify-content: center;
   }
 
   .login-bottom {
@@ -43,27 +36,16 @@
 
   .login-bottom h2 { font-size: 22px; margin-bottom: 24px; }
 
-  .campo input { padding: 14px 18px; font-size: 15px; }
-
-  .btn-azul {
-    padding: 16px;
-    font-size: 15px;
-    border-radius: 12px;
-    transition: opacity 0.2s;
-  }
-
+  .btn-azul { border-radius: 12px; }
   .btn-azul:hover { opacity: 0.88; }
 
-  /* ── PORTAL: sidebar + conteúdo ── */
   .portal {
-    grid-column: 1 / -1;
     display: grid !important;
     grid-template-columns: 260px 1fr;
     grid-template-rows: 60px 1fr;
     min-height: 100vh;
   }
 
-  /* ── HEADER DO PORTAL: vira topbar ── */
   .portal-header {
     grid-column: 2;
     grid-row: 1;
@@ -73,7 +55,6 @@
     gap: 16px;
     border-radius: 0;
     height: 60px;
-    background: linear-gradient(135deg, #1a4e9e, #1a6eb5);
   }
 
   .portal-header::before { display: none; }
@@ -88,22 +69,53 @@
 
   .portal-header p { display: none; }
 
-  .medico-badge {
-    margin-top: 0;
-    padding: 5px 12px;
-    font-size: 12px;
-    white-space: nowrap;
-  }
+  .medico-badge { margin-top: 0; padding: 5px 12px; }
 
-  /* ── CURVA: some no desktop ── */
   .curva { display: none; }
 
-  /* ── SIDEBAR MÉDICO ── */
+  .portal-content {
+    grid-column: 2;
+    grid-row: 2;
+    margin-left: 260px;
+    margin-top: 60px;
+    padding: 24px 32px;
+    background: #e8edf4;
+    min-height: calc(100vh - 60px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .paciente-card {
+    border-radius: 14px;
+    padding: 20px 24px;
+  }
+
+  .acesso-log,
+  #portal-content > div[style*="fef2f2"],
+  #portal-content > div[style*="eff6ff"] {
+    grid-column: 1 / -1;
+  }
+
+  .acesso-log { padding: 10px 16px; font-size: 12px; border-radius: 10px; }
+
+  .btn-sair {
+    grid-column: 1 / -1;
+    width: auto;
+    display: inline-flex;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-right: 8px;
+  }
+
+  #lista-pacientes-recentes { display: none !important; }
+
+  #modal-prescricao { align-items: center !important; }
+  #modal-prescricao > div { border-radius: 16px !important; max-width: 560px; width: 100%; }
+
   #med-sidebar {
-    grid-column: 1;
-    grid-row: 1 / -1;
-    background: #ffffff;
-    border-right: 1px solid rgba(0,0,0,0.08);
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -111,6 +123,8 @@
     left: 0;
     width: 260px;
     height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid rgba(0,0,0,0.08);
     z-index: 200;
     overflow-y: auto;
   }
@@ -125,9 +139,9 @@
   }
 
   #med-sidebar .ms-logo-icon {
-    font-size: 28px;
-    width: 40px;
-    height: 40px;
+    font-size: 24px;
+    width: 38px;
+    height: 38px;
     background: rgba(255,255,255,0.15);
     border-radius: 10px;
     display: flex;
@@ -148,9 +162,8 @@
     letter-spacing: 1px;
   }
 
-  /* Médico info */
   #med-sidebar .ms-medico {
-    padding: 16px 18px;
+    padding: 14px 18px;
     border-bottom: 1px solid rgba(0,0,0,0.07);
     background: #f8fafc;
   }
@@ -163,12 +176,8 @@
     margin-bottom: 2px;
   }
 
-  #med-sidebar .ms-medico-crm {
-    font-size: 12px;
-    color: #6b7280;
-  }
+  #med-sidebar .ms-medico-crm { font-size: 12px; color: #6b7280; }
 
-  /* Pacientes recentes na sidebar */
   #med-sidebar .ms-section {
     padding: 14px 18px;
     border-bottom: 1px solid rgba(0,0,0,0.07);
@@ -193,6 +202,10 @@
     cursor: pointer;
     transition: background 0.15s;
     margin-bottom: 4px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
   }
 
   #med-sidebar .ms-paciente:hover { background: #f1f5f9; }
@@ -206,11 +219,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-    color: #1a6eb5;
-    font-weight: 700;
     font-size: 12px;
+    font-weight: 700;
+    color: #1a6eb5;
+    flex-shrink: 0;
   }
 
   #med-sidebar .ms-pac-info { flex: 1; min-width: 0; }
@@ -224,18 +236,35 @@
     text-overflow: ellipsis;
   }
 
-  #med-sidebar .ms-pac-id {
-    font-size: 11px;
-    color: #6b7280;
+  #med-sidebar .ms-pac-id { font-size: 11px; color: #6b7280; }
+
+  #med-sidebar .ms-novo-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 9px 12px;
+    background: #eff6ff;
+    color: #1a6eb5;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
   }
 
-  /* Ações na sidebar */
+  #med-sidebar .ms-novo-btn:hover { background: #dbeafe; }
+
   #med-sidebar .ms-actions {
     padding: 14px 18px;
     border-top: 1px solid rgba(0,0,0,0.07);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
 
   #med-sidebar .ms-btn {
@@ -256,99 +285,10 @@
   }
 
   #med-sidebar .ms-btn:hover { background: #f1f5f9; }
-
-  #med-sidebar .ms-btn.azul {
-    background: #eff6ff;
-    color: #1a6eb5;
-    font-weight: 600;
-  }
-
-  #med-sidebar .ms-btn.azul:hover { background: #dbeafe; }
-
-  #med-sidebar .ms-btn.verde {
-    background: #f0fdf4;
-    color: #065f46;
-    font-weight: 600;
-  }
-
+  #med-sidebar .ms-btn.verde { background: #f0fdf4; color: #065f46; font-weight: 600; }
   #med-sidebar .ms-btn.verde:hover { background: #dcfce7; }
-
+  #med-sidebar .ms-btn.azul { background: #eff6ff; color: #1a6eb5; font-weight: 600; }
+  #med-sidebar .ms-btn.azul:hover { background: #dbeafe; }
   #med-sidebar .ms-btn.vermelho { color: #991b1b; }
   #med-sidebar .ms-btn.vermelho:hover { background: #fef2f2; }
-
-  /* ── CONTEÚDO PRINCIPAL ── */
-  .portal-content {
-    grid-column: 2;
-    grid-row: 2;
-    margin-left: 260px;
-    margin-top: 60px;
-    padding: 24px 32px;
-    background: #e8edf4;
-    min-height: calc(100vh - 60px);
-  }
-
-  /* ── PACIENTES RECENTES: vai para sidebar, esconde no topo ── */
-  #lista-pacientes-recentes { display: none !important; }
-
-  /* ── CARDS: grid de 2 colunas ── */
-  .paciente-card {
-    border-radius: 14px;
-    padding: 20px 24px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  }
-
-  /* Wrapper para grid de cards */
-  #portal-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    align-items: start;
-  }
-
-  /* Cards que ocupam coluna inteira */
-  #portal-content .acesso-log,
-  #portal-content > div[style*="background:#fef2f2"],
-  #portal-content > div[style*="background:#eff6ff"],
-  #portal-content .btn-sair,
-  #portal-content > a,
-  #portal-content > button {
-    grid-column: 1 / -1;
-  }
-
-  /* ── LOG DE ACESSO: mais compacto ── */
-  .acesso-log {
-    padding: 10px 16px;
-    font-size: 12px;
-    border-radius: 10px;
-  }
-
-  /* ── BOTÕES DE AÇÃO: linha horizontal ── */
-  #portal-content .btn-sair {
-    display: inline-flex;
-    width: auto;
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-size: 13px;
-    margin-right: 8px;
-    margin-bottom: 0;
-  }
-
-  /* ── MODAL PRESCRIÇÃO: centralizado ── */
-  #modal-prescricao {
-    align-items: center !important;
-  }
-
-  #modal-prescricao > div {
-    border-radius: 16px !important;
-    max-width: 560px;
-    width: 100%;
-  }
-
-  /* ── VIDEOCHAMADA: não muda ── */
-}
-
-/* Sidebar só existe no desktop */
-#med-sidebar { display: none; }
-@media (min-width: 768px) {
-  #med-sidebar { display: flex; flex-direction: column; }
 }
