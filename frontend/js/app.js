@@ -1891,7 +1891,7 @@ function gerarQRCodeTEA(idPessoal) {
 // ── CUIDADOS ──
 
 function trocarAbaCuidados(aba) {
-  ['atividades','humor','alimentacao','hidratacao','sono','intercorrencias'].forEach(a => {
+  ['atividades','humor','alimentacao','hidratacao','sono','intercorrencias','passagem'].forEach(a => {
     document.getElementById('cuid-' + a).style.display = a === aba ? 'block' : 'none';
     const btn = document.getElementById('aba-cuid-' + a);
     if (btn) btn.classList.toggle('ativa', a === aba);
