@@ -778,7 +778,6 @@ async function api(metodo, url, corpo) {
 // ── HOME ──
 async function carregarHome() {
   document.getElementById('home-nome').textContent = `Olá, ${APP.membroNome.split(' ')[0]} 👋`;
-  carregarMensagensApoio();
 
   // Mostrar card TEA se família tem membro TEA
   try {
@@ -3293,42 +3292,5 @@ async function carregarStreak() {
   }
 }
 
-async function carregarMensagensApoio() {
-  try {
-    const msgs = await api('GET', '/api/apoio/' + APP.familiaId);
-    const card = document.getElementById('card-apoio');
-    const lista = document.getElementById('lista-apoio');
-    if (!card || !lista) return;
-    if (!msgs.length) { card.style.display = 'none'; return; }
-    card.style.display = 'block';
-    lista.innerHTML = msgs.map(m => `
-      <div style="padding:8px 0;border-bottom:0.5px solid #f3f4f6">
-        <span style="font-weight:600;color:#1a9e6e">${m.autor_nome}</span>
-        <span style="color:#6b7280;font-size:11px;margin-left:6px">${new Date(m.criado_em).toLocaleDateString('pt-BR')}</span>
-        <div style="margin-top:2px">${m.texto}</div>
-      </div>
-    `).join('');
-  } catch(e) { console.log('Erro apoio:', e); }
-}
 
-function abrirModalApoio() {
-  document.getElementById('apoio-autor').value = APP.membroNome || '';
-  abrirModal('modal-apoio');
-}
 
-async function enviarMensagemApoio() {
-  const autor = document.getElementById('apoio-autor').value.trim();
-  const texto = document.getElementById('apoio-texto').value.trim();
-  if (!texto) return alerta('Escreva uma mensagem');
-  try {
-    await api('POST', '/api/apoio', {
-      familia_id: APP.familiaId,
-      autor_nome: autor || 'Anônimo',
-      texto
-    });
-    document.getElementById('apoio-texto').value = '';
-    fecharModal('modal-apoio');
-    alerta('Mensagem enviada!');
-    carregarMensagensApoio();
-  } catch(e) { alerta('Erro ao enviar: ' + e.message); }
-}

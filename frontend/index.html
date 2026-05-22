@@ -179,15 +179,6 @@
       </div>
       <div id="resumo-texto" style="font-size:13px;line-height:1.6;opacity:0.95">Analisando seus dados...</div>
     </div>
-
-    <div id="card-apoio" style="display:none;background:#fff;border:1.5px solid #e5e7eb;border-radius:20px;padding:16px;margin-bottom:16px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-size:15px;font-weight:700;color:#1a1a1a">💌 Mensagens de apoio</span>
-        <button onclick="abrirModalApoio()" style="background:#f0fdf4;color:#0f6647;border:1.5px solid #0f6647;border-radius:10px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Enviar</button>
-      </div>
-      <div id="lista-apoio" style="font-size:13px;color:#374151;line-height:1.6"></div>
-    </div>
-
     <div class="cards-grid">
       <div class="card destaque" onclick="navegarPara('remedios')">
         <div class="card-icone">💊</div>
@@ -2106,18 +2097,6 @@
       <button class="btn btn-block" style="background:#fff0f0;color:#e74c3c;border:1.5px solid #e74c3c" onclick="removerPin()">🗑️ Remover PIN</button>
     </div>
     <button class="btn btn-cinza btn-block" style="margin-top:12px" onclick="fecharModal('modal-config-pin')">Fechar</button>
-  </div>
-</div>
-
-<div id="modal-apoio" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-titulo">💌 Enviar mensagem de apoio</div>
-    <div class="form" style="padding:0">
-      <div class="campo"><label>Seu nome</label><input id="apoio-autor" type="text" placeholder="Ex: Tia Maria"></div>
-      <div class="campo"><label>Mensagem</label><textarea id="apoio-texto" rows="3" placeholder="Escreva uma mensagem de carinho..." style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:15px;resize:none;box-sizing:border-box"></textarea></div>
-      <button class="btn btn-verde btn-block" onclick="enviarMensagemApoio()">💌 Enviar mensagem</button>
-      <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-apoio')">Cancelar</button>
-    </div>
   </div>
 </div>
 
