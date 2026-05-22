@@ -116,4 +116,41 @@ router.post("/enviar-sos-externo", async (req, res) => {
   }
 });
 
+
+// ── Push para médico via CRM ──
+router.post('/inscrever-medico', async (req, res) => {
+  const { crm, nome, subscription } = req.body;
+  try {
+    await db.query(
+      `CREATE TABLE IF NOT EXISTS push_medicos (
+        crm VARCHAR(50) PRIMARY KEY,
+        nome VARCHAR(200),
+        subscription TEXT,
+        criado_em TIMESTAMP DEFAULT NOW()
+      )`
+    );
+    await db.query(
+      'INSERT INTO push_medicos (crm, nome, subscription) VALUES ($1,$2,$3) ON CONFLICT (crm) DO UPDATE SET subscription=$3, nome=$2',
+      [crm, nome, JSON.stringify(subscription)]
+    );
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+router.post('/enviar-medico-crm', async (req, res) => {
+  const { crm, titulo, corpo, url } = req.body;
+  try {
+    const result = await db.query('SELECT subscription FROM push_medicos WHERE crm=$1', [crm]);
+    if (!result.rows.length) return res.json({ ok: false, erro: 'Médico sem push cadastrado' });
+    const sub = typeof result.rows[0].subscription === 'string' ? JSON.parse(result.rows[0].subscription) : result.rows[0].subscription;
+    const payload = JSON.stringify({ titulo, corpo, url: url || '/' });
+    await webpush.sendNotification(sub, payload);
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 module.exports = router;

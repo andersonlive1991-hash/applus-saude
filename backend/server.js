@@ -577,3 +577,44 @@ setInterval(async () => {
     console.log('[Inatividade] Erro:', e.message);
   }
 }, 3600000);
+
+// ── Agendador push médico — 3 doses puladas seguidas ──
+setInterval(async () => {
+  try {
+    const resultado = await pool.query(
+      `SELECT m.membro_id, m.nome as med_nome, mb.nome as paciente_nome,
+              COUNT(*) as doses_puladas
+       FROM historico_meds m
+       JOIN medicamentos med ON med.id = m.med_id
+       JOIN membros mb ON mb.id = m.membro_id
+       WHERE m.status = 'pulado'
+         AND m.criado_em >= NOW() - INTERVAL '24 hours'
+       GROUP BY m.membro_id, m.nome, mb.nome
+       HAVING COUNT(*) >= 3`
+    );
+    for (const row of resultado.rows) {
+      const prescRes = await pool.query(
+        'SELECT DISTINCT medico_crm FROM prescricoes WHERE membro_id=$1 AND medico_crm IS NOT NULL',
+        [row.membro_id]
+      );
+      for (const presc of prescRes.rows) {
+        const subRes = await pool.query(
+          'SELECT subscription FROM push_medicos WHERE crm=$1',
+          [presc.medico_crm]
+        );
+        if (!subRes.rows.length) continue;
+        const sub = typeof subRes.rows[0].subscription === 'string'
+          ? JSON.parse(subRes.rows[0].subscription)
+          : subRes.rows[0].subscription;
+        const payload = JSON.stringify({
+          titulo: '⚠️ Paciente pulou doses',
+          corpo: `${row.paciente_nome} pulou ${row.doses_puladas} doses nas ultimas 24h.`,
+          url: '/medico.html'
+        });
+        webpush.sendNotification(sub, payload).catch(() => {});
+      }
+    }
+  } catch(e) {
+    console.log('[Push Medico Doses] Erro:', e.message);
+  }
+}, 3600000);
