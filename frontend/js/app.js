@@ -1723,47 +1723,27 @@ document.addEventListener('keydown', e => {
 // ── DROPDOWN TROCA DE PERFIL ──
 async function atualizarDropdown() {
   try {
-    const membros = await api('GET', `/api/membros/familia/${APP.familiaId}`);
-    const lista = document.getElementById('dropdown-lista');
-    const avatar = document.getElementById('dropdown-avatar');
-    const nomeEl = document.getElementById('dropdown-nome');
-
-    const memAtivo = membros.find(function(m) { return m.id == APP.membroId; });
-    if (avatar) {
-      if (memAtivo && memAtivo.foto) {
-        avatar.innerHTML = '<img src="' + memAtivo.foto + '" style="width:32px;height:32px;object-fit:cover;border-radius:50%">';
-      } else {
-        avatar.textContent = avatarMembro(APP.membroNome, APP.membroTipo);
-      }
+    const membros = await api("GET", `/api/membros/familia/${APP.familiaId}`);
+    const ehCuidador = APP.membroTipo === "cuidador";
+    const membrosVisiveis = ehCuidador ? membros.filter(m => m.id == APP.membroId) : membros;
+    let container = document.getElementById("perfis-header");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "perfis-header";
+      container.style.cssText = "display:flex;align-items:center;gap:8px;position:absolute;top:14px;right:16px;z-index:50;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:24px;padding:6px 12px;backdrop-filter:blur(8px)";
+      const selector = document.querySelector(".perfil-selector");
+      if (selector) selector.replaceWith(container);
     }
-    if (nomeEl) nomeEl.textContent = APP.membroNome.split(' ')[0];
-
-    if (lista) {
-      const ehCuidador = APP.membroTipo === 'cuidador';
-      const membrosVisiveis = ehCuidador ? membros.filter(m => m.id == APP.membroId) : membros;
-
-      lista.innerHTML = membrosVisiveis.map(m => `
-        <button class="dropdown-item ${m.id == APP.membroId ? 'ativo' : ''}"
-          onclick="trocarParaPerfil(${m.id}, '${m.nome}', '${m.tipo}', '${m.id_pessoal}')">
-          <div class="av" style="overflow:hidden;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center">${m.foto ? '<img src="' + m.foto + '" style="width:40px;height:40px;object-fit:cover;border-radius:50%">' : avatarMembro(m.nome, m.tipo)}</div>
-          <div class="dropdown-item-info">
-            <div class="dn">${m.nome.split(' ')[0]}</div>
-            <div class="dt">${m.tipo}</div>
-          </div>
-          ${m.id == APP.membroId ? '<span style="color:var(--verde);font-size:14px">✓</span>' : ''}
-        </button>`).join('') + (ehCuidador ? '' : `
-        <button class="dropdown-item" onclick="fecharDropdown();abrirModal('modal-add-membro')">
-          <div class="av" style="background:var(--cinza-claro);color:var(--cinza);font-size:20px">+</div>
-          <div class="dropdown-item-info">
-            <div class="dn">Adicionar membro</div>
-          </div>
-        </button>`);
-    }
-  } catch (e) {
-    console.log('Erro dropdown:', e);
-  }
+    container.innerHTML = membrosVisiveis.map(m => {
+      const ativo = m.id == APP.membroId;
+      const av = m.foto ? `<img src="${m.foto}" style="width:32px;height:32px;object-fit:cover;border-radius:50%">` : `<span style="font-size:14px">${avatarMembro(m.nome, m.tipo)}</span>`;
+      return `<div onclick="trocarParaPerfil(${m.id},'${m.nome.split(' ')[0]}','${m.tipo}','${m.id_pessoal}')" style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer">
+        <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:${ativo?'white':'rgba(255,255,255,0.3)'};border:2px solid ${ativo?'white':'transparent'}">${av}</div>
+        <span style="font-size:9px;color:${ativo?'white':'rgba(255,255,255,0.7)'};font-weight:${ativo?700:400}">${m.nome.split(' ')[0]}</span>
+      </div>`;
+    }).join("") + (ehCuidador ? "" : `<div onclick="abrirModal('modal-add-membro')" style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer"><div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.2);color:white;font-size:18px">+</div><span style="font-size:9px;color:rgba(255,255,255,0.7)">Novo</span></div>`);
+  } catch(e) { console.log("Erro dropdown:", e); }
 }
-
 function toggleDropdown() {
   const dropdown = document.getElementById('perfil-dropdown');
   dropdown.classList.toggle('aberto');
