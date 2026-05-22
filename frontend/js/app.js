@@ -1286,6 +1286,30 @@ async function perguntarIA() {
   }
 }
 
+
+// ── ESCALA DE DOR ──
+async function registrarDor(nivel) {
+  const labels = ['Sem dor', 'Leve', 'Moderada', 'Intensa', 'Insuportável'];
+  const emojis = ['😊', '😐', '😟', '😣', '😭'];
+  try {
+    await api('POST', '/api/sinais', {
+      membro_id: APP.membroId,
+      tipo: 'dor',
+      valor: nivel,
+      unidade: '/4',
+      observacoes: emojis[nivel] + ' ' + labels[nivel]
+    });
+    fecharModal('modal-dor');
+    alerta('Dor registrada: ' + emojis[nivel] + ' ' + labels[nivel]);
+    carregarSinais();
+    if (nivel >= 3) {
+      alerta('⚠️ Dor intensa registrada. A família será notificada.');
+    }
+  } catch(e) {
+    alerta('Erro ao registrar dor');
+  }
+}
+
 // ── MAIS (perfil, sinais, vacinas, etc.) ──
 function carregarMais() {
   document.getElementById('mais-nome').textContent = APP.membroNome;

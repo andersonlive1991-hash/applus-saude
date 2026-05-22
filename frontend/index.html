@@ -323,6 +323,11 @@
         <div class="card-titulo" data-i18n="card.oximetria">Oximetria</div>
         <div class="card-sub">Registrar</div>
       </div>
+      <div class="card" onclick="abrirModal('modal-dor')">
+        <div class="card-icone">🤕</div>
+        <div class="card-titulo">Dor</div>
+        <div class="card-sub">Registrar nível</div>
+      </div>
       <div class="card" onclick="navegarPara('emergencia')">
         <div class="card-icone">🚨</div>
         <div class="card-titulo" data-i18n="card.emergencia">Emergência</div>
@@ -1675,6 +1680,21 @@
 </div>
 
 <!-- Modal Pressão -->
+<div id="modal-dor" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🤕 Escala de Dor</div>
+    <p style="color:#666;font-size:0.9rem;text-align:center;margin-bottom:16px">Como está a dor agora?</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+      <button onclick="registrarDor(0)" style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:12px;font-size:1rem;cursor:pointer;text-align:left">😊 <strong>Sem dor</strong> — me sinto bem</button>
+      <button onclick="registrarDor(1)" style="background:#fefce8;border:2px solid #fde047;border-radius:12px;padding:12px;font-size:1rem;cursor:pointer;text-align:left">😐 <strong>Leve</strong> — quase não incomoda</button>
+      <button onclick="registrarDor(2)" style="background:#fff7ed;border:2px solid #fdba74;border-radius:12px;padding:12px;font-size:1rem;cursor:pointer;text-align:left">😟 <strong>Moderada</strong> — está atrapalhando</button>
+      <button onclick="registrarDor(3)" style="background:#fff1f2;border:2px solid #fca5a5;border-radius:12px;padding:12px;font-size:1rem;cursor:pointer;text-align:left">😣 <strong>Intensa</strong> — difícil de aguentar</button>
+      <button onclick="registrarDor(4)" style="background:#fdf2f8;border:2px solid #f0abfc;border-radius:12px;padding:12px;font-size:1rem;cursor:pointer;text-align:left">😭 <strong>Insuportável</strong> — preciso de ajuda</button>
+    </div>
+    <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-dor')">Cancelar</button>
+  </div>
+</div>
+
 <div id="modal-pressao" class="modal-overlay">
   <div class="modal">
     <div class="modal-titulo">🩺 Pressão Arterial</div>
