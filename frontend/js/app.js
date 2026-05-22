@@ -726,6 +726,7 @@ function navegarPara(pagina) {
   if (pagina === 'agenda') carregarAgenda();
   if (pagina === 'chat') carregarChat();
   if (pagina === 'mais') carregarMais();
+  if (pagina === 'saude') carregarSinais();
   if (pagina === 'perfil') { carregarPerfil(); setTimeout(preencherNomePerfil, 500); }
   if (pagina === 'bem-estar') carregarHistoricoBemEstar();
   if (pagina === 'checklist') carregarChecklist();
@@ -1357,6 +1358,131 @@ async function registrarDor(nivel) {
   } catch(e) {
     alerta('Erro ao registrar dor');
   }
+}
+
+
+// ── SINAIS VITAIS + GRÁFICO ──
+APP._periodoSinais = 7;
+APP._tipoSinais = 'pressao';
+
+function mudarPeriodoSinais(dias) {
+  APP._periodoSinais = dias;
+  ['7','30','90'].forEach(d => {
+    const btn = document.getElementById('btn-periodo-' + d);
+    if (btn) btn.classList.toggle('ativa', parseInt(d) === dias);
+  });
+  carregarSinais();
+}
+
+function mudarTipoSinais(tipo) {
+  APP._tipoSinais = tipo;
+  ['pressao','glicemia','peso','oximetria','dor'].forEach(t => {
+    const btn = document.getElementById('btn-tipo-' + t);
+    if (btn) btn.classList.toggle('ativa', t === tipo);
+  });
+  carregarSinais();
+}
+
+async function carregarSinais() {
+  try {
+    const tipo = APP._tipoSinais || 'pressao';
+    const dias = APP._periodoSinais || 7;
+    const todos = await api('GET', '/api/sinais/' + APP.membroId + '?tipo=' + tipo);
+    const corte = new Date(); corte.setDate(corte.getDate() - dias);
+    const filtrados = todos.filter(s => new Date(s.criado_em) >= corte).reverse();
+
+    // Lista
+    const lista = document.getElementById('lista-sinais');
+    const unidades = { pressao:'mmHg', glicemia:'mg/dL', peso:'kg', oximetria:'%', dor:'/4' };
+    const emojis = { pressao:'🩺', glicemia:'🩸', peso:'⚖️', oximetria:'💨', dor:'🤕' };
+    if (lista) {
+      lista.innerHTML = filtrados.length ? filtrados.slice().reverse().slice(0,10).map(s => {
+        const dt = new Date(s.criado_em);
+        const hora = dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+        const val = s.valor2 ? s.valor + '/' + s.valor2 : s.valor;
+        return `<div style="display:flex;justify-content:space-between;align-items:center;background:white;border-radius:10px;padding:0.75rem 1rem;margin-bottom:0.5rem;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <span style="font-size:0.95rem">${emojis[tipo]||'❤️'} ${s.observacoes || (val + ' ' + (unidades[tipo]||''))}</span>
+          <span style="font-size:0.75rem;color:#999">${hora}</span>
+        </div>`;
+      }).join('') : '<p style="color:#999;font-size:0.9rem;text-align:center;padding:1rem">Nenhum registro no período</p>';
+    }
+
+    // Gráfico
+    const canvas = document.getElementById('grafico-sinais');
+    if (!canvas || !filtrados.length) return;
+    const dpr = window.devicePixelRatio || 1;
+    const W = canvas.offsetWidth || 320;
+    const H = 160;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.height = H + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, W, H);
+
+    const vals = filtrados.map(s => parseFloat(s.valor));
+    const vals2 = tipo === 'pressao' ? filtrados.map(s => parseFloat(s.valor2 || 0)) : null;
+    const minV = Math.min(...vals) * 0.95;
+    const maxV = Math.max(...vals) * 1.05;
+    const pad = { t:16, r:16, b:28, l:36 };
+    const gW = W - pad.l - pad.r;
+    const gH = H - pad.t - pad.b;
+
+    const toX = i => pad.l + (i / (filtrados.length - 1 || 1)) * gW;
+    const toY = v => pad.t + gH - ((v - minV) / (maxV - minV || 1)) * gH;
+
+    // Grid
+    ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.t + (i / 4) * gH;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gW, y); ctx.stroke();
+      const lbl = (maxV - (i / 4) * (maxV - minV)).toFixed(0);
+      ctx.fillStyle = '#9ca3af'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+      ctx.fillText(lbl, pad.l - 4, y + 3);
+    }
+
+    // Linha sistólica (ou única)
+    ctx.beginPath(); ctx.strokeStyle = '#e53e3e'; ctx.lineWidth = 2;
+    filtrados.forEach((s, i) => {
+      const x = toX(i); const y = toY(parseFloat(s.valor));
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // Pontos
+    filtrados.forEach((s, i) => {
+      ctx.beginPath(); ctx.arc(toX(i), toY(parseFloat(s.valor)), 3, 0, Math.PI*2);
+      ctx.fillStyle = '#e53e3e'; ctx.fill();
+    });
+
+    // Linha diastólica (pressão)
+    if (vals2 && vals2.some(v => v > 0)) {
+      const minV2 = Math.min(...vals2) * 0.95;
+      const toY2 = v => pad.t + gH - ((v - minV2) / (maxV - minV2 || 1)) * gH;
+      ctx.beginPath(); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2;
+      filtrados.forEach((s, i) => {
+        const x = toX(i); const y = toY2(parseFloat(s.valor2 || 0));
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      filtrados.forEach((s, i) => {
+        ctx.beginPath(); ctx.arc(toX(i), toY2(parseFloat(s.valor2||0)), 3, 0, Math.PI*2);
+        ctx.fillStyle = '#3b82f6'; ctx.fill();
+      });
+    }
+
+    // Datas eixo X
+    ctx.fillStyle = '#9ca3af'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    const passo = Math.max(1, Math.floor(filtrados.length / 5));
+    filtrados.forEach((s, i) => {
+      if (i % passo === 0 || i === filtrados.length - 1) {
+        const dt = new Date(s.criado_em);
+        const label = dt.getDate() + '/' + (dt.getMonth()+1);
+        ctx.fillText(label, toX(i), H - pad.b + 12);
+      }
+    });
+
+  } catch(e) { console.log('Erro sinais:', e); }
 }
 
 // ── MAIS (perfil, sinais, vacinas, etc.) ──

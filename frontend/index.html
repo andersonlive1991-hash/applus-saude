@@ -340,8 +340,23 @@
       </div>
     </div>
     <div class="secao">
-      <div class="secao-titulo">Últimos registros</div>
-      <div id="lista-sinais"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+        <div class="secao-titulo" style="margin:0">📊 Histórico</div>
+        <div style="display:flex;gap:0.4rem">
+          <button onclick="mudarPeriodoSinais(7)" id="btn-periodo-7" class="btn-aba ativa" style="padding:4px 10px;font-size:0.75rem">7d</button>
+          <button onclick="mudarPeriodoSinais(30)" id="btn-periodo-30" class="btn-aba" style="padding:4px 10px;font-size:0.75rem">30d</button>
+          <button onclick="mudarPeriodoSinais(90)" id="btn-periodo-90" class="btn-aba" style="padding:4px 10px;font-size:0.75rem">90d</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.4rem;margin-bottom:0.75rem;flex-wrap:wrap">
+        <button onclick="mudarTipoSinais('pressao')" id="btn-tipo-pressao" class="btn-aba ativa" style="padding:4px 10px;font-size:0.75rem">🩺 Pressão</button>
+        <button onclick="mudarTipoSinais('glicemia')" id="btn-tipo-glicemia" class="btn-aba" style="padding:4px 10px;font-size:0.75rem">🩸 Glicemia</button>
+        <button onclick="mudarTipoSinais('peso')" id="btn-tipo-peso" class="btn-aba" style="padding:4px 10px;font-size:0.75rem">⚖️ Peso</button>
+        <button onclick="mudarTipoSinais('oximetria')" id="btn-tipo-oximetria" class="btn-aba" style="padding:4px 10px;font-size:0.75rem">💨 Oximetria</button>
+        <button onclick="mudarTipoSinais('dor')" id="btn-tipo-dor" class="btn-aba" style="padding:4px 10px;font-size:0.75rem">🤕 Dor</button>
+      </div>
+      <canvas id="grafico-sinais" style="width:100%;border-radius:12px;background:#f8fafc"></canvas>
+      <div id="lista-sinais" style="margin-top:0.75rem"></div>
     </div>
   </div>
 
