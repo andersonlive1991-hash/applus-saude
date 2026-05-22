@@ -1730,7 +1730,7 @@ async function atualizarDropdown() {
     if (!container) {
       container = document.createElement("div");
       container.id = "perfis-header";
-      container.style.cssText = "display:flex;align-items:center;gap:8px;position:absolute;top:14px;right:16px;z-index:50;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:24px;padding:6px 12px;backdrop-filter:blur(8px)";
+      container.style.cssText = "display:flex;align-items:center;gap:8px;position:absolute;top:14px;right:16px;z-index:999;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:24px;padding:6px 12px;backdrop-filter:blur(8px)";
       const selector = document.querySelector(".perfil-selector");
       if (selector) selector.replaceWith(container);
     }
