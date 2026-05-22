@@ -110,3 +110,12 @@ router.get('/pin/tem/:membro_id', async (req, res) => {
     res.json({ tem: r.rows.length > 0 && r.rows[0].pin_hash !== null });
   } catch(e) { res.json({ tem: false }); }
 });
+
+router.put('/:id/acesso', async (req, res) => {
+  try {
+    await db.query('UPDATE membros SET ultimo_acesso = NOW() WHERE id = $1', [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});

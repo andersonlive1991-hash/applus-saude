@@ -533,6 +533,7 @@ function iniciarApp() {
 
 function _continuarIniciarApp() {
   iniciarAlarmes();
+  if (APP.membroId) api('PUT', '/api/membros/' + APP.membroId + '/acesso', {}).catch(()=>{});
   if (Notification.permission === 'granted') {
     inscreverPush();
   } else if (Notification.permission === 'default') {

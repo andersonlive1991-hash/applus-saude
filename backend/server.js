@@ -236,6 +236,7 @@ pool.query(`
 
 // ── ID SOS E CONTATOS SOS ──
 pool.query(`ALTER TABLE membros ADD COLUMN IF NOT EXISTS id_sos VARCHAR(20) UNIQUE`).catch(()=>{});
+pool.query(`ALTER TABLE membros ADD COLUMN IF NOT EXISTS ultimo_acesso TIMESTAMP`).catch(()=>{});
 
 pool.query(`
   CREATE TABLE IF NOT EXISTS contatos_sos (
@@ -541,3 +542,38 @@ setInterval(async () => {
   }
 }, 60000);
 
+
+// ── Agendador inatividade do idoso ──
+setInterval(async () => {
+  try {
+    const horasLimite = 6;
+    const idosos = await pool.query(
+      `SELECT m.id, m.nome, m.familia_id, m.ultimo_acesso
+       FROM membros m
+       WHERE m.tipo = 'idoso'
+         AND m.ultimo_acesso IS NOT NULL
+         AND m.ultimo_acesso < NOW() - INTERVAL '${horasLimite} hours'`
+    );
+    for (const idoso of idosos.rows) {
+      const familiares = await pool.query(
+        `SELECT ps.subscription FROM push_subscriptions ps
+         JOIN membros m ON m.id = ps.membro_id
+         WHERE m.familia_id = $1 AND m.id != $2`,
+        [idoso.familia_id, idoso.id]
+      );
+      for (const f of familiares.rows) {
+        try {
+          const sub = typeof f.subscription === 'string' ? JSON.parse(f.subscription) : f.subscription;
+          const payload = JSON.stringify({
+            titulo: '⚠️ Inatividade detectada',
+            corpo: `${idoso.nome} nao abre o app ha mais de ${horasLimite} horas.`,
+            url: '/'
+          });
+          webpush.sendNotification(sub, payload).catch(() => {});
+        } catch(e) {}
+      }
+    }
+  } catch(e) {
+    console.log('[Inatividade] Erro:', e.message);
+  }
+}, 3600000);
