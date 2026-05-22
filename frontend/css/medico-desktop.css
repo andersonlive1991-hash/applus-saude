@@ -291,3 +291,7 @@
   #med-sidebar .ms-btn.azul:hover { background: #dbeafe; }
   #med-sidebar .ms-btn.vermelho { color: #991b1b; }
   #med-sidebar .ms-btn.vermelho:hover { background: #fef2f2; }
+
+/* Esconde botoes de acao duplicados no conteudo */
+.btn-sair { display: none; }
+a[onclick*="consultarOutro"] { display: none; }
