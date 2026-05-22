@@ -2999,3 +2999,14 @@ async function carregarStatusPin() {
     if (el) el.textContent = r.tem ? '🔒 Ativo' : '🔓 Desativado';
   } catch(e) {}
 }
+
+async function baixarPDFPlantao() {
+  const hoje = new Date().toLocaleDateString('sv-SE');
+  const url = `/api/pdf/plantao/${APP.membroId}?data=${hoje}`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `plantao-${hoje}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
