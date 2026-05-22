@@ -9,19 +9,19 @@ router.get('/:membro_id', async (req, res) => {
 
   try {
     const memRes = await db.query(
-      `SELECT m.nome, f.nome AS familia_nome
+      `SELECT m.nome, f.nome AS familia_nome, m.familia_id
        FROM membros m JOIN familias f ON f.id = m.familia_id
        WHERE m.id = $1`, [membro_id]
     );
     if (!memRes.rows.length) return res.status(404).json({ erro: 'Membro não encontrado' });
-    const { nome, familia_nome } = memRes.rows[0];
+    const { nome, familia_nome, familia_id } = memRes.rows[0];
 
     const [atividades, humor, refeicoes, hidratacao, sono] = await Promise.all([
-      db.query(`SELECT atividade, hora FROM cuidados_atividades WHERE membro_id=$1 AND DATE(hora)=$2 ORDER BY hora`, [membro_id, data]),
-      db.query(`SELECT humor, descricao FROM cuidados_humor WHERE membro_id=$1 AND DATE(criado_em)=$2 ORDER BY criado_em`, [membro_id, data]),
-      db.query(`SELECT refeicao, quantidade FROM cuidados_refeicoes WHERE membro_id=$1 AND DATE(criado_em)=$2 ORDER BY criado_em`, [membro_id, data]),
-      db.query(`SELECT copos FROM cuidados_hidratacao WHERE membro_id=$1 AND DATE(criado_em)=$2`, [membro_id, data]),
-      db.query(`SELECT dormiu, acordou, qualidade FROM cuidados_sono WHERE membro_id=$1 AND DATE(criado_em)=$2`, [membro_id, data]),
+      db.query(`SELECT tipo, hora, obs FROM cuidados_atividades WHERE familia_id=$1 AND DATE(criado_em)=$2 ORDER BY criado_em`, [familia_id, data]),
+      db.query(`SELECT humor, obs FROM cuidados_humor WHERE familia_id=$1 AND DATE(criado_em)=$2 ORDER BY criado_em`, [familia_id, data]),
+      db.query(`SELECT tipo, quantidade, obs FROM cuidados_refeicoes WHERE familia_id=$1 AND DATE(criado_em)=$2 ORDER BY criado_em`, [familia_id, data]),
+      db.query(`SELECT copos FROM cuidados_hidratacao WHERE familia_id=$1 AND data=$2`, [familia_id, data]),
+      db.query(`SELECT inicio, fim, qualidade, obs FROM cuidados_sono WHERE familia_id=$1 AND DATE(criado_em)=$2`, [familia_id, data]),
     ]);
 
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
@@ -52,17 +52,17 @@ router.get('/:membro_id', async (req, res) => {
     secao('Sono');
     if (sono.rows.length) {
       const s = sono.rows[0];
-      linha('Dormiu: ' + (s.dormiu || '-') + '  |  Acordou: ' + (s.acordou || '-') + '  |  Qualidade: ' + (s.qualidade || '-'));
+      linha('Inicio: ' + (s.inicio || '-') + '  |  Fim: ' + (s.fim || '-') + '  |  Qualidade: ' + (s.qualidade || '-') + (s.obs ? '  |  Obs: ' + s.obs : ''));
     } else vazio();
     doc.moveDown(0.8);
 
     secao('Humor');
-    if (humor.rows.length) humor.rows.forEach(h => linha(h.humor + (h.descricao ? ' - ' + h.descricao : '')));
+    if (humor.rows.length) humor.rows.forEach(h => linha(h.humor + (h.obs ? ' - ' + h.obs : '')));
     else vazio();
     doc.moveDown(0.8);
 
     secao('Refeicoes');
-    if (refeicoes.rows.length) refeicoes.rows.forEach(r => linha(r.refeicao + (r.quantidade ? ' (' + r.quantidade + ')' : '')));
+    if (refeicoes.rows.length) refeicoes.rows.forEach(r => linha(r.tipo + (r.quantidade ? ' (' + r.quantidade + ')' : '') + (r.obs ? ' - ' + r.obs : '')));
     else vazio();
     doc.moveDown(0.8);
 
@@ -75,8 +75,7 @@ router.get('/:membro_id', async (req, res) => {
     secao('Atividades Realizadas');
     if (atividades.rows.length) {
       atividades.rows.forEach(a => {
-        const hora = a.hora ? new Date(a.hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-        linha((hora ? hora + ' - ' : '') + a.atividade);
+        linha((a.hora ? a.hora + ' - ' : '') + (a.tipo || '') + (a.obs ? ' (' + a.obs + ')' : ''));
       });
     } else vazio();
     doc.moveDown(2);
