@@ -346,6 +346,17 @@ body {
 
 </div>
 
+<!-- Tela videochamada médico -->
+<div id="tela-video-medico" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:9999;flex-direction:column;align-items:center;justify-content:center">
+  <video id="video-remoto-medico" autoplay playsinline style="width:100%;max-height:65vh;object-fit:cover"></video>
+  <video id="video-local-medico" autoplay playsinline muted style="position:absolute;top:16px;right:16px;width:90px;height:120px;object-fit:cover;border-radius:12px;border:2px solid white"></video>
+  <div id="video-medico-status" style="position:absolute;top:40px;left:50%;transform:translateX(-50%);color:white;font-size:15px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,0.8);white-space:nowrap">📹 Conectando...</div>
+  <div style="position:absolute;bottom:40px;display:flex;gap:16px">
+    <button onclick="encerrarVideoChamadaMedico()" style="padding:14px 28px;background:#dc2626;border:none;border-radius:50px;color:white;font-size:15px;font-weight:700;cursor:pointer">📵 Encerrar</button>
+    <button onclick="mutarMedico()" id="btn-mute-medico" style="padding:14px 20px;background:rgba(255,255,255,0.2);border:none;border-radius:50px;color:white;font-size:15px;cursor:pointer">🎙️</button>
+  </div>
+</div>
+
 <script>
 const MEDICO = { nome: '', crm: '', pacienteId: '', pacienteMembroId: null };
 
@@ -621,6 +632,7 @@ async function carregarHistorico(membro) {
     `;
 
     html += `
+      <button class="btn-sair" onclick="iniciarVideoChamadaMedico()" style="margin-bottom:8px;background:#f0fdf4;color:#065f46;border:2px solid #1a9e6e">📹 Videochamada com paciente</button>
       <button class="btn-sair" onclick="gerarPDF()" style="margin-bottom:8px;background:#e0f2fe;color:#0369a1">📄 Gerar Relatório PDF</button>
     <a href="#" onclick="consultarOutro()" style="display:block;text-align:center;padding:14px;color:#1a6eb5;font-weight:600;text-decoration:none">🔍 Consultar outro paciente</button>
       <button class="btn-sair" onclick="encerrarSessao()" style="background:#fee2e2;color:#991b1b">🚪 Encerrar Sessão</button>
@@ -851,6 +863,85 @@ async function salvarPrescricao() {
   } catch(e) { alert("Erro ao salvar prescrição: " + e.message); }
 }
 
+
+// ── VIDEOCHAMADA MÉDICO ──
+let _medicoSocket = null;
+let _medicoPC = null;
+let _medicoStream = null;
+let _medicoMudo = false;
+
+function conectarSocketMedico() {
+  if (_medicoSocket) return;
+  _medicoSocket = io();
+  // Entrar na sala da familia do paciente
+  _medicoSocket.emit("entrar-familia", String(MEDICO.familiaId));
+  _medicoSocket.on("video-answer", async (data) => {
+    if (_medicoPC) await _medicoPC.setRemoteDescription(new RTCSessionDescription(data.answer));
+    document.getElementById("video-medico-status").textContent = "📹 " + MEDICO.pacienteNome + " — Conectado";
+  });
+  _medicoSocket.on("video-ice", async (data) => {
+    if (_medicoPC && data.candidate) await _medicoPC.addIceCandidate(new RTCIceCandidate(data.candidate));
+  });
+  _medicoSocket.on("video-encerrado", () => { encerrarVideoChamadaMedico(); });
+}
+
+async function iniciarVideoChamadaMedico() {
+  if (!MEDICO.familiaId || !MEDICO.pacienteMembroId) {
+    alert("Acesse o historico do paciente primeiro.");
+    return;
+  }
+  try {
+    conectarSocketMedico();
+    _medicoStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    document.getElementById("video-local-medico").srcObject = _medicoStream;
+    if (_medicoPC) { _medicoPC.close(); _medicoPC = null; }
+    _medicoPC = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+    _medicoStream.getTracks().forEach(t => _medicoPC.addTrack(t, _medicoStream));
+    _medicoPC.onicecandidate = (e) => {
+      if (e.candidate) _medicoSocket.emit("video-ice", { familiaId: String(MEDICO.familiaId), candidate: e.candidate });
+    };
+    _medicoPC.ontrack = (e) => {
+      document.getElementById("video-remoto-medico").srcObject = e.streams[0];
+    };
+    const offer = await _medicoPC.createOffer();
+    await _medicoPC.setLocalDescription(offer);
+    _medicoSocket.emit("video-chamar", {
+      familiaId: String(MEDICO.familiaId),
+      membroId: "medico-" + MEDICO.crm,
+      nome: "Dr(a). " + MEDICO.nome,
+      offer
+    });
+    // Enviar push para o paciente
+    fetch("/api/push/enviar-membro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        membro_id: MEDICO.pacienteMembroId,
+        titulo: "📹 Videochamada do médico",
+        corpo: "Dr(a). " + MEDICO.nome + " quer falar com você. Abra o app para atender!",
+        url: "/"
+      })
+    }).catch(() => {});
+    document.getElementById("tela-video-medico").style.display = "flex";
+    document.getElementById("video-medico-status").textContent = "📹 Chamando " + MEDICO.pacienteNome + "...";
+  } catch(e) { alert("Erro ao acessar camera: " + e.message); }
+}
+
+function encerrarVideoChamadaMedico() {
+  if (_medicoPC) { _medicoPC.close(); _medicoPC = null; }
+  if (_medicoStream) { _medicoStream.getTracks().forEach(t => t.stop()); _medicoStream = null; }
+  if (_medicoSocket) _medicoSocket.emit("video-encerrar", { familiaId: String(MEDICO.familiaId) });
+  document.getElementById("tela-video-medico").style.display = "none";
+}
+
+function mutarMedico() {
+  if (!_medicoStream) return;
+  _medicoMudo = !_medicoMudo;
+  _medicoStream.getAudioTracks().forEach(t => t.enabled = !_medicoMudo);
+  document.getElementById("btn-mute-medico").textContent = _medicoMudo ? "🔇" : "🎙️";
+}
+
 </script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </body>
 </html>
