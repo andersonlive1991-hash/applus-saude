@@ -439,8 +439,8 @@ setInterval(async () => {
     const horaAtual = String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0');
     const dataAtual = agora.toISOString().split('T')[0];
 
-    // 1 minuto antes
-    const proximoMinuto = new Date(agora.getTime() + 60000);
+    // 1 hora antes
+    const proximoMinuto = new Date(agora.getTime() + 60 * 60000);
     const horaProxima = String(proximoMinuto.getHours()).padStart(2,'0') + ':' + String(proximoMinuto.getMinutes()).padStart(2,'0');
 
     console.log('Agendador eventos — data:', dataAtual, 'horaProxima:', horaProxima);
@@ -457,7 +457,7 @@ setInterval(async () => {
       if (!subRes.rows.length) continue;
       const sub = typeof subRes.rows[0].subscription === 'string' ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
       const payload = JSON.stringify({
-        titulo: '📅 Evento em 1 minuto!',
+        titulo: '📅 Evento em 1 hora!',
         corpo: `${ev.titulo}${ev.local ? ' — ' + ev.local : ''} · ${horaProxima}`,
         url: '/#agenda',
         alarme: true,
