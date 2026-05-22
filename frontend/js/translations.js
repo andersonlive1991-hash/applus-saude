@@ -743,11 +743,8 @@ function aplicarTraducoes() {
 }
 
 function verificarIdioma() {
-  const idioma = localStorage.getItem('applus_idioma');
-  if (!idioma) {
-    document.getElementById('idioma-page').style.display = 'flex';
-    document.getElementById('login-page').style.display = 'none';
-    return true;
+  if (!localStorage.getItem('applus_idioma')) {
+    localStorage.setItem('applus_idioma', 'pt');
   }
   aplicarTraducoes();
   return false;
