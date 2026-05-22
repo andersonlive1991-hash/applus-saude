@@ -110,3 +110,31 @@ self.addEventListener('notificationclick', e => {
     })
   );
 });
+
+// ── Firebase Cloud Messaging ──
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: "AIzaSyCei4pon-zvFXKYEVBhPC_CqV-PAR1mijo",
+  authDomain: "applus-91d09.firebaseapp.com",
+  projectId: "applus-91d09",
+  storageBucket: "applus-91d09.firebasestorage.app",
+  messagingSenderId: "814206937925",
+  appId: "1:814206937925:web:9b550986b5e06678532c2c"
+});
+
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage(payload => {
+  const titulo = payload.notification?.title || payload.data?.titulo || 'AP+ Saúde';
+  const corpo = payload.notification?.body || payload.data?.corpo || '';
+  const url = payload.data?.url || '/';
+  self.registration.showNotification(titulo, {
+    body: corpo,
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    vibrate: [800, 300, 800],
+    data: { url }
+  });
+});

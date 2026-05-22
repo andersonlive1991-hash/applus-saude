@@ -7,6 +7,65 @@ const { Server } = require('socket.io');
 const path = require('path');
 const pool = require('./db');
 
+// ── Firebase Admin (FCM) ──
+const admin = require('firebase-admin');
+try {
+  const serviceAccount = require('./firebase-credentials.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+  console.log('[FCM] Firebase Admin inicializado');
+} catch(e) {
+  console.log('[FCM] Erro ao inicializar Firebase:', e.message);
+}
+
+// ── Helper: enviar push via FCM + VAPID em paralelo ──
+async function enviarPushCompleto(membro_id, titulo, corpo, url, urgente) {
+  try {
+    const subRes = await pool.query(
+      'SELECT subscription, fcm_token FROM push_subscriptions WHERE membro_id=$1',
+      [membro_id]
+    );
+    if (!subRes.rows.length) return;
+    const { subscription, fcm_token } = subRes.rows[0];
+    const payload = JSON.stringify({ titulo, corpo, url: url || '/', urgente: urgente || false });
+
+    // VAPID (web-push) — funciona com app aberto/minimizado
+    if (subscription) {
+      try {
+        const sub = typeof subscription === 'string' ? JSON.parse(subscription) : subscription;
+        await webpush.sendNotification(sub, payload);
+      } catch(e) {
+        if (e.statusCode === 410 || e.statusCode === 404) {
+          pool.query('DELETE FROM push_subscriptions WHERE membro_id=$1', [membro_id]).catch(()=>{});
+        }
+      }
+    }
+
+    // FCM — funciona com tela desligada
+    if (fcm_token && admin.apps.length) {
+      try {
+        await admin.messaging().send({
+          token: fcm_token,
+          notification: { title: titulo, body: corpo },
+          data: { url: url || '/', urgente: String(urgente || false) },
+          android: {
+            priority: 'high',
+            notification: { sound: 'default', channelId: 'applus_alarmes' }
+          }
+        });
+      } catch(e) {
+        console.log('[FCM] Erro envio:', e.message);
+        if (e.code === 'messaging/registration-token-not-registered') {
+          pool.query('UPDATE push_subscriptions SET fcm_token=NULL WHERE membro_id=$1', [membro_id]).catch(()=>{});
+        }
+      }
+    }
+  } catch(e) {
+    console.log('[Push Completo] Erro:', e.message);
+  }
+}
+
 // Criar tabela perfil_cuidador se não existir
 pool.query(`
   CREATE TABLE IF NOT EXISTS perfil_cuidador (
@@ -237,6 +296,7 @@ pool.query(`
 // ── ID SOS E CONTATOS SOS ──
 pool.query(`ALTER TABLE membros ADD COLUMN IF NOT EXISTS id_sos VARCHAR(20) UNIQUE`).catch(()=>{});
 pool.query(`ALTER TABLE membros ADD COLUMN IF NOT EXISTS ultimo_acesso TIMESTAMP`).catch(()=>{});
+pool.query(`ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS fcm_token TEXT`).catch(()=>{});
 
 pool.query(`
   CREATE TABLE IF NOT EXISTS contatos_sos (

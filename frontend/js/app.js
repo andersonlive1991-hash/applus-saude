@@ -534,6 +534,7 @@ function iniciarApp() {
 function _continuarIniciarApp() {
   iniciarAlarmes();
   if (APP.membroId) api('PUT', '/api/membros/' + APP.membroId + '/acesso', {}).catch(()=>{});
+  registrarTokenFCM();
   if (Notification.permission === 'granted') {
     inscreverPush();
   } else if (Notification.permission === 'default') {
@@ -1647,6 +1648,34 @@ function sair() {
 }
 
 // ── PUSH ──
+async function registrarTokenFCM() {
+  try {
+    if (!('serviceWorker' in navigator)) return;
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js');
+    const firebaseApp = initializeApp({
+      apiKey: "AIzaSyCei4pon-zvFXKYEVBhPC_CqV-PAR1mijo",
+      authDomain: "applus-91d09.firebaseapp.com",
+      projectId: "applus-91d09",
+      storageBucket: "applus-91d09.firebasestorage.app",
+      messagingSenderId: "814206937925",
+      appId: "1:814206937925:web:9b550986b5e06678532c2c"
+    });
+    const messaging = getMessaging(firebaseApp);
+    const reg = await navigator.serviceWorker.ready;
+    const token = await getToken(messaging, {
+      vapidKey: 'BFpHhhK6LGFVPakgXU_RYPsMTkmMladUq7GTfVVk7L5iwOkbJ6w2eqOFI5pC2qi2YbYkw4WYF28tQHOvBge8kNc',
+      serviceWorkerRegistration: reg
+    });
+    if (token && APP.membroId) {
+      await api('POST', '/api/push/salvar-fcm-token', { membro_id: APP.membroId, fcm_token: token });
+      console.log('[FCM] Token registrado:', token.substring(0, 20) + '...');
+    }
+  } catch(e) {
+    console.log('[FCM] Erro ao registrar token:', e.message);
+  }
+}
+
 async function inscreverPush() {
   if (!('PushManager' in window)) return;
   try {

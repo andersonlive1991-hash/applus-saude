@@ -153,4 +153,18 @@ router.post('/enviar-medico-crm', async (req, res) => {
   }
 });
 
+router.post('/salvar-fcm-token', async (req, res) => {
+  const { membro_id, fcm_token } = req.body;
+  if (!membro_id || !fcm_token) return res.status(400).json({ erro: 'Campos obrigatorios' });
+  try {
+    await db.query(
+      'UPDATE push_subscriptions SET fcm_token=$1 WHERE membro_id=$2',
+      [fcm_token, membro_id]
+    );
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 module.exports = router;
