@@ -1933,6 +1933,7 @@ function voltarEscolhaAcesso() {
 
 function abrirModal(id) {
   document.getElementById(id).classList.add('aberto');
+  history.pushState({ modal: id, pagina: history.state?.pagina || 'home' }, '', location.href);
 }
 
 function fecharModal(id) {
@@ -3348,6 +3349,13 @@ function fecharPortalIframe() {
 
 // ── Botão voltar do Android ──
 window.addEventListener('popstate', function(e) {
+  // Se tem modal aberto, fechar o modal em vez de navegar
+  const modalAberto = document.querySelector('.modal-overlay.aberto');
+  if (modalAberto) {
+    modalAberto.classList.remove('aberto');
+    history.pushState(e.state, '', location.href);
+    return;
+  }
   if (e.state && e.state.pagina) {
     // Navegar para a página anterior sem empurrar novo estado
     const pagina = e.state.pagina;
