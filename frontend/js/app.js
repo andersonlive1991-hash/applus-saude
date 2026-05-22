@@ -1755,7 +1755,6 @@ function fecharDropdown() {
 }
 
 function trocarParaPerfil(id, nome, tipo, idPessoal) {
-  fecharDropdown();
   APP.membroId = id;
   APP.membroNome = nome;
   APP.membroTipo = tipo;
