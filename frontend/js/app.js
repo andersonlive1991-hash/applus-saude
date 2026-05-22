@@ -3323,3 +3323,21 @@ async function carregarStreak() {
 
 
 
+
+function abrirPortal(url) {
+  const container = document.getElementById('portal-iframe-container');
+  const iframe = document.getElementById('portal-iframe');
+  if (!container || !iframe) { window.location.href = url; return; }
+  iframe.src = url;
+  container.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function fecharPortalIframe() {
+  const container = document.getElementById('portal-iframe-container');
+  const iframe = document.getElementById('portal-iframe');
+  if (!container || !iframe) return;
+  container.style.display = 'none';
+  iframe.src = '';
+  document.body.style.overflow = '';
+}
