@@ -1989,7 +1989,10 @@ document.addEventListener('keydown', e => {
 async function atualizarDropdown() {
   try {
     const membros = await api("GET", `/api/membros/familia/${APP.familiaId}`);
-    const ehCuidador = APP.membroTipo === "cuidador";
+    // Verificar tipo original para nao prender admin que trocou para cuidador
+    const perfilOriginal = JSON.parse(localStorage.getItem('applus_perfil_original') || 'null');
+    const tipoReal = perfilOriginal ? perfilOriginal.membroTipo : APP.membroTipo;
+    const ehCuidador = tipoReal === "cuidador";
     const membrosVisiveis = ehCuidador ? membros.filter(m => m.id == APP.membroId) : membros;
     let container = document.getElementById("perfis-header");
     if (!container) {
@@ -2020,6 +2023,15 @@ function fecharDropdown() {
 }
 
 function trocarParaPerfil(id, nome, tipo, idPessoal) {
+  // Se o perfil original ainda nao foi salvo, salvar agora
+  if (!localStorage.getItem('applus_perfil_original')) {
+    localStorage.setItem('applus_perfil_original', JSON.stringify({
+      membroId: APP.membroId,
+      membroNome: APP.membroNome,
+      membroTipo: APP.membroTipo,
+      idPessoal: APP.idPessoal
+    }));
+  }
   APP.membroId = id;
   APP.membroNome = nome;
   APP.membroTipo = tipo;
