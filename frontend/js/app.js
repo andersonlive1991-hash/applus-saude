@@ -2647,7 +2647,7 @@ async function iniciarMeuDia() {
   try {
     const perfil = await api('GET', '/api/perfil/' + APP.membroId);
     if (perfil && !perfil.erro) {
-      if (!perfil.meta_agua && !perfil.meta_refeicoes) {
+      if (!perfil.meta_justificativas) {
         try {
           const r = await api('POST', '/api/ia/gerar-metas', {
             membro_id: APP.membroId, familia_id: APP.familiaId
