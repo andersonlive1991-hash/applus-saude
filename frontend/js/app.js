@@ -1686,14 +1686,32 @@ async function executarExclusaoConfirmada() {
       sair();
     } else {
       await api('DELETE', '/api/membros/' + membroId);
-      alerta('Perfil de ' + nome + ' excluído com sucesso!');
       if (membroId == APP.membroId) {
-        sair();
+        const restantes = await api('GET', '/api/membros/familia/' + APP.familiaId);
+        if (restantes && restantes.length > 0) {
+          const outro = restantes[0];
+          APP.membroId = outro.id;
+          APP.membroNome = outro.nome;
+          APP.membroTipo = outro.tipo;
+          APP.idPessoal = outro.id_pessoal;
+          localStorage.removeItem('applus_perfil_original');
+          salvarSessaoMembro();
+          fecharModal('modal-confirmar-exclusao');
+          atualizarDropdown();
+          mostrarToast('Perfil de ' + nome + ' excluido!');
+          navegarPara('home');
+        } else {
+          sair();
+        }
       } else {
-        const membros = await api('GET', '/api/membros/familia/' + APP.familiaId);
-        const lista = document.getElementById('lista-excluir-perfis');
-        lista.innerHTML = membros.map(m => '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;border:1px solid #eee;border-radius:8px;margin-bottom:0.5rem"><div><strong>' + m.nome.split(' ')[0] + '</strong><span style="font-size:0.8rem;color:#999;margin-left:0.5rem">' + m.tipo + '</span></div><button onclick="confirmarExcluirMembro(' + m.id + ', \'' + m.nome.split(' ')[0] + '\')" style="background:#fff0f0;color:#e74c3c;border:1px solid #e74c3c;border-radius:6px;padding:0.3rem 0.7rem;cursor:pointer">Excluir</button></div>').join('');
-        abrirModal('modal-excluir-perfil');
+        const original = JSON.parse(localStorage.getItem('applus_perfil_original') || 'null');
+        if (original && original.membroId == membroId) {
+          localStorage.removeItem('applus_perfil_original');
+        }
+        fecharModal('modal-confirmar-exclusao');
+        atualizarDropdown();
+        mostrarToast('Perfil de ' + nome + ' excluido!');
+        navegarPara('mais');
       }
     }
   } catch(e) {
