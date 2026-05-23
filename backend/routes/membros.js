@@ -17,7 +17,13 @@ router.post('/', async (req, res) => {
       'INSERT INTO membros (familia_id, nome, tipo, relacao, id_pessoal) VALUES ($1,$2,$3,$4,$5) RETURNING *',
       [familia_id, nome, tipo, relacao, id_pessoal]
     );
-    res.json(result.rows[0]);
+    const membro = result.rows[0];
+    // Criar perfil vazio automaticamente para todo membro novo
+    await db.query(
+      'INSERT INTO perfil_idoso (membro_id) VALUES ($1) ON CONFLICT (membro_id) DO NOTHING',
+      [membro.id]
+    ).catch(() => {});
+    res.json(membro);
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }
