@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP+ Saúde — Babá</title>
+<link rel="manifest" href="/manifest.json">
+<script src="/socket.io/socket.io.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+body{background:#f0faf5;min-height:100vh;padding-bottom:80px;}
+.header{background:#1D9E75;color:#fff;padding:16px;position:sticky;top:0;z-index:100;}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.header-nome{font-size:16px;font-weight:600;}
+.header-sub{font-size:12px;opacity:0.85;}
+.baby-bar{background:rgba(255,255,255,0.18);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;}
+.baby-av{width:36px;height:36px;border-radius:50%;background:#fff;color:#1D9E75;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}
+.baby-info{flex:1;}
+.baby-nome{font-size:14px;font-weight:600;color:#fff;}
+.baby-ultima{font-size:11px;color:rgba(255,255,255,0.85);}
+.btn-checkin{background:#fff;color:#0F6E56;border:none;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-checkin.checkout{background:#ffecec;color:#c0392b;}
+.section{padding:12px 14px 4px;font-size:11px;font-weight:600;color:#0F6E56;text-transform:uppercase;letter-spacing:0.06em;}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 14px;}
+.quick-btn{background:#fff;border:1.5px solid #e0f0ea;border-radius:12px;padding:12px 4px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:all .15s;}
+.quick-btn:active{transform:scale(0.95);background:#e0f0ea;}
+.quick-ico{font-size:22px;}
+.quick-lbl{font-size:10px;color:#555;font-weight:500;}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 14px 8px;}
+.stat{background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #e0f0ea;}
+.stat-v{font-size:20px;font-weight:700;color:#1D9E75;}
+.stat-l{font-size:10px;color:#888;margin-top:2px;}
+.previsao-box{background:#fff;border-radius:12px;margin:0 14px 8px;padding:12px 14px;border:1px solid #b8e8d4;display:none;}
+.prev-title{font-size:12px;font-weight:600;color:#0F6E56;margin-bottom:8px;}
+.prev-row{display:flex;gap:8px;}
+.prev-item{flex:1;background:#f0faf5;border-radius:8px;padding:8px;text-align:center;}
+.prev-hora{font-size:16px;font-weight:700;color:#1D9E75;}
+.prev-tipo{font-size:10px;color:#666;}
+.prev-dica{font-size:11px;color:#555;margin-top:6px;font-style:italic;}
+.log-list{padding:0 14px;}
+.log-item{background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;border-left:3px solid #1D9E75;}
+.log-item.mamada{border-color:#3498db;}
+.log-item.fralda{border-color:#f39c12;}
+.log-item.sono{border-color:#9b59b6;}
+.log-item.humor{border-color:#e74c3c;}
+.log-item.marco{border-color:#e67e22;}
+.log-item.medicamento{border-color:#1abc9c;}
+.log-dot{width:8px;height:8px;border-radius:50%;background:#1D9E75;margin-top:4px;flex-shrink:0;}
+.log-content{flex:1;}
+.log-titulo{font-size:13px;font-weight:600;color:#222;}
+.log-detalhe{font-size:12px;color:#666;margin-top:2px;}
+.log-hora{font-size:11px;color:#999;flex-shrink:0;}
+.log-foto{width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+.fab{position:fixed;bottom:90px;right:16px;width:56px;height:56px;border-radius:50%;background:#1D9E75;color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(29,158,117,0.4);}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e0f0ea;display:flex;padding:6px 0 10px;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px;}
+.nav-ico{font-size:22px;color:#aaa;}
+.nav-ico.active{color:#1D9E75;}
+.nav-lbl{font-size:10px;color:#aaa;}
+.nav-lbl.active{color:#1D9E75;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:16px;color:#222;}
+.modal-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+.modal-opt{background:#f8f8f8;border:1.5px solid #eee;border-radius:12px;padding:14px;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:#333;}
+.modal-opt:active{background:#e0f0ea;border-color:#1D9E75;}
+.modal-opt-ico{font-size:22px;}
+.form-group{margin-bottom:12px;}
+.form-label{font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block;}
+.form-input{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;background:#fff;}
+.form-input:focus{outline:none;border-color:#1D9E75;}
+.btn-salvar{width:100%;background:#1D9E75;color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;}
+.btn-cancelar{width:100%;background:#f0f0f0;color:#666;border:none;padding:12px;border-radius:12px;font-size:14px;cursor:pointer;}
+.humor-opts{display:flex;gap:8px;justify-content:center;margin:8px 0;}
+.humor-opt{font-size:28px;cursor:pointer;padding:6px;border-radius:8px;border:2px solid transparent;}
+.humor-opt.sel{border-color:#1D9E75;background:#e0f0ea;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.instrucoes-box{background:#fff;border-radius:12px;margin:0 14px;padding:14px;border:1px solid #e0f0ea;}
+.instrucoes-texto{font-size:13px;color:#444;line-height:1.6;white-space:pre-wrap;}
+.instrucoes-vazio{color:#aaa;font-size:13px;font-style:italic;}
+.btn-editar{background:#e0f0ea;color:#0F6E56;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px;}
+.estoque-list{padding:0 14px;}
+.estoque-item{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;border:1px solid #e0f0ea;}
+.estoque-nome{flex:1;font-size:14px;font-weight:500;color:#222;}
+.estoque-qtd{font-size:14px;font-weight:700;color:#1D9E75;}
+.estoque-alerta{color:#e74c3c;}
+.estoque-ctrl{display:flex;align-items:center;gap:6px;}
+.estoque-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid #e0f0ea;background:#f8f8f8;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.marcos-list{padding:0 14px;}
+.marco-item{background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid #e67e22;}
+.marco-desc{font-size:14px;font-weight:500;color:#222;}
+.marco-data{font-size:11px;color:#999;margin-top:3px;}
+.marco-foto{width:100%;border-radius:8px;margin-top:8px;max-height:150px;object-fit:cover;}
+.aval-list{padding:0 14px;}
+.aval-item{background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #e0f0ea;}
+.aval-estrelas{color:#f39c12;font-size:16px;}
+.aval-coment{font-size:13px;color:#444;margin-top:4px;}
+.aval-data{font-size:11px;color:#999;margin-top:4px;}
+.video-overlay{display:none;position:fixed;inset:0;background:#000;z-index:300;flex-direction:column;}
+.video-overlay.open{display:flex;}
+.video-remote{flex:1;width:100%;object-fit:cover;}
+.video-local{position:absolute;top:16px;right:16px;width:100px;height:140px;border-radius:12px;object-fit:cover;border:2px solid #fff;}
+.video-controls{display:flex;justify-content:center;gap:20px;padding:20px;background:#111;}
+.video-btn{width:56px;height:56px;border-radius:50%;border:none;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.btn-encerrar{background:#e74c3c;color:#fff;}
+.btn-mute{background:#333;color:#fff;}
+.incoming-call{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.incoming-call.open{display:flex;}
+.incoming-titulo{color:#fff;font-size:18px;font-weight:600;}
+.incoming-sub{color:rgba(255,255,255,0.7);font-size:14px;}
+.incoming-btns{display:flex;gap:24px;margin-top:8px;}
+.btn-atender{background:#1D9E75;color:#fff;border:none;width:64px;height:64px;border-radius:50%;font-size:24px;cursor:pointer;}
+.btn-rejeitar{background:#e74c3c;color:#fff;border:none;width:64px;height:64px;border-radius:50%;font-size:24px;cursor:pointer;}
+.login-box{max-width:340px;margin:60px auto;background:#fff;border-radius:16px;padding:28px;box-shadow:0 2px 16px rgba(0,0,0,0.08);}
+.login-logo{text-align:center;font-size:32px;margin-bottom:8px;}
+.login-titulo{text-align:center;font-size:18px;font-weight:700;color:#1D9E75;margin-bottom:4px;}
+.login-sub{text-align:center;font-size:13px;color:#888;margin-bottom:20px;}
+.notif-bar{background:#1D9E75;color:#fff;padding:10px 14px;font-size:13px;border-radius:10px;margin:8px 14px;display:none;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="tela-login">
+  <div class="login-box">
+    <div class="login-logo">👶</div>
+    <div class="login-titulo">AP+ Saúde — Babá</div>
+    <div class="login-sub">Entre com seu ID pessoal</div>
+    <div class="form-group">
+      <label class="form-label">Seu ID pessoal</label>
+      <input class="form-input" id="login-id" placeholder="Ex: CAR-XY123" style="text-transform:uppercase">
+    </div>
+    <button class="btn-salvar" onclick="fazerLogin()">Entrar</button>
+    <div id="login-erro" style="color:#e74c3c;font-size:13px;text-align:center;margin-top:8px;display:none;"></div>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="app" style="display:none;">
+
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-nome" id="h-nome">Babá</div>
+        <div class="header-sub" id="h-familia">Família</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="abrirVideoInicio()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 10px;border-radius:20px;font-size:12px;cursor:pointer;">📹 Vídeo</button>
+      </div>
+    </div>
+    <div class="baby-bar">
+      <div class="baby-av" id="h-baby-av">B</div>
+      <div class="baby-info">
+        <div class="baby-nome" id="h-baby-nome">Bebê</div>
+        <div class="baby-ultima" id="h-ultima">Carregando...</div>
+      </div>
+      <button class="btn-checkin" id="btn-checkin" onclick="toggleCheckin()">Check-in</button>
+    </div>
+  </div>
+
+  <div id="notif-bar" class="notif-bar"></div>
+
+  <!-- TABS -->
+  <div style="display:flex;background:#fff;border-bottom:1px solid #e0f0ea;position:sticky;top:110px;z-index:50;">
+    <button onclick="showTab('hoje')" id="tab-btn-hoje" style="flex:1;padding:10px;border:none;background:none;font-size:12px;font-weight:600;color:#1D9E75;border-bottom:2px solid #1D9E75;cursor:pointer;">Hoje</button>
+    <button onclick="showTab('instrucoes')" id="tab-btn-instrucoes" style="flex:1;padding:10px;border:none;background:none;font-size:12px;color:#aaa;cursor:pointer;">Instruções</button>
+    <button onclick="showTab('marcos')" id="tab-btn-marcos" style="flex:1;padding:10px;border:none;background:none;font-size:12px;color:#aaa;cursor:pointer;">Marcos</button>
+    <button onclick="showTab('estoque')" id="tab-btn-estoque" style="flex:1;padding:10px;border:none;background:none;font-size:12px;color:#aaa;cursor:pointer;">Estoque</button>
+    <button onclick="showTab('avaliacoes')" id="tab-btn-avaliacoes" style="flex:1;padding:10px;border:none;background:none;font-size:12px;color:#aaa;cursor:pointer;">Avaliações</button>
+  </div>
+
+  <!-- TAB HOJE -->
+  <div id="tab-hoje" class="tab-content active">
+    <div class="stats-row">
+      <div class="stat"><div class="stat-v" id="s-mamadas">0</div><div class="stat-l">Mamadas</div></div>
+      <div class="stat"><div class="stat-v" id="s-fraldas">0</div><div class="stat-l">Fraldas</div></div>
+      <div class="stat"><div class="stat-v" id="s-sono">0</div><div class="stat-l">Sonos</div></div>
+    </div>
+    <div class="previsao-box" id="previsao-box">
+      <div class="prev-title">🤖 Previsão IA</div>
+      <div class="prev-row">
+        <div class="prev-item"><div class="prev-hora" id="prev-mamada">--:--</div><div class="prev-tipo">Próx. mamada</div></div>
+        <div class="prev-item"><div class="prev-hora" id="prev-sono">--:--</div><div class="prev-tipo">Próx. sono</div></div>
+      </div>
+      <div class="prev-dica" id="prev-dica"></div>
+    </div>
+    <div class="quick-grid">
+      <div class="quick-btn" onclick="abrirModal('mamada')"><div class="quick-ico">🍼</div><div class="quick-lbl">Mamada</div></div>
+      <div class="quick-btn" onclick="abrirModal('fralda')"><div class="quick-ico">🧷</div><div class="quick-lbl">Fralda</div></div>
+      <div class="quick-btn" onclick="abrirModal('sono')"><div class="quick-ico">😴</div><div class="quick-lbl">Sono</div></div>
+      <div class="quick-btn" onclick="abrirModal('humor')"><div class="quick-ico">😊</div><div class="quick-lbl">Humor</div></div>
+      <div class="quick-btn" onclick="abrirModal('marco')"><div class="quick-ico">⭐</div><div class="quick-lbl">Marco</div></div>
+      <div class="quick-btn" onclick="abrirModal('medicamento')"><div class="quick-ico">💊</div><div class="quick-lbl">Remédio</div></div>
+      <div class="quick-btn" onclick="abrirModal('foto')"><div class="quick-ico">📷</div><div class="quick-lbl">Foto</div></div>
+      <div class="quick-btn" onclick="abrirModal('atividade')"><div class="quick-ico">🎮</div><div class="quick-lbl">Atividade</div></div>
+    </div>
+    <div class="section">Diário de hoje</div>
+    <div class="log-list" id="log-list"><div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">Nenhum registro ainda hoje</div></div>
+  </div>
+
+  <!-- TAB INSTRUÇÕES -->
+  <div id="tab-instrucoes" class="tab-content">
+    <div style="padding:12px 14px;">
+      <div class="instrucoes-box">
+        <div class="form-label" style="margin-bottom:6px;">📋 Instruções da família</div>
+        <div id="instrucoes-view">
+          <div class="instrucoes-texto" id="instrucoes-texto"><span class="instrucoes-vazio">Nenhuma instrução cadastrada.</span></div>
+          <button class="btn-editar" onclick="editarInstrucoes()">✏️ Editar</button>
+        </div>
+        <div id="instrucoes-edit" style="display:none;">
+          <textarea class="form-input" id="instrucoes-input" rows="8" placeholder="Ex: Fraldas no armário azul. Alergia a morango. Pediatra: Dr. Silva 21 99999-0000. Horário do soninho: 14h."></textarea>
+          <button class="btn-salvar" style="margin-top:10px;" onclick="salvarInstrucoes()">Salvar</button>
+          <button class="btn-cancelar" style="margin-top:6px;" onclick="cancelarInstrucoes()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB MARCOS -->
+  <div id="tab-marcos" class="tab-content">
+    <div style="padding:12px 14px 4px;display:flex;justify-content:space-between;align-items:center;">
+      <span class="section" style="padding:0;">Marcos do bebê</span>
+      <button onclick="abrirModal('marco')" style="background:#1D9E75;color:#fff;border:none;padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">+ Novo</button>
+    </div>
+    <div class="marcos-list" id="marcos-list"><div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">Nenhum marco registrado</div></div>
+  </div>
+
+  <!-- TAB ESTOQUE -->
+  <div id="tab-estoque" class="tab-content">
+    <div style="padding:12px 14px 4px;display:flex;justify-content:space-between;align-items:center;">
+      <span class="section" style="padding:0;">Estoque</span>
+      <button onclick="abrirModal('estoque-novo')" style="background:#1D9E75;color:#fff;border:none;padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">+ Item</button>
+    </div>
+    <div class="estoque-list" id="estoque-list"><div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">Nenhum item no estoque</div></div>
+  </div>
+
+  <!-- TAB AVALIAÇÕES -->
+  <div id="tab-avaliacoes" class="tab-content">
+    <div style="padding:12px 14px;">
+      <div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e0f0ea;margin-bottom:12px;">
+        <div class="form-label">Avaliar dia de hoje</div>
+        <div class="humor-opts" id="aval-estrelas-opts">
+          <span onclick="selEstrela(1)" class="humor-opt" data-v="1">⭐</span>
+          <span onclick="selEstrela(2)" class="humor-opt" data-v="2">⭐⭐</span>
+          <span onclick="selEstrela(3)" class="humor-opt" data-v="3">⭐⭐⭐</span>
+          <span onclick="selEstrela(4)" class="humor-opt" data-v="4">⭐⭐⭐⭐</span>
+          <span onclick="selEstrela(5)" class="humor-opt" data-v="5">⭐⭐⭐⭐⭐</span>
+        </div>
+        <textarea class="form-input" id="aval-comentario" rows="3" placeholder="Comentário sobre o dia..."></textarea>
+        <button class="btn-salvar" style="margin-top:10px;" onclick="salvarAvaliacao()">Enviar avaliação</button>
+      </div>
+      <div class="aval-list" id="aval-list"><div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">Nenhuma avaliação ainda</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab-btn" onclick="abrirModal('menu')" style="display:none;">+</button>
+
+<!-- MODAL REGISTRO -->
+<div class="modal-bg" id="modal-registro">
+  <div class="modal">
+    <div class="modal-title" id="modal-titulo">Registrar</div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- VIDEOCHAMADA -->
+<div class="video-overlay" id="video-overlay">
+  <video id="video-remoto" class="video-remote" autoplay playsinline></video>
+  <video id="video-local" class="video-local" autoplay playsinline muted></video>
+  <div class="video-controls">
+    <button class="video-btn btn-mute" onclick="toggleMute()" id="btn-mute">🎤</button>
+    <button class="video-btn btn-encerrar" onclick="encerrarVideo()">📵</button>
+  </div>
+</div>
+
+<!-- CHAMADA RECEBENDO -->
+<div class="incoming-call" id="incoming-call">
+  <div style="font-size:48px;">📞</div>
+  <div class="incoming-titulo">Chamada de vídeo</div>
+  <div class="incoming-sub" id="incoming-sub">Os pais querem falar com você</div>
+  <div class="incoming-btns">
+    <button class="btn-atender" onclick="atenderVideo()">✅</button>
+    <button class="btn-rejeitar" onclick="rejeitarVideo()">❌</button>
+  </div>
+</div>
+
+<script>
+const BASE = '';
+let BABA = null, FAMILIA_ID = null, CHECKIN_ID = null;
+let socket = null, pc = null, streamLocal = null, mutado = false;
+let humorSel = '', estrelaSel = 0, fotoBase64 = '';
+let currentTab = 'hoje';
+
+// ── LOGIN ──
+async function fazerLogin() {
+  const id = document.getElementById('login-id').value.trim().toUpperCase();
+  if (!id) return;
+  try {
+    const r = await fetch(`/api/membros/id/${id}`);
+    if (!r.ok) throw new Error('ID não encontrado');
+    const m = await r.json();
+    if (m.tipo !== 'baba' && m.tipo !== 'cuidador') {
+      document.getElementById('login-erro').textContent = 'Este ID não é de uma babá.';
+      document.getElementById('login-erro').style.display = 'block';
+      return;
+    }
+    BABA = m;
+    FAMILIA_ID = m.familia_id;
+    localStorage.setItem('baba_id', id);
+    iniciarApp();
+  } catch(e) {
+    document.getElementById('login-erro').textContent = e.message;
+    document.getElementById('login-erro').style.display = 'block';
+  }
+}
+
+async function iniciarApp() {
+  document.getElementById('tela-login').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('fab-btn').style.display = 'flex';
+  document.getElementById('h-nome').textContent = 'Olá, ' + BABA.nome.split(' ')[0];
+  document.getElementById('h-familia').textContent = 'Babá · ' + (BABA.nome_familia || 'Família');
+  const av = BABA.nome.substring(0,1).toUpperCase();
+  document.getElementById('h-baby-av').textContent = av;
+  document.getElementById('h-baby-nome').textContent = BABA.nome_familia ? 'Família ' + BABA.nome_familia : 'Bebê';
+  conectarSocket();
+  await verificarCheckin();
+  await carregarRegistros();
+  await carregarInstrucoes();
+  await carregarMarcos();
+  await carregarEstoque();
+  await carregarAvaliacoes();
+  buscarPrevisaoIA();
+}
+
+// ── SOCKET ──
+function conectarSocket() {
+  socket = io();
+  socket.emit('entrar-familia', String(FAMILIA_ID));
+  socket.on('baba-video-recebendo', async (data) => {
+    pendingOffer = data.offer;
+    document.getElementById('incoming-call').classList.add('open');
+  });
+  socket.on('baba-video-answer', async (data) => {
+    if (pc) await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+  });
+  socket.on('baba-video-ice', async (data) => {
+    if (pc && data.candidate) await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+  });
+  socket.on('baba-video-encerrado', () => fecharVideo());
+}
+
+// ── CHECKIN ──
+async function verificarCheckin() {
+  try {
+    const r = await fetch(`/api/baba/checkin-ativo/${FAMILIA_ID}/${BABA.id}`);
+    const d = await r.json();
+    if (d) {
+      CHECKIN_ID = d.id;
+      const btn = document.getElementById('btn-checkin');
+      btn.textContent = 'Check-out';
+      btn.classList.add('checkout');
+      const h = new Date(d.checkin_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      document.getElementById('h-ultima').textContent = 'Check-in às ' + h;
+    } else {
+      document.getElementById('btn-checkin').textContent = 'Check-in';
+      document.getElementById('h-ultima').textContent = 'Sem check-in hoje';
+    }
+  } catch(e) {}
+}
+
+async function toggleCheckin() {
+  const btn = document.getElementById('btn-checkin');
+  if (!CHECKIN_ID) {
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const gps = pos.coords.latitude + ',' + pos.coords.longitude;
+      const r = await fetch('/api/baba/checkin', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ familia_id: FAMILIA_ID, baba_membro_id: BABA.id, gps })
+      });
+      const d = await r.json();
+      CHECKIN_ID = d.id;
+      btn.textContent = 'Check-out';
+      btn.classList.add('checkout');
+      const h = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      document.getElementById('h-ultima').textContent = 'Check-in às ' + h;
+      socket.emit('baba-checkin', { familiaId: FAMILIA_ID, tipo: 'checkin', nome: BABA.nome, hora: h });
+      mostrarNotif('✅ Check-in registrado às ' + h);
+    }, async () => {
+      const r = await fetch('/api/baba/checkin', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ familia_id: FAMILIA_ID, baba_membro_id: BABA.id, gps: null })
+      });
+      const d = await r.json();
+      CHECKIN_ID = d.id;
+      btn.textContent = 'Check-out';
+      btn.classList.add('checkout');
+    });
+  } else {
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const gps = pos.coords.latitude + ',' + pos.coords.longitude;
+      await fetch(`/api/baba/checkout/${CHECKIN_ID}`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ gps })
+      });
+      CHECKIN_ID = null;
+      btn.textContent = 'Check-in';
+      btn.classList.remove('checkout');
+      document.getElementById('h-ultima').textContent = 'Check-out registrado';
+      socket.emit('baba-checkin', { familiaId: FAMILIA_ID, tipo: 'checkout', nome: BABA.nome });
+      mostrarNotif('👋 Check-out registrado');
+    }, async () => {
+      await fetch(`/api/baba/checkout/${CHECKIN_ID}`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ gps: null })
+      });
+      CHECKIN_ID = null;
+      btn.textContent = 'Check-in';
+      btn.classList.remove('checkout');
+    });
+  }
+}
+
+// ── REGISTROS ──
+async function carregarRegistros() {
+  try {
+    const r = await fetch(`/api/baba/registros/${FAMILIA_ID}`);
+    const dados = await r.json();
+    renderRegistros(dados);
+    atualizarStats(dados);
+  } catch(e) {}
+}
+
+function renderRegistros(dados) {
+  const el = document.getElementById('log-list');
+  if (!dados.length) { el.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">Nenhum registro ainda hoje</div>'; return; }
+  el.innerHTML = dados.map(d => {
+    const h = new Date(d.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const tipos = {mamada:'🍼',fralda:'🧷',sono:'😴',humor:'😊',marco:'⭐',medicamento:'💊',foto:'📷',atividade:'🎮'};
+    const ico = tipos[d.tipo] || '📝';
+    const fotoHtml = d.foto ? `<img src="${d.foto}" class="log-foto">` : '';
+    return `<div class="log-item ${d.tipo}">
+      <div style="font-size:20px;margin-top:2px;">${ico}</div>
+      <div class="log-content">
+        <div class="log-titulo">${nomesTipo[d.tipo]||d.tipo}${d.quantidade?' — '+d.quantidade:''}</div>
+        <div class="log-detalhe">${d.detalhe||''}${d.humor?' Humor: '+d.humor:''}</div>
+        ${fotoHtml}
+      </div>
+      <div class="log-hora">${h}</div>
+    </div>`;
+  }).join('');
+}
+
+const nomesTipo = {mamada:'Mamada',fralda:'Fralda',sono:'Sono',humor:'Humor',marco:'Marco',medicamento:'Medicamento',foto:'Foto',atividade:'Atividade'};
+
+function atualizarStats(dados) {
+  document.getElementById('s-mamadas').textContent = dados.filter(d=>d.tipo==='mamada').length;
+  document.getElementById('s-fraldas').textContent = dados.filter(d=>d.tipo==='fralda').length;
+  document.getElementById('s-sono').textContent = dados.filter(d=>d.tipo==='sono').length;
+}
+
+async function salvarRegistro(tipo, detalhe, quantidade, humor, foto) {
+  try {
+    const r = await fetch('/api/baba/registros', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ familia_id: FAMILIA_ID, baba_membro_id: BABA.id, bebe_nome: '', tipo, detalhe, quantidade, humor, foto })
+    });
+    const d = await r.json();
+    socket.emit('baba-registro', { familiaId: FAMILIA_ID, registro: d, babaNome: BABA.nome });
+    await carregarRegistros();
+    buscarPrevisaoIA();
+    fecharModal();
+    mostrarNotif('✅ ' + (nomesTipo[tipo]||tipo) + ' registrado!');
+  } catch(e) { alert('Erro ao salvar: ' + e.message); }
+}
+
+// ── MODAL ──
+function abrirModal(tipo) {
+  const modal = document.getElementById('modal-registro');
+  const body = document.getElementById('modal-body');
+  humorSel = ''; fotoBase64 = '';
+  const titulos = {mamada:'🍼 Mamada',fralda:'🧷 Fralda',sono:'😴 Sono',humor:'😊 Humor do bebê',marco:'⭐ Marco',medicamento:'💊 Medicamento',foto:'📷 Foto',atividade:'🎮 Atividade','estoque-novo':'📦 Novo item no estoque'};
+  document.getElementById('modal-titulo').textContent = titulos[tipo] || 'Registrar';
+
+  if (tipo === 'mamada') {
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Quantidade (ml)</label><input class="form-input" id="f-qtd" type="number" placeholder="Ex: 150"></div>
+      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="f-tipo-mama"><option>Mamadeira</option><option>Amamentação</option><option>Leite materno</option><option>Fórmula</option></select></div>
+      <div class="form-group"><label class="form-label">Observação</label><input class="form-input" id="f-obs" placeholder="Opcional"></div>
+      <button class="btn-salvar" onclick="salvarRegistro('mamada',document.getElementById('f-tipo-mama').value+' — '+(document.getElementById('f-obs').value||''),document.getElementById('f-qtd').value+'ml','','')">Salvar</button>
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>`;
+  } else if (tipo === 'fralda') {
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="f-fralda"><option>Xixi</option><option>Cocô</option><option>Xixi e cocô</option></select></div>
+      <div class="form-group"><label class="form-label">Observação</label><input class="form-input" id="f-obs" placeholder="Normal, pastoso..."></div>
+      <button class="btn-salvar" onclick="salvarRegistro('fralda',document.getElementById('f-fralda').value+(document.getElementById('f-obs').value?' — '+document.getElementById('f-obs').value:''),'','','')">Salvar</button>
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>`;
+  } else if (tipo === 'sono') {
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Duração (minutos)</label><input class="form-input" id="f-dur" type="number" placeholder="Ex: 90"></div>
+      <div class="form-group"><label class="form-label">Observação</label><input class="form-input" id="f-obs" placeholder="Acordou tranquilo..."></div>
+      <button class="btn-salvar" onclick="salvarRegistro('sono',document.getElementById('f-obs').value,document.getElementById('f-dur').value+'min','','')">Salvar</button>
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>`;
+  } else if (tipo === 'humor') {
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Como está o bebê?</label>
+      <div class="humor-opts">
+        <span class="humor-opt" onclick="selHumor('Muito feliz',this)">😄</span>
+        <span class="humor-opt" onclick="selHumor('Feliz',this)">😊</span>
+        <span class="humor-opt" onclick="selHumor('Tranquilo',this)">😐</span>
+        <span class="humor-opt" onclick="selHumor('Agitado',this)">😟</span>
+        <span class="humor-opt" onclick="selHumor('Choroso',this)">😢</span>
+        <span class="humor-opt" onclick="selHumor('Sonolento',this)">😴</span>
+      </div></div>
+      <div class="form-group"><label class="form-label">Observação</label><input class="form-input" id="f-obs" placeholder="Opcional"></div>
+      <button class="btn-salvar" onclick="salvarRegistro('humor',document.getElementById('f-obs').value,'',humorSel,'')">Salvar</button>
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>`;
+  } else if (tipo === 'marco') {
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Descrição do marco</label><input class="form-input" id="f-marco" placeholder="Ex: Primeiro sorriso! Sentou sozinho!"></div>
+      <div class="form-group"><label class="form-label">Foto (opcional)</label><input type="file" accept="image/*" class="form-input" id="f-foto" onchange="lerFoto(this)"></div>
+      <button class="btn-salvar" onclick="salvarMarco()">Salvar</button>
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>`;
+  } else if (tipo === 'medicamento') {
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Medicamento</label><input class="form-input" id="f-med" placeholder="Nome do remédio"></div>
+      <div class="form-group"><label class="form-label">Dose</label><input class="form-input" id="f-dose" placeholder="Ex: 2ml, 1 comprimido"></div>
+      <button class="btn-salvar" onclick="salvarRegistro('medicamento',document.getElementById('f-med').value,document.getElementById('f-dose').value,'','')">Salvar</button>
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>`;
+  } else if (tipo === 'foto') {
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Foto do bebê</label><input type="file" accept="image/*" class="form-input" id="f-foto" onchange="lerFoto(this)"></div>
+      <div class="form-group"><label class="form-label">Legenda</label><input class="form-input" id="f-obs" placeholder="Opcional"></div>
+      <button class="btn-salvar" onclick="salvarRegistro('foto',document.getElementById('f-obs').value,'','',fotoBase64)">Salvar</button>
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>`;
+  } else if (tipo === 'atividade') {
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Atividade</label><input class="form-input" id="f-ativ" placeholder="Ex: Brincou com chocalho, banho, passeio"></div>
+      <button class="btn-salvar" onclick="salvarRegistro('atividade',document.getElementById('f-ativ').value,'','','')">Salvar</button>
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>`;
+  } else if (tipo === 'estoque-novo') {
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Item</label><select class="form-input" id="f-item"><option>Fraldas</option><option>Leite em pó</option><option>Lenços umedecidos</option><option>Pomada</option><option>Outro</option></select></div>
+      <div class="form-group"><label class="form-label">Quantidade atual</label><input class="form-input" id="f-qtd" type="number" placeholder="Ex: 30"></div>
+      <div class="form-group"><label class="form-label">Alertar quando restar</label><input class="form-input" id="f-alerta" type="number" value="5"></div>
+      <button class="btn-salvar" onclick="salvarEstoqueNovo()">Salvar</button>
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>`;
+  }
+  modal.classList.add('open');
+}
+
+function fecharModal() { document.getElementById('modal-registro').classList.remove('open'); }
+function selHumor(v, el) { humorSel = v; document.querySelectorAll('.humor-opt').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); }
+function selEstrela(v) { estrelaSel = v; document.querySelectorAll('#aval-estrelas-opts .humor-opt').forEach((e,i)=>{ i<v?e.classList.add('sel'):e.classList.remove('sel'); }); }
+function lerFoto(input) { const f=input.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>fotoBase64=e.target.result; r.readAsDataURL(f); }
+
+// ── MARCOS ──
+async function salvarMarco() {
+  const desc = document.getElementById('f-marco').value.trim();
+  if (!desc) return alert('Descreva o marco!');
+  await fetch('/api/baba/marcos', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ familia_id: FAMILIA_ID, descricao: desc, foto: fotoBase64 })
+  });
+  await salvarRegistro('marco', desc, '', '', fotoBase64);
+  socket.emit('baba-marco', { familiaId: FAMILIA_ID, descricao: desc, babaNome: BABA.nome });
+  await carregarMarcos();
+}
+
+async function carregarMarcos() {
+  const r = await fetch(`/api/baba/marcos/${FAMILIA_ID}`);
+  const dados = await r.json();
+  const el = document.getElementById('marcos-list');
+  if (!dados.length) { el.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">Nenhum marco registrado</div>'; return; }
+  el.innerHTML = dados.map(d => {
+    const data = new Date(d.criado_em).toLocaleDateString('pt-BR');
+    const fotoHtml = d.foto ? `<img src="${d.foto}" class="marco-foto">` : '';
+    return `<div class="marco-item"><div class="marco-desc">⭐ ${d.descricao}</div><div class="marco-data">${data}</div>${fotoHtml}</div>`;
+  }).join('');
+}
+
+// ── INSTRUÇÕES ──
+async function carregarInstrucoes() {
+  const r = await fetch(`/api/baba/instrucoes/${FAMILIA_ID}`);
+  const d = await r.json();
+  const el = document.getElementById('instrucoes-texto');
+  el.innerHTML = d.texto ? d.texto.replace(/</g,'&lt;') : '<span class="instrucoes-vazio">Nenhuma instrução cadastrada.</span>';
+  document.getElementById('instrucoes-input').value = d.texto || '';
+}
+function editarInstrucoes() { document.getElementById('instrucoes-view').style.display='none'; document.getElementById('instrucoes-edit').style.display='block'; }
+function cancelarInstrucoes() { document.getElementById('instrucoes-view').style.display='block'; document.getElementById('instrucoes-edit').style.display='none'; }
+async function salvarInstrucoes() {
+  const texto = document.getElementById('instrucoes-input').value;
+  await fetch('/api/baba/instrucoes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ familia_id: FAMILIA_ID, texto }) });
+  await carregarInstrucoes();
+  cancelarInstrucoes();
+  mostrarNotif('✅ Instruções salvas!');
+}
+
+// ── ESTOQUE ──
+async function carregarEstoque() {
+  const r = await fetch(`/api/baba/estoque/${FAMILIA_ID}`);
+  const dados = await r.json();
+  const el = document.getElementById('estoque-list');
+  if (!dados.length) { el.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">Nenhum item cadastrado</div>'; return; }
+  el.innerHTML = dados.map(d => {
+    const alerta = d.quantidade <= d.alerta_em;
+    return `<div class="estoque-item">
+      <div class="estoque-nome">${d.item}</div>
+      <div class="estoque-ctrl">
+        <button class="estoque-btn" onclick="ajustarEstoque(${d.id},${d.quantidade-1})">−</button>
+        <span class="estoque-qtd ${alerta?'estoque-alerta':''}">${d.quantidade}${alerta?' ⚠️':''}</span>
+        <button class="estoque-btn" onclick="ajustarEstoque(${d.id},${d.quantidade+1})">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function ajustarEstoque(id, qtd) {
+  if (qtd < 0) return;
+  await fetch(`/api/baba/estoque/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ quantidade: qtd }) });
+  await carregarEstoque();
+}
+async function salvarEstoqueNovo() {
+  const item = document.getElementById('f-item').value;
+  const qtd = parseInt(document.getElementById('f-qtd').value) || 10;
+  const alerta = parseInt(document.getElementById('f-alerta').value) || 5;
+  await fetch('/api/baba/estoque', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ familia_id: FAMILIA_ID, item, quantidade: qtd, alerta_em: alerta }) });
+  await carregarEstoque();
+  fecharModal();
+  mostrarNotif('✅ Item adicionado ao estoque!');
+}
+
+// ── AVALIAÇÕES ──
+async function carregarAvaliacoes() {
+  const r = await fetch(`/api/baba/avaliacoes/${BABA.id}`);
+  const dados = await r.json();
+  const el = document.getElementById('aval-list');
+  if (!dados.length) { el.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">Nenhuma avaliação ainda</div>'; return; }
+  el.innerHTML = dados.map(d => `<div class="aval-item"><div class="aval-estrelas">${'⭐'.repeat(d.estrelas)}</div><div class="aval-coment">${d.comentario||''}</div><div class="aval-data">${d.data_fmt}</div></div>`).join('');
+}
+async function salvarAvaliacao() {
+  if (!estrelaSel) return alert('Selecione as estrelas!');
+  const comentario = document.getElementById('aval-comentario').value;
+  await fetch('/api/baba/avaliacoes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ familia_id: FAMILIA_ID, baba_membro_id: BABA.id, estrelas: estrelaSel, comentario }) });
+  await carregarAvaliacoes();
+  mostrarNotif('✅ Avaliação enviada!');
+}
+
+// ── PREVISÃO IA ──
+async function buscarPrevisaoIA() {
+  try {
+    const r = await fetch(`/api/baba/previsao/${FAMILIA_ID}`);
+    const d = await r.json();
+    if (d.previsao) {
+      document.getElementById('previsao-box').style.display = 'block';
+      document.getElementById('prev-mamada').textContent = d.previsao.proxima_mamada || '--:--';
+      document.getElementById('prev-sono').textContent = d.previsao.proximo_sono || '--:--';
+      document.getElementById('prev-dica').textContent = d.previsao.dica || '';
+    }
+  } catch(e) {}
+}
+
+// ── VÍDEO ──
+let pendingOffer = null;
+async function abrirVideoInicio() {
+  try {
+    streamLocal = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    document.getElementById('video-local').srcObject = streamLocal;
+    pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    streamLocal.getTracks().forEach(t => pc.addTrack(t, streamLocal));
+    pc.onicecandidate = e => { if (e.candidate) socket.emit('baba-video-ice', { familiaId: FAMILIA_ID, candidate: e.candidate }); };
+    pc.ontrack = e => { document.getElementById('video-remoto').srcObject = e.streams[0]; };
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    socket.emit('baba-video-chamar', { familiaId: FAMILIA_ID, offer, babaNome: BABA.nome });
+    document.getElementById('video-overlay').classList.add('open');
+  } catch(e) { alert('Erro ao iniciar vídeo: ' + e.message); }
+}
+async function atenderVideo() {
+  document.getElementById('incoming-call').classList.remove('open');
+  try {
+    streamLocal = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    document.getElementById('video-local').srcObject = streamLocal;
+    pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    streamLocal.getTracks().forEach(t => pc.addTrack(t, streamLocal));
+    pc.onicecandidate = e => { if (e.candidate) socket.emit('baba-video-ice', { familiaId: FAMILIA_ID, candidate: e.candidate }); };
+    pc.ontrack = e => { document.getElementById('video-remoto').srcObject = e.streams[0]; };
+    await pc.setRemoteDescription(new RTCSessionDescription(pendingOffer));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    socket.emit('baba-video-answer', { familiaId: FAMILIA_ID, answer });
+    document.getElementById('video-overlay').classList.add('open');
+  } catch(e) { alert('Erro ao atender: ' + e.message); }
+}
+function rejeitarVideo() { document.getElementById('incoming-call').classList.remove('open'); pendingOffer = null; }
+function encerrarVideo() { socket.emit('baba-video-encerrar', { familiaId: FAMILIA_ID }); fecharVideo(); }
+function fecharVideo() {
+  if (streamLocal) { streamLocal.getTracks().forEach(t => t.stop()); streamLocal = null; }
+  if (pc) { pc.close(); pc = null; }
+  document.getElementById('video-overlay').classList.remove('open');
+  document.getElementById('video-remoto').srcObject = null;
+  document.getElementById('video-local').srcObject = null;
+}
+function toggleMute() {
+  if (!streamLocal) return;
+  mutado = !mutado;
+  streamLocal.getAudioTracks().forEach(t => t.enabled = !mutado);
+  document.getElementById('btn-mute').textContent = mutado ? '🔇' : '🎤';
+}
+
+// ── TABS ──
+function showTab(t) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('[id^="tab-btn-"]').forEach(el => { el.style.color='#aaa'; el.style.borderBottom='none'; });
+  document.getElementById('tab-'+t).classList.add('active');
+  const btn = document.getElementById('tab-btn-'+t);
+  if (btn) { btn.style.color='#1D9E75'; btn.style.borderBottom='2px solid #1D9E75'; }
+  currentTab = t;
+}
+
+// ── NOTIF ──
+function mostrarNotif(msg) {
+  const el = document.getElementById('notif-bar');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display='none', 3000);
+}
+
+// ── INIT ──
+window.addEventListener('load', () => {
+  history.pushState({}, '');
+  window.addEventListener('popstate', () => { fecharModal(); history.pushState({}, ''); });
+  const savedId = localStorage.getItem('baba_id');
+  if (savedId) { document.getElementById('login-id').value = savedId; fazerLogin(); }
+});
+</script>
+</body>
+</html>

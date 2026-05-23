@@ -1,3 +1,11 @@
+function mostrarToast(msg, duracao) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;padding:12px 20px;border-radius:16px;z-index:9999;font-size:14px;font-weight:600;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.25);max-width:90vw;pointer-events:none;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.transition='opacity 0.5s'; t.style.opacity='0'; setTimeout(()=>t.remove(),500); }, duracao||3000);
+}
+
 // ── ESTADO GLOBAL ──
 const APP = {
   familiaId: null,
@@ -1203,6 +1211,27 @@ function conectarSocket() {
   APP.socket.on('alerta-emergencia', (data) => {
     mostrarAlertaEmergencia(data);
   });
+
+  APP.socket.on('baba-novo-registro', (data) => {
+    const tipos = {mamada:'🍼',fralda:'🧷',sono:'😴',humor:'😊',marco:'⭐',medicamento:'💊',foto:'📷',atividade:'🎮'};
+    const ico = tipos[data.registro.tipo] || '📝';
+    const nomes = {mamada:'Mamada',fralda:'Fralda',sono:'Sono',humor:'Humor',marco:'Marco',medicamento:'Medicamento',foto:'Foto',atividade:'Atividade'};
+    const nome = nomes[data.registro.tipo] || data.registro.tipo;
+    mostrarToast(ico + ' ' + (data.babaNome||'Babá') + ' registrou: ' + nome + (data.registro.quantidade?' — '+data.registro.quantidade:''));
+  });
+
+  APP.socket.on('baba-checkin-update', (data) => {
+    const msg = data.tipo === 'checkin' ? '✅ ' + (data.nome||'Babá') + ' fez check-in às ' + data.hora : '👋 ' + (data.nome||'Babá') + ' fez check-out';
+    mostrarToast(msg);
+  });
+
+  APP.socket.on('baba-novo-marco', (data) => {
+    mostrarToast('⭐ Marco registrado pela babá: ' + data.descricao);
+  });
+
+  APP.socket.on('baba-video-recebendo', (data) => {
+    mostrarToast('📹 Babá está iniciando videochamada...');
+  });
 }
 
 async function carregarChat() {
@@ -2067,6 +2096,7 @@ function avatarMembro(nome, tipo) {
     idoso: '🧓',
     crianca: '👶',
     conjuge: '💑',
+    baba: '👶',
     mae: '👩',
     pai: '👨',
     irmao: '👦',

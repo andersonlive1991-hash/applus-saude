@@ -130,6 +130,7 @@ app.use('/api/gastos', require('./routes/gastos'));
 app.use('/api/push', require('./routes/push'));
 app.use('/api/ia', require('./routes/ia'));
 app.use('/api/escala', require('./routes/escala'));
+app.use('/api/baba', require('./routes/baba'));
 app.use('/api/mente-sa', require('./routes/mente-sa'));
 const rateLimit = require('express-rate-limit');
 
@@ -265,6 +266,27 @@ io.on('connection', (socket) => {
   });
   socket.on('tea-comunicou', (data) => {
     io.to(String(data.familiaId)).emit('tea-comunicou', data);
+  });
+  socket.on('baba-registro', (data) => {
+    io.to(String(data.familiaId)).emit('baba-novo-registro', data);
+  });
+  socket.on('baba-checkin', (data) => {
+    io.to(String(data.familiaId)).emit('baba-checkin-update', data);
+  });
+  socket.on('baba-marco', (data) => {
+    io.to(String(data.familiaId)).emit('baba-novo-marco', data);
+  });
+  socket.on('baba-video-chamar', (data) => {
+    socket.to(String(data.familiaId)).emit('baba-video-recebendo', data);
+  });
+  socket.on('baba-video-answer', (data) => {
+    socket.to(String(data.familiaId)).emit('baba-video-answer', data);
+  });
+  socket.on('baba-video-ice', (data) => {
+    socket.to(String(data.familiaId)).emit('baba-video-ice', data);
+  });
+  socket.on('baba-video-encerrar', (data) => {
+    socket.to(String(data.familiaId)).emit('baba-video-encerrado');
   });
   socket.on('mensagem', (data) => {
     const sala = String(data.familiaId || data.familia_id);
