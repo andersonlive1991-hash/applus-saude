@@ -620,17 +620,10 @@ async function salvarPerfil() {
       tel_emergencia: document.getElementById('pf-tel').value.trim() || null
     };
     // Salvar foto se foi alterada
-    const inputFotoPerfil = document.getElementById('inp-foto-perfil');
-    if (inputFotoPerfil && inputFotoPerfil.files && inputFotoPerfil.files[0]) {
-      const fotoDataPerfil = await new Promise(function(resolve) {
-        const reader = new FileReader();
-        reader.onload = function(e) { resolve(e.target.result); };
-        reader.readAsDataURL(inputFotoPerfil.files[0]);
-      });
-      if (fotoDataPerfil) {
-        await api('PUT', '/api/membros/' + mem.id + '/foto', { foto: fotoDataPerfil });
-        atualizarDropdown();
-      }
+    if (_fotoPerfil) {
+      await api('PUT', '/api/membros/' + mem.id + '/foto', { foto: _fotoPerfil });
+      _fotoPerfil = null;
+      atualizarDropdown();
     }
 
     const resp = await fetch('/api/perfil', {
@@ -3426,10 +3419,13 @@ window.addEventListener('popstate', function(e) {
   }
 });
 
+let _fotoPerfil = null;
+
 function previewFotoPerfil(input) {
   if (!input.files || !input.files[0]) return;
   const reader = new FileReader();
   reader.onload = function(e) {
+    _fotoPerfil = e.target.result;
     const preview = document.getElementById('foto-perfil-preview');
     if (preview) {
       preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
