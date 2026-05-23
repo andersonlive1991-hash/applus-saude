@@ -2647,10 +2647,28 @@ async function iniciarMeuDia() {
   try {
     const perfil = await api('GET', '/api/perfil/' + APP.membroId);
     if (perfil && !perfil.erro) {
-      meudiaMetaAgua = perfil.meta_agua || 8;
-      meudiaMetaRefeicoes = perfil.meta_refeicoes || 3;
-      meudiaMetaSono = perfil.meta_sono || 8;
-      meudiaMetaAtividades = perfil.meta_atividades || 1;
+      if (!perfil.meta_agua && !perfil.meta_refeicoes) {
+        try {
+          const r = await api('POST', '/api/ia/gerar-metas', {
+            membro_id: APP.membroId, familia_id: APP.familiaId
+          });
+          if (r && r.metas) {
+            meudiaMetaAgua = r.metas.agua || 8;
+            meudiaMetaRefeicoes = r.metas.refeicoes || 4;
+            meudiaMetaSono = r.metas.sono || 8;
+            meudiaMetaAtividades = r.metas.atividades || 1;
+            alerta('🤖 Suas metas foram personalizadas pela IA com base no seu perfil!');
+          }
+        } catch(e) {
+          meudiaMetaAgua = 8; meudiaMetaRefeicoes = 4;
+          meudiaMetaSono = 8; meudiaMetaAtividades = 1;
+        }
+      } else {
+        meudiaMetaAgua = perfil.meta_agua || 8;
+        meudiaMetaRefeicoes = perfil.meta_refeicoes || 4;
+        meudiaMetaSono = perfil.meta_sono || 8;
+        meudiaMetaAtividades = perfil.meta_atividades || 1;
+      }
     }
   } catch(e) {}
 

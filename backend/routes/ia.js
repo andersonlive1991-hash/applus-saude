@@ -131,3 +131,92 @@ router.post('/resumo-forcar', async (req, res) => {
 });
 
 module.exports = router;
+
+// Gerar metas personalizadas com Gemini
+router.post('/gerar-metas', async (req, res) => {
+  const { membro_id, familia_id } = req.body;
+  try {
+    // Garantir colunas de meta existem
+    await db.query(`ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS meta_agua INTEGER`).catch(()=>{});
+    await db.query(`ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS meta_refeicoes INTEGER`).catch(()=>{});
+    await db.query(`ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS meta_sono NUMERIC`).catch(()=>{});
+    await db.query(`ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS meta_atividades INTEGER`).catch(()=>{});
+    await db.query(`ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS meta_justificativas TEXT`).catch(()=>{});
+
+    // Buscar perfil
+    const perfil = await db.query('SELECT * FROM perfil_idoso WHERE membro_id=$1', [membro_id]);
+    const p = perfil.rows[0] || {};
+
+    // Calcular idade
+    let idade = null;
+    if (p.data_nascimento) {
+      const nasc = new Date(p.data_nascimento);
+      idade = Math.floor((Date.now() - nasc) / (365.25 * 24 * 3600 * 1000));
+    }
+
+    // Buscar medicamentos
+    const meds = await db.query(
+      'SELECT nome, dosagem FROM medicamentos WHERE membro_id=$1 AND ativo=true',
+      [membro_id]
+    );
+    const medsTexto = meds.rows.length ? meds.rows.map(m => m.nome + (m.dosagem ? ' ' + m.dosagem : '')).join(', ') : 'nenhum';
+
+    // Buscar membro para pegar o tipo
+    const membro = await db.query('SELECT tipo, nome FROM membros WHERE id=$1', [membro_id]);
+    const tipo = membro.rows[0] ? membro.rows[0].tipo : 'adulto';
+    const nome = membro.rows[0] ? membro.rows[0].nome : 'usuario';
+
+    const prompt = `Voce e um especialista em saude preventiva. Analise o perfil abaixo e defina metas diarias saudaveis e personalizadas.
+
+PERFIL:
+- Nome: ${nome}
+- Tipo: ${tipo}
+- Idade: ${idade ? idade + ' anos' : 'nao informada'}
+- Tipo sanguineo: ${p.tipo_sanguineo || 'nao informado'}
+- Alergias: ${p.alergias || 'nenhuma'}
+- Medicamentos em uso: ${medsTexto}
+
+Responda SOMENTE com um JSON valido, sem markdown, sem explicacao, exatamente neste formato:
+{
+  "agua": <numero de copos de 250ml por dia>,
+  "refeicoes": <numero de refeicoes por dia>,
+  "sono": <horas de sono por dia>,
+  "atividades": <numero de atividades fisicas por dia>,
+  "justificativas": {
+    "agua": "<motivo em 1 frase>",
+    "refeicoes": "<motivo em 1 frase>",
+    "sono": "<motivo em 1 frase>",
+    "atividades": "<motivo em 1 frase>"
+  }
+}`;
+
+    const response = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      }
+    );
+    const data = await response.json();
+    let texto = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    texto = texto.replace(/```json|```/g, '').trim();
+    const metas = JSON.parse(texto);
+
+    // Salvar no banco
+    await db.query(
+      `UPDATE perfil_idoso SET
+        meta_agua=$1, meta_refeicoes=$2, meta_sono=$3,
+        meta_atividades=$4, meta_justificativas=$5
+       WHERE membro_id=$6`,
+      [metas.agua, metas.refeicoes, metas.sono,
+       metas.atividades, JSON.stringify(metas.justificativas), membro_id]
+    );
+
+    res.json({ ok: true, metas });
+  } catch(e) {
+    console.log('[Metas IA] Erro:', e.message);
+    res.status(500).json({ erro: e.message });
+  }
+});
+module.exports = router;
