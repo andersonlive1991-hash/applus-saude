@@ -3433,8 +3433,9 @@ function previewFotoPerfil(input) {
 
 async function carregarFotoPerfil() {
   try {
-    const mem = await api('GET', `/api/membros/familia/${APP.familiaId}`);
-    const membro = mem.find(m => m.id == APP.membroId);
+    const idPessoal = APP.idPessoal || (APP.membroAtivo && APP.membroAtivo.id_pessoal);
+    if (!idPessoal) return;
+    const membro = await api('GET', '/api/membros/id/' + idPessoal);
     if (!membro) return;
     const preview = document.getElementById('foto-perfil-preview');
     if (!preview) return;
