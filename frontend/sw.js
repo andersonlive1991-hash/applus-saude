@@ -2,7 +2,7 @@
 const CACHE = 'applus-v22';
 const ARQUIVOS = [
   '/', '/index.html', '/css/style.css',
-  '/js/app.js', '/js/modulos.js', '/manifest.json',
+  '/js/modulos.js', '/manifest.json',
   '/icons/icon-192.png', '/icons/icon-512.png',
   '/sounds/alarme.wav'
 ];
