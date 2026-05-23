@@ -233,11 +233,9 @@ async function adicionarMembro() {
   const tipo = document.getElementById('add-mem-tipo').value;
   if (!nome) return alerta('Digite o nome');
 
-  // Se for criança, perguntar se é autista
-  if (tipo === 'crianca') {
-    APP._membroNomePendente = nome;
-    fecharModal('modal-add-membro');
-    abrirModal('modal-autismo');
+  // Se for crianca ou tea, criar direto sem modal intermediario
+  if (tipo === 'crianca' || tipo === 'tea') {
+    await _salvarMembro(nome, tipo);
     return;
   }
 
