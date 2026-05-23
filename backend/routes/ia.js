@@ -156,7 +156,7 @@ router.post('/gerar-metas', async (req, res) => {
 
     // Buscar medicamentos
     const meds = await db.query(
-      'SELECT nome, dosagem FROM medicamentos WHERE membro_id=$1 AND ativo=true',
+      'SELECT nome, dosagem FROM medicamentos WHERE membro_id=$1',
       [membro_id]
     );
     const medsTexto = meds.rows.length ? meds.rows.map(m => m.nome + (m.dosagem ? ' ' + m.dosagem : '')).join(', ') : 'nenhum';
