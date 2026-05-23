@@ -599,11 +599,7 @@ function _continuarIniciarApp() {
     }
   }
   atualizarDropdown();
-  if (APP.membroTipo === 'baba') {
-    navegarPara('painel-baba');
-  } else {
-    navegarPara('home');
-  }
+  navegarPara('home');
   if (typeof carregarStatusPin === 'function') carregarStatusPin();
 }
 
@@ -860,6 +856,9 @@ async function carregarHome() {
       const memTEA = membros.find(m => m.tipo === 'tea');
       if (memTEA) window._membroTEAId = memTEA.id;
     }
+    const temBaba = membros.some(m => m.tipo === 'baba');
+    const cardBaba = document.getElementById('card-baba');
+    if (cardBaba) cardBaba.style.display = temBaba ? 'flex' : 'none';
   } catch(e) {}
   document.getElementById('home-data').textContent = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
@@ -2098,7 +2097,9 @@ async function atualizarDropdown() {
     const perfilOriginal = JSON.parse(localStorage.getItem('applus_perfil_original') || 'null');
     const tipoReal = perfilOriginal ? perfilOriginal.membroTipo : APP.membroTipo;
     const ehCuidador = tipoReal === "cuidador";
-    const membrosVisiveis = ehCuidador ? membros.filter(m => m.id == APP.membroId) : membros;
+    const membrosVisiveis = ehCuidador 
+      ? membros.filter(m => m.id == APP.membroId) 
+      : membros.filter(m => m.tipo !== 'baba');
     let container = document.getElementById("perfis-header");
     if (!container) {
       container = document.createElement("div");
@@ -2143,11 +2144,7 @@ function trocarParaPerfil(id, nome, tipo, idPessoal) {
   APP.idPessoal = idPessoal;
   salvarSessaoMembro();
   atualizarDropdown();
-  if (tipo === 'baba') {
-    navegarPara('painel-baba');
-  } else {
-    navegarPara('home');
-  }
+  navegarPara('home');
 }
 
 
