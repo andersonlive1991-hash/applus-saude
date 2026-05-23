@@ -301,13 +301,18 @@ app.get("/ping", (req, res) => {
 });
 
 
-// Autoping — mantém o servidor acordado
+// Autoping — mantém o servidor acordado (ping local + externo)
 setInterval(async () => {
   try {
+    // Ping local
     const http = require("http");
     http.get("http://localhost:" + (process.env.PORT || 3000) + "/ping", (r) => {
-      console.log("[Keep-alive] ping ok -", new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }));
+      console.log("[Keep-alive] ping local ok -", new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }));
     });
+    // Ping externo — garante que o Render nao dorme
+    fetch("https://applus-saude.onrender.com/ping")
+      .then(() => console.log("[Keep-alive] ping externo ok"))
+      .catch(() => {});
   } catch(e) { console.log("[Keep-alive] erro:", e.message); }
 }, 4 * 60 * 1000);
 

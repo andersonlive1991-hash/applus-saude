@@ -1038,6 +1038,11 @@ function _salvarConfirmados() {
 async function iniciarAlarmes() {
   if (APP.alarmeInterval) clearInterval(APP.alarmeInterval);
   APP.alarmeInterval = setInterval(verificarAlarmes, 30000);
+
+  // Keep-alive externo — evita o Render dormir
+  setInterval(() => {
+    fetch('/ping').catch(() => {});
+  }, 4 * 60 * 1000);
   verificarAlarmes();
 }
 
