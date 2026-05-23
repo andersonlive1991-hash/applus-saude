@@ -599,7 +599,11 @@ function _continuarIniciarApp() {
     }
   }
   atualizarDropdown();
-  navegarPara('home');
+  if (APP.membroTipo === 'baba') {
+    navegarPara('painel-baba');
+  } else {
+    navegarPara('home');
+  }
   if (typeof carregarStatusPin === 'function') carregarStatusPin();
 }
 
@@ -2110,7 +2114,7 @@ async function atualizarDropdown() {
         <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:${ativo?'white':'rgba(255,255,255,0.3)'};border:2px solid ${ativo?'white':'transparent'}">${av}</div>
         <span style="font-size:9px;color:${ativo?'white':'rgba(255,255,255,0.7)'};font-weight:${ativo?700:400}">${m.nome.split(' ')[0]}</span>
       </div>`;
-    }).join("") + (ehCuidador ? "" : `<div onclick="abrirModal('modal-add-membro')" style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer"><div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.2);color:white;font-size:18px">+</div><span style="font-size:9px;color:rgba(255,255,255,0.7)">Novo</span></div>`);
+    }).join("") + (ehCuidador ? "" : `<div onclick="abrirModal(&quot;modal-add-membro&quot;)" style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer"><div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.2);color:white;font-size:18px">+</div><span style="font-size:9px;color:rgba(255,255,255,0.7)">Novo</span></div>`);
   } catch(e) { console.log("Erro dropdown:", e); }
 }
 function toggleDropdown() {
@@ -2201,8 +2205,15 @@ async function carregarPainelBaba() {
     const marcosHtml = marcos.slice(0,3).map(function(m) {
       return '<div style="background:#fff8e1;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:13px;">marco ' + m.descricao + ' <span style="color:#999;font-size:11px;">' + new Date(m.criado_em).toLocaleDateString('pt-BR') + '</span></div>';
     }).join('');
+    await atualizarDropdown();
     pagina.innerHTML =
-      '<div style="padding:16px;">'
+      '<div style="padding:0">'
+      + '<div style="background:#1D9E75;padding:14px 16px 12px;position:relative;min-height:60px;">'
+      + '<div id="perfis-header-baba" style="display:flex;align-items:center;gap:8px;position:absolute;top:14px;right:16px;z-index:999;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:24px;padding:6px 12px;"></div>'
+      + '<div style="font-size:16px;font-weight:700;color:#fff;padding-right:120px;">👶 ' + APP.membroNome + '</div>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,0.85);">Painel da babá — hoje</div>'
+      + '</div>'
+      + '<div style="padding:16px;">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
       + '<div><div style="font-size:18px;font-weight:700;color:#222;">bebe ' + APP.membroNome + '</div>'
       + '<div style="font-size:12px;color:#888;">Painel da baba — hoje</div></div>'
@@ -2225,6 +2236,22 @@ async function carregarPainelBaba() {
       + '</div></div>'
       + '<button onclick="carregarPainelBaba()" style="width:100%;margin-top:14px;background:#f0faf5;color:#1D9E75;border:1px solid #b8e8d4;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">Atualizar</button>'
       + '</div>';
+    // Popular dropdown de perfis no header do painel
+    try {
+      const membros = await api('GET', '/api/membros/familia/' + APP.familiaId);
+      const headerBaba = document.getElementById('perfis-header-baba');
+      if (headerBaba) {
+        headerBaba.innerHTML = membros.map(m => {
+          const ativo = m.id == APP.membroId;
+          const av = m.foto ? '<img src="' + m.foto + '" style="width:32px;height:32px;object-fit:cover;border-radius:50%">' : '<span style="font-size:14px">' + avatarMembro(m.nome, m.tipo) + '</span>';
+          return '<div data-mid="' + m.id + '" data-nome="' + m.nome.split(' ')[0] + '" data-tipo="' + m.tipo + '" data-pid="' + m.id_pessoal + '" onclick="trocarParaPerfil(parseInt(this.dataset.mid),this.dataset.nome,this.dataset.tipo,this.dataset.pid)" style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer">'
+            + '<div style="width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:' + (ativo?'white':'rgba(255,255,255,0.3)') + ';border:2px solid ' + (ativo?'white':'transparent') + '">' + av + '</div>'
+            + '<span style="font-size:9px;color:' + (ativo?'white':'rgba(255,255,255,0.7)') + ';font-weight:' + (ativo?700:400) + '">' + m.nome.split(' ')[0] + '</span>'
+            + '</div>';
+        }).join('') + '<div onclick="abrirModal(&quot;modal-add-membro&quot;)" style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer"><div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.2);color:white;font-size:18px">+</div><span style="font-size:9px;color:rgba(255,255,255,0.7)">Novo</span></div>';
+      }
+    } catch(e) {}
+
     if (APP.socket) {
       APP.socket.off('baba-novo-registro');
       APP.socket.on('baba-novo-registro', function() { carregarPainelBaba(); });
