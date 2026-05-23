@@ -2130,10 +2130,10 @@ function trocarParaPerfil(id, nome, tipo, idPessoal) {
 
 
 async function carregarPainelBaba() {
-  let pagina = document.getElementById('pagina-painel-baba');
+  let pagina = document.getElementById('pag-painel-baba');
   if (!pagina) {
     pagina = document.createElement('div');
-    pagina.id = 'pagina-painel-baba';
+    pagina.id = 'pag-painel-baba';
     pagina.className = 'pagina';
     const cont = document.querySelector('.conteudo');
     if (cont) cont.appendChild(pagina);
