@@ -256,7 +256,41 @@ async function adicionarMembro() {
     return;
   }
 
+  // Se for baba, criar e mostrar QR Code para baba.html
+  if (tipo === 'baba') {
+    fecharModal('modal-add-membro');
+    await _criarMembroBaba(nome);
+    return;
+  }
+
   await _salvarMembro(nome, tipo);
+}
+
+async function _criarMembroBaba(nome) {
+  try {
+    const mem = await api('POST', '/api/membros', {
+      familia_id: APP.familiaId,
+      nome, tipo: 'baba', relacao: 'baba'
+    });
+    const link = 'https://applus-saude.onrender.com/baba.html?id=' + mem.id_pessoal;
+    document.getElementById('qr-id-cuidador').textContent = mem.id_pessoal;
+    document.getElementById('qr-nome-cuidador') && (document.getElementById('qr-nome-cuidador').textContent = nome);
+    abrirModal('modal-qrcode-cuidador');
+    try {
+      const res = await api('POST', '/api/qrcode', { texto: link });
+      const canvas = document.getElementById('qrcode-cuidador-canvas');
+      if (canvas) canvas.style.display = 'none';
+      const img = document.getElementById('qrcode-cuidador-img') || document.createElement('img');
+      img.id = 'qrcode-cuidador-img';
+      img.src = res.qrcode;
+      img.style.cssText = 'width:200px;height:200px;display:block;margin:0 auto;border-radius:12px;';
+      const container = document.getElementById('qrcode-cuidador-canvas');
+      if (container && container.parentNode) container.parentNode.insertBefore(img, container);
+    } catch(e) {}
+    mostrarSelecaoPerfil();
+  } catch(e) {
+    alerta('Erro ao criar babá: ' + e.message);
+  }
 }
 
 async function _criarMembroCuidador(nome, tipo) {
