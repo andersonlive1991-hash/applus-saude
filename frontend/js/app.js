@@ -2138,7 +2138,7 @@ async function carregarPainelBaba() {
     const cont = document.querySelector('.conteudo');
     if (cont) cont.appendChild(pagina);
   }
-  pagina.style.display = 'block';
+  pagina.classList.add('ativa');
   pagina.innerHTML = '<div style="padding:20px;text-align:center;color:#888;">Carregando...</div>';
   try {
     const fid = APP.familiaId;
