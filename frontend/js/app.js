@@ -789,6 +789,7 @@ function navegarPara(pagina) {
 
   // Carregar dados da página
   if (pagina === 'home') carregarHome();
+  if (pagina === 'painel-baba') carregarPainelBaba();
   if (pagina === 'remedios') carregarMedicamentos();
   if (pagina === 'agenda') carregarAgenda();
   if (pagina === 'chat') carregarChat();
@@ -2120,7 +2121,84 @@ function trocarParaPerfil(id, nome, tipo, idPessoal) {
   APP.idPessoal = idPessoal;
   salvarSessaoMembro();
   atualizarDropdown();
-  navegarPara('home');
+  if (tipo === 'baba') {
+    navegarPara('painel-baba');
+  } else {
+    navegarPara('home');
+  }
+}
+
+
+async function carregarPainelBaba() {
+  let pagina = document.getElementById('pagina-painel-baba');
+  if (!pagina) {
+    pagina = document.createElement('div');
+    pagina.id = 'pagina-painel-baba';
+    pagina.className = 'pagina';
+    const cont = document.querySelector('.conteudo');
+    if (cont) cont.appendChild(pagina);
+  }
+  pagina.style.display = 'block';
+  pagina.innerHTML = '<div style="padding:20px;text-align:center;color:#888;">Carregando...</div>';
+  try {
+    const fid = APP.familiaId;
+    const registros = await api('GET', '/api/baba/registros/' + fid);
+    const ckRes = await fetch('/api/baba/checkin-ativo/' + fid + '/' + APP.membroId);
+    const checkin = ckRes.ok ? await ckRes.json() : null;
+    const estoque = await api('GET', '/api/baba/estoque/' + fid);
+    const marcos = await api('GET', '/api/baba/marcos/' + fid);
+    const mamadas = registros.filter(r=>r.tipo==='mamada').length;
+    const fraldas = registros.filter(r=>r.tipo==='fralda').length;
+    const sonos = registros.filter(r=>r.tipo==='sono').length;
+    const ckHtml = checkin
+      ? '<div style="background:#e0f5ea;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#0F6E56;">checkmark Check-in as ' + new Date(checkin.checkin_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) + (checkin.gps_checkin?' · GPS OK':'') + '</div>'
+      : '<div style="background:#fff3cd;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#856404;">Baba ainda nao fez check-in hoje</div>';
+    const estoqueAlerta = estoque.filter(e=>e.quantidade<=e.alerta_em);
+    const estoqueHtml = estoqueAlerta.length
+      ? '<div style="background:#fdecea;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#c0392b;">Estoque baixo: ' + estoqueAlerta.map(e=>e.item+' ('+e.quantidade+')').join(', ') + '</div>'
+      : '';
+    const tipos = {mamada:'mamada',fralda:'fralda',sono:'sono',humor:'humor',marco:'marco',medicamento:'med',foto:'foto',atividade:'ativ'};
+    const icos = {mamada:'mamada',fralda:'fralda',sono:'sono',humor:'humor',marco:'marco',medicamento:'💊',foto:'📷',atividade:'🎮'};
+    const logHtml = registros.length ? registros.map(function(r) {
+      const h = new Date(r.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      const fotoEl = r.foto ? '<img src="' + r.foto + '" style="width:56px;height:56px;border-radius:8px;object-fit:cover;">' : '';
+      return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0f0f0;">'
+        + '<div style="flex:1;"><div style="font-size:13px;font-weight:600;color:#222;">' + (r.tipo||'') + (r.quantidade?' — '+r.quantidade:'') + '</div>'
+        + '<div style="font-size:12px;color:#666;">' + (r.detalhe||'') + (r.humor?' Humor: '+r.humor:'') + '</div>' + fotoEl + '</div>'
+        + '<div style="font-size:11px;color:#999;">' + h + '</div></div>';
+    }).join('') : '<div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">Nenhum registro ainda hoje</div>';
+    const marcosHtml = marcos.slice(0,3).map(function(m) {
+      return '<div style="background:#fff8e1;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:13px;">marco ' + m.descricao + ' <span style="color:#999;font-size:11px;">' + new Date(m.criado_em).toLocaleDateString('pt-BR') + '</span></div>';
+    }).join('');
+    pagina.innerHTML =
+      '<div style="padding:16px;">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
+      + '<div><div style="font-size:18px;font-weight:700;color:#222;">bebe ' + APP.membroNome + '</div>'
+      + '<div style="font-size:12px;color:#888;">Painel da baba — hoje</div></div>'
+      + '<button onclick="navegarPara('home')" style="background:#f0f0f0;color:#666;border:none;padding:8px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Voltar</button>'
+      + '</div>'
+      + ckHtml + estoqueHtml
+      + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">'
+      + '<div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #e0f0ea;"><div style="font-size:20px;font-weight:700;color:#1D9E75;">' + mamadas + '</div><div style="font-size:10px;color:#888;">Mamadas</div></div>'
+      + '<div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #e0f0ea;"><div style="font-size:20px;font-weight:700;color:#1D9E75;">' + fraldas + '</div><div style="font-size:10px;color:#888;">Fraldas</div></div>'
+      + '<div style="background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #e0f0ea;"><div style="font-size:20px;font-weight:700;color:#1D9E75;">' + sonos + '</div><div style="font-size:10px;color:#888;">Sonos</div></div>'
+      + '</div>'
+      + (marcosHtml ? '<div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:6px;">Marcos recentes</div>' + marcosHtml + '</div>' : '')
+      + '<div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:8px;">Diario de hoje</div>'
+      + '<div style="background:#fff;border-radius:12px;padding:0 12px;border:1px solid #e0f0ea;">' + logHtml + '</div>'
+      + '<button onclick="carregarPainelBaba()" style="width:100%;margin-top:14px;background:#f0faf5;color:#1D9E75;border:1px solid #b8e8d4;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">Atualizar</button>'
+      + '</div>';
+    if (APP.socket) {
+      APP.socket.off('baba-novo-registro');
+      APP.socket.on('baba-novo-registro', function() { carregarPainelBaba(); });
+      APP.socket.off('baba-checkin-update');
+      APP.socket.on('baba-checkin-update', function() { carregarPainelBaba(); });
+      APP.socket.off('baba-novo-marco');
+      APP.socket.on('baba-novo-marco', function() { carregarPainelBaba(); });
+    }
+  } catch(e) {
+    pagina.innerHTML = '<div style="padding:20px;text-align:center;color:#e74c3c;">Erro: ' + e.message + '</div>';
+  }
 }
 
 function avatarMembro(nome, tipo) {
@@ -3468,6 +3546,7 @@ window.addEventListener('popstate', function(e) {
     const nav = document.querySelector('[data-nav="' + pagina + '"]');
     if (nav) nav.classList.add('ativo');
     if (pagina === 'home') carregarHome();
+  if (pagina === 'painel-baba') carregarPainelBaba();
     if (pagina === 'remedios') carregarMedicamentos();
     if (pagina === 'agenda') carregarAgenda();
     if (pagina === 'chat') carregarChat();
