@@ -2147,6 +2147,17 @@ function trocarParaPerfil(id, nome, tipo, idPessoal) {
 }
 
 
+
+async function salvarInstrucoesPais() {
+  const texto = document.getElementById('instrucoes-pais-input').value;
+  try {
+    await api('POST', '/api/baba/instrucoes', { familia_id: APP.familiaId, texto });
+    mostrarToast('Instrucoes salvas! A baba ja pode ver.');
+  } catch(e) {
+    mostrarToast('Erro ao salvar instrucoes');
+  }
+}
+
 async function carregarPainelBaba() {
   let pagina = document.getElementById('pag-painel-baba');
   if (!pagina) {
@@ -2165,6 +2176,8 @@ async function carregarPainelBaba() {
     const checkin = ckRes.ok ? await ckRes.json() : null;
     const estoque = await api('GET', '/api/baba/estoque/' + fid);
     const marcos = await api('GET', '/api/baba/marcos/' + fid);
+    const instrRes = await fetch('/api/baba/instrucoes/' + fid);
+    const instrucoes = instrRes.ok ? await instrRes.json() : { texto: '' };
     const mamadas = registros.filter(r=>r.tipo==='mamada').length;
     const fraldas = registros.filter(r=>r.tipo==='fralda').length;
     const sonos = registros.filter(r=>r.tipo==='sono').length;
@@ -2204,6 +2217,12 @@ async function carregarPainelBaba() {
       + (marcosHtml ? '<div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:6px;">Marcos recentes</div>' + marcosHtml + '</div>' : '')
       + '<div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:8px;">Diario de hoje</div>'
       + '<div style="background:#fff;border-radius:12px;padding:0 12px;border:1px solid #e0f0ea;">' + logHtml + '</div>'
+      + '<div style="margin-top:16px;">'
+      + '<div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:8px;">Instrucoes para a baba</div>'
+      + '<div style="background:#fff;border-radius:12px;padding:12px;border:1px solid #e0f0ea;">'
+      + '<textarea id="instrucoes-pais-input" rows="4" style="width:100%;border:1px solid #e0e0e0;border-radius:8px;padding:10px;font-size:13px;resize:none;" placeholder="Ex: Fraldas no armario azul. Alergia a morango. Pediatra: Dr. Silva 21 99999-0000.">' + (instrucoes.texto || '') + '</textarea>'
+      + '<button onclick="salvarInstrucoesPais()" style="width:100%;margin-top:8px;background:#1D9E75;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Salvar instrucoes</button>'
+      + '</div></div>'
       + '<button onclick="carregarPainelBaba()" style="width:100%;margin-top:14px;background:#f0faf5;color:#1D9E75;border:1px solid #b8e8d4;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">Atualizar</button>'
       + '</div>';
     if (APP.socket) {
