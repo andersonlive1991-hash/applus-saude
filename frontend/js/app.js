@@ -2175,7 +2175,7 @@ async function carregarPainelBaba() {
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
       + '<div><div style="font-size:18px;font-weight:700;color:#222;">bebe ' + APP.membroNome + '</div>'
       + '<div style="font-size:12px;color:#888;">Painel da baba — hoje</div></div>'
-      + '<button onclick="navegarPara('home')" style="background:#f0f0f0;color:#666;border:none;padding:8px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Voltar</button>'
+      + '<button onclick="navegarPara(\"home\")" style="background:#f0f0f0;color:#666;border:none;padding:8px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Voltar</button>'
       + '</div>'
       + ckHtml + estoqueHtml
       + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">'
