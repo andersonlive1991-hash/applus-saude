@@ -506,9 +506,21 @@ async function recuperarAcesso() {
     APP.familiaId = String(mem.familia_id);
     APP.codigoFamilia = mem.codigo_familia;
     APP.nomeFamilia = mem.nome_familia;
-    salvarSessaoFamilia();
     fecharModal('modal-recuperar');
-    mostrarSelecaoPerfil();
+
+    // Se for cuidador, entrar direto sem tela de seleção
+    if (mem.tipo === 'cuidador') {
+      APP.membroId = mem.id;
+      APP.membroNome = mem.nome;
+      APP.membroTipo = mem.tipo;
+      APP.idPessoal = mem.id_pessoal;
+      APP.membroAtivo = { id: mem.id, nome: mem.nome, tipo: mem.tipo, id_pessoal: mem.id_pessoal };
+      salvarSessaoMembro();
+      iniciarApp();
+    } else {
+      salvarSessaoFamilia();
+      mostrarSelecaoPerfil();
+    }
   } catch (e) {
     alerta('ID não encontrado');
   }
