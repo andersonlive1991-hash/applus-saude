@@ -1886,11 +1886,17 @@
       <div class="campo"><label>Nome</label><input id="add-mem-nome" type="text" placeholder="Nome completo"></div>
       <div class="campo"><label>Papel</label>
         <select id="add-mem-tipo">
-          <option value="cuidador">Cuidador</option>
-          <option value="administrador">👤 Para mim</option>
-          <option value="idoso">Idoso</option>
-          <option value="crianca">Criança</option>
-        </select>
+            <option value="conjuge">💑 Cônjuge / Parceiro(a)</option>
+            <option value="mae">👩 Mãe</option>
+            <option value="pai">👨 Pai</option>
+            <option value="irmao">👦 Irmão / Irmã</option>
+            <option value="avo">👴 Avô / Avó</option>
+            <option value="tio">🧑 Tio / Tia</option>
+            <option value="filho">👶 Filho / Filha</option>
+            <option value="idoso">🧓 Idoso — familiar sendo cuidado</option>
+            <option value="cuidador">💚 Cuidador profissional</option>
+            <option value="administrador">👤 Outro administrador</option>
+          </select>
       </div>
       <button class="btn btn-verde btn-block" onclick="adicionarMembro()">Adicionar</button>
       <button class="btn btn-cinza btn-block" onclick="fecharModal('modal-add-membro')">Cancelar</button>
