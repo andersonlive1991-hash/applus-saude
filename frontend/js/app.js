@@ -620,6 +620,7 @@ async function salvarPerfil() {
       tel_emergencia: document.getElementById('pf-tel').value.trim() || null
     };
     // Salvar foto se foi alterada
+    alerta('Foto: ' + (_fotoPerfil ? 'tem foto ' + _fotoPerfil.length + ' chars' : 'SEM FOTO') + ' | mem.id=' + mem.id);
     if (_fotoPerfil) {
       await api('PUT', '/api/membros/' + mem.id + '/foto', { foto: _fotoPerfil });
       _fotoPerfil = null;
