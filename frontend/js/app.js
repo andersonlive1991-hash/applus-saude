@@ -2058,7 +2058,14 @@ function avatarMembro(nome, tipo) {
     administrador: '👤',
     cuidador: '🧑‍⚕️',
     idoso: '🧓',
-    crianca: '👶'
+    crianca: '👶',
+    conjuge: '💑',
+    mae: '👩',
+    pai: '👨',
+    irmao: '👦',
+    avo: '👴',
+    tio: '🧑',
+    filho: '👶'
   };
   return emojis[tipo] || nome.charAt(0).toUpperCase();
 }
