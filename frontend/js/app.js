@@ -619,12 +619,18 @@ async function salvarPerfil() {
       contato_emergencia: document.getElementById('pf-contato').value.trim() || null,
       tel_emergencia: document.getElementById('pf-tel').value.trim() || null
     };
-    // Salvar foto se foi alterada - mesmo padrao do cadastro
-    const imgPreviewPerfil = document.querySelector('#foto-perfil-preview img');
-    const fotoDataPerfil = imgPreviewPerfil ? imgPreviewPerfil.src : null;
-    if (fotoDataPerfil && fotoDataPerfil.startsWith('data:')) {
-      await api('PUT', '/api/membros/' + mem.id + '/foto', { foto: fotoDataPerfil });
-      atualizarDropdown();
+    // Salvar foto se foi alterada
+    const inputFotoPerfil = document.getElementById('inp-foto-perfil');
+    if (inputFotoPerfil && inputFotoPerfil.files && inputFotoPerfil.files[0]) {
+      const fotoDataPerfil = await new Promise(function(resolve) {
+        const reader = new FileReader();
+        reader.onload = function(e) { resolve(e.target.result); };
+        reader.readAsDataURL(inputFotoPerfil.files[0]);
+      });
+      if (fotoDataPerfil) {
+        await api('PUT', '/api/membros/' + mem.id + '/foto', { foto: fotoDataPerfil });
+        atualizarDropdown();
+      }
     }
 
     const resp = await fetch('/api/perfil', {
