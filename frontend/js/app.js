@@ -2189,18 +2189,30 @@ async function carregarPainelBaba() {
     const estoqueHtml = estoqueAlerta.length
       ? '<div style="background:#fdecea;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#c0392b;">Estoque baixo: ' + estoqueAlerta.map(e=>e.item+' ('+e.quantidade+')').join(', ') + '</div>'
       : '';
-    const tipos = {mamada:'mamada',fralda:'fralda',sono:'sono',humor:'humor',marco:'marco',medicamento:'med',foto:'foto',atividade:'ativ'};
-    const icos = {mamada:'mamada',fralda:'fralda',sono:'sono',humor:'humor',marco:'marco',medicamento:'💊',foto:'📷',atividade:'🎮'};
+    const _icos = {mamada:'🍼',fralda:'🧷',sono:'😴',humor:'😊',marco:'⭐',medicamento:'💊',foto:'📷',atividade:'🎮'};
+    const _nomes = {mamada:'Mamada',fralda:'Fralda',sono:'Sono',humor:'Humor',marco:'Marco',medicamento:'Medicamento',foto:'Foto',atividade:'Atividade'};
     const logHtml = registros.length ? registros.map(function(r) {
       const h = new Date(r.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-      const fotoEl = r.foto ? '<img src="' + r.foto + '" style="width:56px;height:56px;border-radius:8px;object-fit:cover;">' : '';
-      return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0f0f0;">'
-        + '<div style="flex:1;"><div style="font-size:13px;font-weight:600;color:#222;">' + (r.tipo||'') + (r.quantidade?' — '+r.quantidade:'') + '</div>'
-        + '<div style="font-size:12px;color:#666;">' + (r.detalhe||'') + (r.humor?' Humor: '+r.humor:'') + '</div>' + fotoEl + '</div>'
-        + '<div style="font-size:11px;color:#999;">' + h + '</div></div>';
+      const ico = _icos[r.tipo] || '📝';
+      const nome = _nomes[r.tipo] || r.tipo;
+      const qtd = r.quantidade && r.quantidade !== 'undefinedml' ? ' — ' + r.quantidade : '';
+      const det = r.detalhe && r.detalhe !== 'undefined' ? r.detalhe : '';
+      const hum = r.humor ? ' · ' + r.humor : '';
+      const fotoEl = r.foto ? '<div style="margin-top:8px;"><img src="' + r.foto + '" style="width:100%;max-height:200px;border-radius:10px;object-fit:cover;"></div>' : '';
+      return '<div style="padding:12px 0;border-bottom:0.5px solid #f0f0f0;">'
+        + '<div style="display:flex;align-items:center;gap:8px;">'
+        + '<span style="font-size:20px;">' + ico + '</span>'
+        + '<div style="flex:1;">'
+        + '<span style="font-size:13px;font-weight:600;color:#222;">' + nome + qtd + '</span>'
+        + (det||hum ? '<div style="font-size:12px;color:#666;margin-top:1px;">' + det + hum + '</div>' : '')
+        + '</div>'
+        + '<span style="font-size:11px;color:#999;">' + h + '</span>'
+        + '</div>'
+        + fotoEl
+        + '</div>';
     }).join('') : '<div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">Nenhum registro ainda hoje</div>';
     const marcosHtml = marcos.slice(0,3).map(function(m) {
-      return '<div style="background:#fff8e1;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:13px;">marco ' + m.descricao + ' <span style="color:#999;font-size:11px;">' + new Date(m.criado_em).toLocaleDateString('pt-BR') + '</span></div>';
+      return '<div style="background:#fff8e1;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:13px;display:flex;justify-content:space-between;align-items:center;">⭐ ' + m.descricao + '<span style="color:#999;font-size:11px;margin-left:8px;flex-shrink:0;">' + new Date(m.criado_em).toLocaleDateString('pt-BR') + '</span></div>';
     }).join('');
     await atualizarDropdown();
     pagina.innerHTML =
