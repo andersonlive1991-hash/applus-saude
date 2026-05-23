@@ -619,11 +619,11 @@ async function salvarPerfil() {
       contato_emergencia: document.getElementById('pf-contato').value.trim() || null,
       tel_emergencia: document.getElementById('pf-tel').value.trim() || null
     };
-    // Salvar foto se foi alterada
-    const fotoPreview = document.getElementById('foto-perfil-preview');
-    const fotoData = fotoPreview?.dataset?.foto;
-    if (fotoData && fotoData.startsWith('data:')) {
-      await api('PUT', '/api/membros/' + mem.id + '/foto', { foto: fotoData });
+    // Salvar foto se foi alterada - mesmo padrao do cadastro
+    const imgPreviewPerfil = document.querySelector('#foto-perfil-preview img');
+    const fotoDataPerfil = imgPreviewPerfil ? imgPreviewPerfil.src : null;
+    if (fotoDataPerfil && fotoDataPerfil.startsWith('data:')) {
+      await api('PUT', '/api/membros/' + mem.id + '/foto', { foto: fotoDataPerfil });
       atualizarDropdown();
     }
 
@@ -3425,8 +3425,9 @@ function previewFotoPerfil(input) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const preview = document.getElementById('foto-perfil-preview');
-    preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    preview.dataset.foto = e.target.result;
+    if (preview) {
+      preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    }
   };
   reader.readAsDataURL(input.files[0]);
 }
