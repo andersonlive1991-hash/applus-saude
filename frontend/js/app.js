@@ -567,6 +567,7 @@ function _continuarIniciarApp() {
 
 async function carregarPerfil() {
   try {
+    carregarFotoPerfil();
     const idPessoal = APP.idPessoal || (APP.membroAtivo && APP.membroAtivo.id_pessoal);
     if (!idPessoal) { console.log('sem idPessoal'); return; }
     const mem = await api('GET', '/api/membros/id/' + idPessoal);
@@ -618,6 +619,14 @@ async function salvarPerfil() {
       contato_emergencia: document.getElementById('pf-contato').value.trim() || null,
       tel_emergencia: document.getElementById('pf-tel').value.trim() || null
     };
+    // Salvar foto se foi alterada
+    const fotoPreview = document.getElementById('foto-perfil-preview');
+    const fotoData = fotoPreview?.dataset?.foto;
+    if (fotoData && fotoData.startsWith('data:')) {
+      await api('PUT', '/api/membros/' + mem.id + '/foto', { foto: fotoData });
+      atualizarDropdown();
+    }
+
     const resp = await fetch('/api/perfil', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3410,3 +3419,31 @@ window.addEventListener('popstate', function(e) {
     }
   }
 });
+
+function previewFotoPerfil(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('foto-perfil-preview');
+    preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    preview.dataset.foto = e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function carregarFotoPerfil() {
+  try {
+    const mem = await api('GET', `/api/membros/familia/${APP.familiaId}`);
+    const membro = mem.find(m => m.id == APP.membroId);
+    if (!membro) return;
+    const preview = document.getElementById('foto-perfil-preview');
+    if (!preview) return;
+    if (membro.foto) {
+      preview.innerHTML = `<img src="${membro.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      preview.dataset.foto = membro.foto;
+    } else {
+      preview.innerHTML = '👤';
+      preview.dataset.foto = '';
+    }
+  } catch(e) { console.log('Erro foto perfil:', e); }
+}

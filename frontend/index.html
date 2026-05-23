@@ -697,6 +697,11 @@
     </div>
     <div class="curva"></div>
     <div class="form" id="form-perfil">
+      <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1rem">
+        <div id="foto-perfil-preview" onclick="document.getElementById('inp-foto-perfil').click()" style="width:90px;height:90px;border-radius:50%;background:#e8f7f1;border:3px dashed #1a9e6e;display:flex;align-items:center;justify-content:center;font-size:36px;cursor:pointer;overflow:hidden">👤</div>
+        <span style="font-size:12px;color:#6b7280;margin-top:6px">Toque para alterar a foto</span>
+        <input type="file" id="inp-foto-perfil" accept="image/*" style="display:none" onchange="previewFotoPerfil(this)">
+      </div>
       <div class="campo"><label data-i18n="meu_perfil.nome">Nome completo</label><input id="pf-nome" type="text" placeholder="Nome do paciente"></div>
       <div class="campo"><label data-i18n="meu_perfil.nascimento">Data de nascimento</label>
         <div style="display:flex;gap:8px">
