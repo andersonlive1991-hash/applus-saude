@@ -838,7 +838,7 @@ function navegarPara(pagina) {
   if (pagina === 'remedios') carregarMedicamentos();
   if (pagina === 'agenda') carregarAgenda();
   if (pagina === 'chat') carregarChat();
-  if (pagina === 'mais') { carregarBabasSalvas(); }
+  if (pagina === 'mais') { setTimeout(carregarBabasSalvas, 500); }
   if (pagina === 'mais') carregarMais();
   if (pagina === 'saude') carregarSinais();
   if (pagina === 'perfil') { carregarPerfil(); setTimeout(preencherNomePerfil, 500); }
