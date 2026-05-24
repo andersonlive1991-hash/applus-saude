@@ -859,7 +859,7 @@ async function carregarHome() {
     // Mostrar card Cuidados só para cuidador ou idoso
     const cardCuidados = document.getElementById('card-cuidados');
     if (cardCuidados) {
-      const tiposCuidados = ['cuidador', 'idoso', 'administrador'];
+      const tiposCuidados = ['cuidador'];
       cardCuidados.style.display = tiposCuidados.includes(APP.membroTipo) ? 'flex' : 'none';
     }
 
