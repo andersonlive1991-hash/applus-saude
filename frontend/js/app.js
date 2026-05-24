@@ -2643,6 +2643,60 @@ function trocarAbaMeuDia(aba) {
   });
 }
 
+function exibirCardMetasMeuDia(metas) {
+  const el = document.getElementById('meudia-resumo');
+  if (!el || !metas) return;
+  const just = metas.justificativas || {};
+  el.innerHTML = `
+    <div style="background:linear-gradient(135deg,#0f6647,#1a9e6e);border-radius:16px;padding:1.25rem;margin-bottom:1rem;color:white">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+        <div style="font-weight:600;font-size:1rem">🤖 Metas personalizadas pela IA</div>
+        <button onclick="verJustificativasMetasMeuDia()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:0.25rem 0.75rem;font-size:0.8rem;cursor:pointer">Ver motivos</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+        <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:0.6rem;text-align:center">
+          <div style="font-size:1.3rem;font-weight:bold">${metas.agua}</div>
+          <div style="font-size:0.75rem;opacity:0.85">💧 copos água</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:0.6rem;text-align:center">
+          <div style="font-size:1.3rem;font-weight:bold">${metas.refeicoes}</div>
+          <div style="font-size:0.75rem;opacity:0.85">🍽️ refeições</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:0.6rem;text-align:center">
+          <div style="font-size:1.3rem;font-weight:bold">${metas.sono}h</div>
+          <div style="font-size:0.75rem;opacity:0.85">😴 sono</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:0.6rem;text-align:center">
+          <div style="font-size:1.3rem;font-weight:bold">${metas.atividades}</div>
+          <div style="font-size:0.75rem;opacity:0.85">🏃 atividade</div>
+        </div>
+      </div>
+    </div>
+  `;
+  // Guardar justificativas para o modal
+  window._metasJustificativas = just;
+  window._metasValores = metas;
+}
+
+function verJustificativasMetasMeuDia() {
+  const just = window._metasJustificativas || {};
+  const metas = window._metasValores || {};
+  const itens = [
+    { emoji: '💧', label: 'Água', valor: metas.agua + ' copos', motivo: just.agua },
+    { emoji: '🍽️', label: 'Refeições', valor: metas.refeicoes + ' refeições', motivo: just.refeicoes },
+    { emoji: '😴', label: 'Sono', valor: metas.sono + 'h', motivo: just.sono },
+    { emoji: '🏃', label: 'Atividade', valor: metas.atividades + ' por dia', motivo: just.atividades }
+  ];
+  const html = itens.map(i => `
+    <div style="background:#f0fdf4;border-radius:10px;padding:0.75rem;margin-bottom:0.5rem">
+      <div style="font-weight:600;color:#0f6647">${i.emoji} ${i.label} — ${i.valor}</div>
+      <div style="font-size:0.85rem;color:#374151;margin-top:0.25rem">${i.motivo || ''}</div>
+    </div>
+  `).join('');
+  const texto = itens.map(i => i.emoji + ' ' + i.label + ': ' + i.valor + ' — ' + (i.motivo || '')).join('\n\n');
+  alerta('🤖 Metas personalizadas\n\n' + itens.map(i => i.emoji + ' ' + i.label + ' (' + i.valor + '): ' + (i.motivo || '')).join('\n'));
+}
+
 async function iniciarMeuDia() {
   try {
     const perfil = await api('GET', '/api/perfil/' + APP.membroId);
@@ -2657,7 +2711,8 @@ async function iniciarMeuDia() {
             meudiaMetaRefeicoes = r.metas.refeicoes || 4;
             meudiaMetaSono = r.metas.sono || 8;
             meudiaMetaAtividades = r.metas.atividades || 1;
-            alerta('🤖 Suas metas foram personalizadas pela IA com base no seu perfil!');
+            // Exibir card de metas no resumo
+            exibirCardMetasMeuDia(r.metas);
           }
         } catch(e) {
           meudiaMetaAgua = 8; meudiaMetaRefeicoes = 4;
@@ -2668,6 +2723,20 @@ async function iniciarMeuDia() {
         meudiaMetaRefeicoes = perfil.meta_refeicoes || 4;
         meudiaMetaSono = perfil.meta_sono || 8;
         meudiaMetaAtividades = perfil.meta_atividades || 1;
+        if (perfil.meta_justificativas) {
+          try {
+            const just = typeof perfil.meta_justificativas === 'string'
+              ? JSON.parse(perfil.meta_justificativas)
+              : perfil.meta_justificativas;
+            exibirCardMetasMeuDia({
+              agua: perfil.meta_agua,
+              refeicoes: perfil.meta_refeicoes,
+              sono: perfil.meta_sono,
+              atividades: perfil.meta_atividades,
+              justificativas: just
+            });
+          } catch(e) {}
+        }
       }
     }
   } catch(e) {}
