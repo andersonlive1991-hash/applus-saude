@@ -3256,7 +3256,14 @@ async function buscarResumoSalvo() {
       texto.innerHTML = renderMarkdown(r.resumo);
       document.getElementById('resumo-humor').textContent = '😊';
     } else {
-      texto.textContent = 'Resumo disponível às 20h após registrar seus dados do dia.';
+      // Se for após as 20h e não tem resumo, gera automaticamente
+      const hora = new Date().getHours();
+      if (hora >= 20) {
+        texto.textContent = 'Gerando seu resumo do dia...';
+        await gerarResumoIA();
+      } else {
+        texto.textContent = 'Resumo disponível às 20h após registrar seus dados do dia.';
+      }
     }
   } catch (e) {
     texto.textContent = 'Resumo disponível às 20h.';
