@@ -6,6 +6,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const pool = require('./db');
+const { chamarGemini } = require('./gemini');
 
 // ── Firebase Admin (FCM) ──
 const admin = require('firebase-admin');
@@ -615,13 +616,7 @@ setInterval(async () => {
 
         const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de ' + nome + ' e faca um resumo em portugues brasileiro. DADOS: Agua: ' + copos + ' copos (meta: ' + metaAgua + '). Sono: ' + sonoInfo + '. Humor: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica. Seja direto e acolhedor.';
 
-        const geminiRes = await fetch(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
-          { method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }
-        );
-        const geminiData = await geminiRes.json();
-        const resumo = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'Nao foi possivel gerar analise.';
+        const resumo = await chamarGemini(prompt);
 
         await pool.query(
           'INSERT INTO resumo_diario (membro_id, data, resumo, dados) VALUES ($1, CURRENT_DATE, $2, $3)',

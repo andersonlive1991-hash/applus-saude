@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { chamarGemini } = require('../gemini');
 
 // ── Criar tabelas ──
 db.query(`
@@ -235,13 +236,7 @@ router.get('/previsao/:familia_id', async (req, res) => {
 
     const prompt = `Voce e um assistente de saude infantil. Com base nos registros de hoje do bebe, calcule a previsao da proxima mamada e do proximo sono. Registros: ${JSON.stringify(registros.rows.map(r => ({ tipo: r.tipo, hora: new Date(r.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), qtd: r.quantidade })))}. Responda APENAS com JSON no formato: {"proxima_mamada":"HH:MM","proximo_sono":"HH:MM","dica":"frase curta de ate 10 palavras"}`;
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }
-    );
-    const data = await geminiRes.json();
-    const texto = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    const texto = await chamarGemini(prompt);
     const json = JSON.parse(texto.replace(/```json|```/g, '').trim());
     res.json({ previsao: json });
   } catch(e) { res.json({ previsao: null }); }

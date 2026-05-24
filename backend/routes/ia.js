@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { chamarGemini } = require('../gemini');
 
 router.post('/perguntar', async (req, res) => {
   const { pergunta, membro_id, familia_id } = req.body;
@@ -25,19 +26,7 @@ Sempre termine lembrando que não substitui consulta médica.
 ${contexto}
 Pergunta: ${pergunta}`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
-      }
-    );
-
-    const data = await response.json();
-    const resposta = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Não consegui responder agora.';
+    const resposta = await chamarGemini(prompt);
     res.json({ resposta });
   } catch (e) {
     res.status(500).json({ erro: e.message });
@@ -84,17 +73,7 @@ router.post('/resumo-dia', async (req, res) => {
     const idiomaTexto = {pt:'portugues brasileiro',en:'English',es:'español',fr:'français',de:'Deutsch'}[idioma] || 'portugues brasileiro';
     const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de ' + nome + ' e faca um resumo em ' + idiomaTexto + '. DADOS: Agua: ' + copos + ' copos (meta: ' + metaAgua + '). Sono: ' + sonoInfo + '. Humor recente: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica e 1 doenca que pode ser evitada. Seja direto e acolhedor. Nao substitui consulta medica.';
 
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-      }
-    );
-    const data = await response.json();
-    console.log('Gemini resumo resposta:', JSON.stringify(data).substring(0, 300));
-    const resumo = data.candidates && data.candidates[0] ? data.candidates[0].content.parts[0].text : 'Nao consegui gerar analise agora.';
+    const resumo = await chamarGemini(prompt);
     res.json({ resumo: resumo, dados: { copos: copos, metaAgua: metaAgua, horasSono: horasSono, metaSono: metaSono } });
   } catch (e) {
     res.status(500).json({ erro: e.message });
@@ -190,16 +169,7 @@ Responda SOMENTE com um JSON valido, sem markdown, sem explicacao, exatamente ne
   }
 }`;
 
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-      }
-    );
-    const data = await response.json();
-    let texto = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    let texto = await chamarGemini(prompt);
     texto = texto.replace(/```json|```/g, '').trim();
     const metas = JSON.parse(texto);
 
