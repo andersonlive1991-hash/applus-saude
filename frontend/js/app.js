@@ -2455,6 +2455,7 @@ async function registrarAgua(copos) {
       familia_id: APP.familiaId, membro_id: APP.membroId, copos
     });
     carregarHidratacao();
+    atualizarContadoresHome();
   } catch(e) { alerta('Erro: ' + e.message); }
 }
 
@@ -2478,6 +2479,7 @@ async function salvarSono() {
     });
     fecharModal('modal-novo-sono');
     carregarSono();
+    atualizarContadoresHome();
   } catch(e) { alerta('Erro: ' + e.message); }
 }
 
