@@ -444,7 +444,12 @@ let CUIDADOR = null, FAMILIA_ID = null, CHECKIN_ID = null;
         verificarCheckin();
         carregarMedsPortal();
         carregarEventosPortal();
-      }).catch(() => localStorage.removeItem('cuidador_sessao'));
+      }).catch(() => {
+        // Não apaga a sessão — pode ser só lentidão do servidor
+        // Tenta carregar mesmo assim com os dados salvos localmente
+        carregarMedsPortal();
+        carregarEventosPortal();
+      });
     }
   } catch(e) {}
 })();
