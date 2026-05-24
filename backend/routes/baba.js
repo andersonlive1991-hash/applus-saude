@@ -243,3 +243,43 @@ router.get('/previsao/:familia_id', async (req, res) => {
 });
 
 module.exports = router;
+
+// Relatório PDF do plantão
+const PDFDocument = require('pdfkit');
+router.get('/relatorio-pdf/:familia_id/:baba_id', async (req, res) => {
+  try {
+    const { familia_id, baba_id } = req.params;
+    const registros = await db.query(
+      'SELECT * FROM baba_registros WHERE familia_id=$1 AND baba_membro_id=$2 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em ASC',
+      [familia_id, baba_id]
+    );
+    const baba = await db.query('SELECT nome FROM membros WHERE id=$1', [baba_id]);
+    const babaNome = baba.rows[0] ? baba.rows[0].nome : 'Babá';
+
+    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=plantao-baba.pdf');
+    doc.pipe(res);
+
+    doc.fontSize(20).fillColor('#1a9e6e').text('AP+ Saúde — Relatório do Plantão', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(12).fillColor('#333').text('Babá: ' + babaNome, { align: 'center' });
+    doc.text('Data: ' + new Date().toLocaleDateString('pt-BR'), { align: 'center' });
+    doc.moveDown(1);
+
+    if (!registros.rows.length) {
+      doc.fontSize(12).fillColor('#666').text('Nenhum registro hoje.', { align: 'center' });
+    } else {
+      registros.rows.forEach(r => {
+        doc.fontSize(13).fillColor('#1a9e6e').text('• ' + (r.tipo||'').toUpperCase());
+        doc.fontSize(11).fillColor('#333').text('  ' + (r.detalhe || '') + (r.quantidade ? ' — Qtd: ' + r.quantidade : '') + (r.humor ? ' — Humor: ' + r.humor : ''));
+        doc.fontSize(10).fillColor('#999').text('  ' + new Date(r.criado_em).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}));
+        doc.moveDown(0.4);
+      });
+    }
+
+    doc.end();
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});

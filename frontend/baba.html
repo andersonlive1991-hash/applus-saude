@@ -195,6 +195,10 @@ body{background:#f0faf5;min-height:100vh;padding-bottom:80px;}
       <div class="quick-btn" onclick="abrirModal('medicamento')"><div class="quick-ico">💊</div><div class="quick-lbl">Remédio</div></div>
       <div class="quick-btn" onclick="abrirModal('foto')"><div class="quick-ico">📷</div><div class="quick-lbl">Foto</div></div>
       <div class="quick-btn" onclick="abrirModal('atividade')"><div class="quick-ico">🎮</div><div class="quick-lbl">Atividade</div></div>
+      <div class="quick-btn" onclick="babaSOS()" style="border-color:#fca5a5;background:#fef2f2;">
+        <div class="quick-ico">🚨</div>
+        <div class="quick-lbl" style="color:#dc2626;font-weight:700;">SOS</div>
+      </div>
     </div>
     <div class="section">Diário de hoje</div>
     <div class="log-list" id="log-list"><div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">Nenhum registro ainda hoje</div></div>
@@ -738,6 +742,38 @@ window.addEventListener('load', () => {
   const savedId = localStorage.getItem('baba_id');
   if (savedId) { document.getElementById('login-id').value = savedId; fazerLogin(); }
 });
+
+function babaSOS() {
+  if (!confirm('Disparar alerta SOS para a família?')) return;
+  socket.emit('emergencia', {
+    familiaId: FAMILIA_ID,
+    tipo: 'sos-baba',
+    mensagem: BABA.nome + ' (babá) disparou SOS!',
+    nome: BABA.nome
+  });
+  fetch('/api/cuidados/intercorrencia', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ familia_id: FAMILIA_ID, membro_id: BABA.id, tipo: 'sos', descricao: 'SOS disparado pela babá ' + BABA.nome, hora: new Date().toTimeString().slice(0,5) })
+  }).catch(()=>{});
+  mostrarToast('🚨 SOS enviado para a família!');
+}
+
+function gerarPDFPlantao() {
+  const url = '/api/baba/relatorio-pdf/' + FAMILIA_ID + '/' + BABA.id;
+  window.open(url, '_blank');
+}
+
+socket.on('baba-pai-online', (data) => {
+  const el = document.getElementById('lista-pais-online');
+  const painel = document.getElementById('painel-pais');
+  if (!el || !painel) return;
+  painel.style.display = 'block';
+  if (data.pais && data.pais.length) {
+    el.innerHTML = data.pais.map(p => '👤 ' + p).join(' · ');
+  }
+});
+
 </script>
 </body>
 </html>
