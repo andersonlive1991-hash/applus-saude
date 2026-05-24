@@ -861,7 +861,12 @@ function navegarPara(pagina) {
       carregarFeedCuidados();
     }
   }
-  if (pagina === 'painel-cuidador') { carregarFeedCuidadorFamilia(); }
+  if (pagina === 'painel-cuidador') { 
+    window._cuidadorFamiliaId = APP.familiaId;
+    carregarFeedCuidadorFamilia(); 
+    carregarMedsCuidador();
+    carregarEventosCuidador();
+  }
   if (pagina === 'tea') {
     // Buscar membro TEA da família
     api('GET', `/api/membros/familia/${APP.familiaId}`).then(membros => {
@@ -3967,4 +3972,57 @@ async function carregarFeedCuidadorFamilia() {
         </div>
       </div>`).join('');
   } catch(e) { console.log('Erro feed cuidador:', e); }
+}
+
+async function carregarMedsCuidador() {
+  try {
+    if (!window._cuidadorFamiliaId) return;
+    const meds = await api('GET', '/api/medicamentos/' + window._cuidadorFamiliaId);
+    const el = document.getElementById('cuid-meds-lista');
+    if (!el) return;
+    if (!meds || !meds.length) { el.innerHTML = '<div style="text-align:center;color:#999;font-size:13px;padding:10px;">Nenhum medicamento cadastrado.</div>'; return; }
+    const agora = new Date();
+    const horaAtual = agora.getHours() * 60 + agora.getMinutes();
+    el.innerHTML = meds.map(m => {
+      const horarios = Array.isArray(m.horarios) ? m.horarios : JSON.parse(m.horarios || '[]');
+      return horarios.map(h => {
+        const [hh, mm] = h.split(':').map(Number);
+        const minutos = hh * 60 + mm;
+        const passou = minutos < horaAtual;
+        const agr = Math.abs(minutos - horaAtual) < 30;
+        const cor = agr ? '#dc2626' : passou ? '#6b7280' : '#1a6eb5';
+        const bg = agr ? '#fef2f2' : passou ? '#f9f9f9' : '#e8f0fb';
+        return `<div style="background:${bg};border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;border-left:3px solid ${cor};">
+          <div style="font-size:20px;">💊</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:#111;">${m.nome}</div>
+            <div style="font-size:11px;color:#555;">${m.dosagem || ''}</div>
+          </div>
+          <div style="font-size:13px;font-weight:700;color:${cor};">${h}${agr?' ⚠️':''}</div>
+        </div>`;
+      }).join('');
+    }).join('');
+  } catch(e) { console.log('Erro meds cuidador:', e); }
+}
+
+async function carregarEventosCuidador() {
+  try {
+    if (!window._cuidadorFamiliaId) return;
+    const eventos = await api('GET', '/api/eventos/' + window._cuidadorFamiliaId);
+    const el = document.getElementById('cuid-eventos-lista');
+    if (!el) return;
+    const hoje = new Date().toISOString().split('T')[0];
+    const hojeEvs = (eventos || []).filter(e => e.data && e.data.startsWith(hoje));
+    if (!hojeEvs.length) { el.innerHTML = '<div style="text-align:center;color:#999;font-size:13px;padding:10px;">Nenhum evento hoje.</div>'; return; }
+    const icons = { Consulta:'🩺', Exame:'🔬', Medicamento:'💊', Família:'👨‍👩‍👧', Outro:'📋' };
+    el.innerHTML = hojeEvs.map(e => `
+      <div style="background:#f0f9ff;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;border-left:3px solid #1a6eb5;">
+        <div style="font-size:20px;">${icons[e.tipo]||'📋'}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:#111;">${e.titulo}</div>
+          <div style="font-size:11px;color:#555;">${e.local||''}${e.medico?' · Dr. '+e.medico:''}</div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#1a6eb5;">${e.hora||''}</div>
+      </div>`).join('');
+  } catch(e) { console.log('Erro eventos cuidador:', e); }
 }
