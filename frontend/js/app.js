@@ -2648,7 +2648,7 @@ function exibirCardMetasMeuDia(metas) {
   if (!el || !metas) return;
   const just = metas.justificativas || {};
   el.innerHTML = `
-    <div style="background:linear-gradient(135deg,#0f6647,#1a9e6e);border-radius:16px;padding:1.25rem;margin-bottom:1rem;color:white">
+    <div style="background:linear-gradient(135deg,#0f6647,#1a9e6e);border-radius:16px;padding:1.25rem;margin-bottom:1rem;color:white;position:relative;z-index:20">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
         <div style="font-weight:600;font-size:1rem">🤖 Metas personalizadas pela IA</div>
         <button onclick="verJustificativasMetasMeuDia()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:0.25rem 0.75rem;font-size:0.8rem;cursor:pointer">Ver motivos</button>
