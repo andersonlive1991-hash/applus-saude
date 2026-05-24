@@ -856,6 +856,13 @@ async function carregarHome() {
       const memTEA = membros.find(m => m.tipo === 'tea');
       if (memTEA) window._membroTEAId = memTEA.id;
     }
+    // Mostrar card Cuidados só para cuidador ou idoso
+    const cardCuidados = document.getElementById('card-cuidados');
+    if (cardCuidados) {
+      const tiposCuidados = ['cuidador', 'idoso', 'administrador'];
+      cardCuidados.style.display = tiposCuidados.includes(APP.membroTipo) ? 'flex' : 'none';
+    }
+
     const temBaba = membros.some(m => m.tipo === 'baba');
     const cardBaba = document.getElementById('card-baba');
     if (cardBaba) cardBaba.style.display = temBaba ? 'flex' : 'none';
