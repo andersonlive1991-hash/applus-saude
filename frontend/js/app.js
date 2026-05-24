@@ -2402,7 +2402,7 @@ async function salvarHumorIdoso() {
 
 async function carregarHumorIdoso() {
   try {
-    const lista = await api('GET', `/api/cuidados/humor/${APP.familiaId}`);
+    const lista = await api('GET', `/api/cuidados/humor/${APP.familiaId}?membro_id=${APP.membroId}`);
     const el = document.getElementById('lista-humor-idoso');
     const emojis = { otimo:'😄', bem:'🙂', regular:'😐', mal:'😔', pessimo:'😢' };
     if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhum humor registrado.</p>'; return; }
@@ -2460,7 +2460,7 @@ async function registrarAgua(copos) {
 
 async function carregarHidratacao() {
   try {
-    const dados = await api('GET', `/api/cuidados/hidratacao/${APP.familiaId}`);
+    const dados = await api('GET', `/api/cuidados/hidratacao/${APP.familiaId}?membro_id=${APP.membroId}`);
     document.getElementById('total-hidratacao').textContent = dados.total || 0;
   } catch(e) { console.log('Erro hidratacao:', e); }
 }
@@ -2483,7 +2483,7 @@ async function salvarSono() {
 
 async function carregarSono() {
   try {
-    const lista = await api('GET', `/api/cuidados/sono/${APP.familiaId}`);
+    const lista = await api('GET', `/api/cuidados/sono/${APP.familiaId}?membro_id=${APP.membroId}`);
     const el = document.getElementById('lista-sono');
     if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhum sono registrado.</p>'; return; }
     el.innerHTML = lista.map(s => `
@@ -2538,10 +2538,10 @@ async function carregarFeedCuidados() {
   try {
     const [atividades, humor, refeicoes, intercorrencias, hidratacao] = await Promise.all([
       api('GET', `/api/cuidados/atividades/${APP.familiaId}`),
-      api('GET', `/api/cuidados/humor/${APP.familiaId}`),
+      api('GET', `/api/cuidados/humor/${APP.familiaId}?membro_id=${APP.membroId}`),
       api('GET', `/api/cuidados/refeicoes/${APP.familiaId}`),
       api('GET', `/api/cuidados/intercorrencias/${APP.familiaId}`),
-      api('GET', `/api/cuidados/hidratacao/${APP.familiaId}`)
+      api('GET', `/api/cuidados/hidratacao/${APP.familiaId}?membro_id=${APP.membroId}`)
     ]);
 
     let html = '';
@@ -2779,7 +2779,7 @@ function meudiaAtualizarBarra(idBarra, idLabel, atual, meta, cor, unidade) {
 // ÁGUA
 async function meudiaCarregarAgua() {
   try {
-    const dados = await api('GET', '/api/cuidados/hidratacao/' + APP.familiaId);
+    const dados = await api('GET', '/api/cuidados/hidratacao/' + APP.familiaId + '?membro_id=' + APP.membroId);
     var total = dados.total || 0;
     document.getElementById('meudia-total-agua').textContent = total;
     document.getElementById('meudia-meta-agua').textContent = meudiaMetaAgua;
@@ -2794,12 +2794,12 @@ function atualizarContadoresHome() {
     const elSono = document.getElementById('resumo-sono');
     const elHumor = document.getElementById('resumo-humor');
     if (elAgua) {
-      api('GET', '/api/cuidados/hidratacao/' + APP.familiaId).then(d => {
+      api('GET', '/api/cuidados/hidratacao/' + APP.familiaId + '?membro_id=' + APP.membroId).then(d => {
         if (d && elAgua) elAgua.textContent = (d.total || 0) + '/' + meudiaMetaAgua;
       }).catch(()=>{});
     }
     if (elSono) {
-      api('GET', '/api/cuidados/sono/' + APP.familiaId).then(lista => {
+      api('GET', '/api/cuidados/sono/' + APP.familiaId + '?membro_id=' + APP.membroId).then(lista => {
         if (!lista || !lista.length) return;
         const s = lista[lista.length-1];
         if (s && s.inicio && s.fim) {
@@ -2812,7 +2812,7 @@ function atualizarContadoresHome() {
       }).catch(()=>{});
     }
     if (elHumor) {
-      api('GET', '/api/cuidados/humor/' + APP.familiaId).then(lista => {
+      api('GET', '/api/cuidados/humor/' + APP.familiaId + '?membro_id=' + APP.membroId).then(lista => {
         if (!lista || !lista.length) return;
         const emojis = {1:'😢',2:'😔',3:'😐',4:'🙂',5:'😄'};
         const ultimo = lista[lista.length-1];
@@ -2865,7 +2865,7 @@ async function meudiaRegistrarRefeicao(tipo) {
 // SONO
 async function meudiaCarregarSono() {
   try {
-    const lista = await api('GET', '/api/cuidados/sono/' + APP.familiaId);
+    const lista = await api('GET', '/api/cuidados/sono/' + APP.familiaId + '?membro_id=' + APP.membroId);
     var totalHoras = 0;
     if (lista.length) {
       lista.forEach(function(s) {
@@ -2970,7 +2970,7 @@ async function meudiaRegistrarHumor() {
 
 async function meudiaCarregarHumor() {
   try {
-    const lista = await api('GET', '/api/cuidados/humor/' + APP.familiaId);
+    const lista = await api('GET', '/api/cuidados/humor/' + APP.familiaId + '?membro_id=' + APP.membroId);
     var el = document.getElementById('meudia-lista-humor');
     var emojis = { otimo:'😄', bem:'🙂', regular:'😐', mal:'😔', pessimo:'😢' };
     if (!lista.length) { el.innerHTML = '<p style="color:#999;text-align:center">Nenhum humor registrado hoje.</p>'; return; }

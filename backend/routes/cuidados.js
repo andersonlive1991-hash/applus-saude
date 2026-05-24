@@ -81,7 +81,7 @@ router.post('/humor', async (req, res) => {
 
 router.get('/humor/:familia_id', async (req, res) => {
   try {
-    const r = await db.query('SELECT * FROM cuidados_humor WHERE familia_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC', [req.params.familia_id]);
+    const r = await db.query('SELECT * FROM cuidados_humor WHERE familia_id=$1 AND membro_id=$2 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC', [req.params.familia_id, req.query.membro_id]);
     res.json(r.rows);
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
@@ -120,7 +120,7 @@ router.post('/hidratacao', async (req, res) => {
 
 router.get('/hidratacao/:familia_id', async (req, res) => {
   try {
-    const r = await db.query('SELECT COALESCE(SUM(copos),0) as total FROM cuidados_hidratacao WHERE familia_id=$1 AND data=CURRENT_DATE', [req.params.familia_id]);
+    const r = await db.query('SELECT COALESCE(SUM(copos),0) as total FROM cuidados_hidratacao WHERE familia_id=$1 AND membro_id=$2 AND data=CURRENT_DATE', [req.params.familia_id, req.query.membro_id]);
     res.json({ total: r.rows[0].total });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
@@ -137,7 +137,7 @@ router.post('/sono', async (req, res) => {
 
 router.get('/sono/:familia_id', async (req, res) => {
   try {
-    const r = await db.query('SELECT * FROM cuidados_sono WHERE familia_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC', [req.params.familia_id]);
+    const r = await db.query('SELECT * FROM cuidados_sono WHERE familia_id=$1 AND membro_id=$2 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC', [req.params.familia_id, req.query.membro_id]);
     res.json(r.rows);
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
