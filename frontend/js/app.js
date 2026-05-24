@@ -2693,8 +2693,9 @@ function verJustificativasMetasMeuDia() {
       <div style="font-size:0.85rem;color:#374151;margin-top:0.25rem">${i.motivo || ''}</div>
     </div>
   `).join('');
-  const texto = itens.map(i => i.emoji + ' ' + i.label + ': ' + i.valor + ' — ' + (i.motivo || '')).join('\n\n');
-  alerta('🤖 Metas personalizadas\n\n' + itens.map(i => i.emoji + ' ' + i.label + ' (' + i.valor + '): ' + (i.motivo || '')).join('\n'));
+  const conteudo = document.getElementById('modal-metas-ia-conteudo');
+  if (conteudo) conteudo.innerHTML = html;
+  abrirModal('modal-metas-ia');
 }
 
 async function iniciarMeuDia() {
