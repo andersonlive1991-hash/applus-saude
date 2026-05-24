@@ -7,6 +7,7 @@
 <link rel="manifest" href="/manifest.json">
 <script src="/socket.io/socket.io.js">
 async function carregarMedsPortal() {
+  if (!FAMILIA_ID) return;
   try {
     const r = await fetch('/api/medicamentos/' + FAMILIA_ID);
     const meds = await r.json();
@@ -31,10 +32,15 @@ async function carregarMedsPortal() {
           '<div style="font-size:13px;font-weight:700;color:'+cor+';">'+h+(agr?' ⚠️':'')+'</div></div>';
       }).join('');
     }).join('');
-  } catch(e) { console.log('Erro meds portal:', e); }
+  } catch(e) {
+    console.log('Erro meds portal:', e);
+    const el = document.getElementById('cuid-meds-portal');
+    if (el) el.innerHTML = '<div style="text-align:center;color:#999;font-size:13px;padding:10px;">Nenhum medicamento cadastrado.</div>';
+  }
 }
 
 async function carregarEventosPortal() {
+  if (!FAMILIA_ID) return;
   try {
     const r = await fetch('/api/eventos/' + FAMILIA_ID);
     const eventos = await r.json();
@@ -51,7 +57,11 @@ async function carregarEventosPortal() {
       '<div style="font-size:11px;color:#555;">'+(e.local||'')+(e.medico?' · Dr. '+e.medico:'')+'</div></div>' +
       '<div style="font-size:13px;font-weight:700;color:#1a6eb5;">'+(e.hora||'')+'</div></div>'
     ).join('');
-  } catch(e) { console.log('Erro eventos portal:', e); }
+  } catch(e) {
+    console.log('Erro eventos portal:', e);
+    const el = document.getElementById('cuid-eventos-portal');
+    if (el) el.innerHTML = '<div style="text-align:center;color:#999;font-size:13px;padding:10px;">Nenhum evento hoje.</div>';
+  }
 }
 
 
