@@ -21,6 +21,7 @@
 }
 .btn-estresse { font-size:16px; }
 </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -62,6 +63,15 @@
   <div class="login-bottom">
     <h2 data-i18n="login.como_entrar">Como deseja entrar?</h2>
     <div class="login-opcoes">
+
+      
+      <button class="login-opcao" onclick="loginGoogle()" style="background:white;border:1.5px solid #ddd;">
+        <span class="login-opcao-icone">🇬</span>
+        <div>
+          <div class="login-opcao-titulo">Entrar com Google</div>
+          <div class="login-opcao-sub">Acesso rápido com sua conta Google</div>
+        </div>
+      </button>
 
       <button class="login-opcao" onclick="abrirModal('modal-criar')">
         <span class="login-opcao-icone">🏠</span>

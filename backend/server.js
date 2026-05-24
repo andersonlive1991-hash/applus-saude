@@ -112,6 +112,7 @@ app.use(express.static(path.join(__dirname, '../frontend'), {
 }));
 
 // Rotas
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api/familias', require('./routes/familias'));
 app.use('/api/membros', require('./routes/membros'));
 app.use('/api/medicamentos', require('./routes/medicamentos'));

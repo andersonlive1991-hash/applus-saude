@@ -1,3 +1,39 @@
+
+async function loginGoogle() {
+  try {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: '1028956812970-verjkuuuqnn6c8nhafh7kcvgphn1htkj.apps.googleusercontent.com',
+      scope: 'openid email profile',
+      callback: async (resp) => {
+        if (resp.error) return alerta('Erro ao entrar com Google');
+        try {
+          // Troca o access_token pelo id_token via userinfo
+          const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: 'Bearer ' + resp.access_token }
+          }).then(r => r.json());
+
+          const res = await api('POST', '/api/auth/google', {
+            token: resp.access_token,
+            userInfo
+          });
+          if (res && res.ok) {
+            APP.familiaId = res.familiaId;
+            APP.membroId = res.membroId;
+            APP.membroAtivo = { id: res.membroId, nome: res.membroNome, tipo: res.membroTipo };
+            localStorage.setItem('applus_familia_id', res.familiaId);
+            localStorage.setItem('applus_membro_id', res.membroId);
+            localStorage.setItem('applus_membro_nome', res.membroNome);
+            if (res.foto) localStorage.setItem('applus_foto', res.foto);
+            mostrarPagina('home');
+            carregarHome();
+            alerta('✅ Bem-vindo, ' + res.membroNome + '!');
+          }
+        } catch(e) { alerta('Erro ao autenticar: ' + e.message); }
+      }
+    });
+    client.requestAccessToken();
+  } catch(e) { alerta('Google não disponível: ' + e.message); }
+}
 function mostrarToast(msg, duracao) {
   const t = document.createElement('div');
   t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;padding:12px 20px;border-radius:16px;z-index:9999;font-size:14px;font-weight:600;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.25);max-width:90vw;pointer-events:none;';
