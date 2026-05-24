@@ -3899,7 +3899,7 @@ async function carregarBabasSalvas() {
     if (cuidadores.length) {
       html += '<div style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:0.06em;margin:8px 0 6px;">CUIDADORES</div>';
       html += cuidadores.map(b => {
-        const link = 'https://applus-saude.onrender.com/cuidados.html?id=' + b.id_pessoal;
+        const link = 'https://applus-saude.onrender.com/cuidador.html?id=' + b.id_pessoal;
         return `<div style="background:white;border-radius:12px;padding:12px;margin-bottom:8px;border:0.5px solid #e5e7eb;">
           <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:2px;">💚 ${b.nome}</div>
           <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">ID: <b>${b.id_pessoal}</b></div>
