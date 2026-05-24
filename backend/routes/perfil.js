@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { encrypt, decrypt } = require('../crypto');
 
 // Garantir coluna nome_completo em bancos existentes
 db.query('ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS nome_completo VARCHAR(200)')
@@ -14,7 +15,11 @@ router.get('/:membro_id', async (req, res) => {
       [req.params.membro_id]
     );
     if (!result.rows.length) return res.status(404).json({ erro: 'Perfil nao encontrado' });
-    res.json(result.rows[0]);
+    const p = result.rows[0];
+    p.cpf = decrypt(p.cpf);
+    p.alergias = decrypt(p.alergias);
+    p.tipo_sanguineo = decrypt(p.tipo_sanguineo);
+    res.json(p);
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }
@@ -45,8 +50,8 @@ router.post('/', async (req, res) => {
         contato_emergencia=$9, tel_emergencia=$10,
         atualizado_em=NOW()
         RETURNING *`,
-      [membro_id, nome_completo, dataNasc, tipo_sanguineo,
-       alergias, cpf, cartao_sus, convenio, contato_emergencia, tel_emergencia]
+      [membro_id, nome_completo, dataNasc, encrypt(tipo_sanguineo),
+       encrypt(alergias), encrypt(cpf), cartao_sus, convenio, contato_emergencia, tel_emergencia]
     );
     console.log('[perfil] salvo id:', result.rows[0].id);
     res.json(result.rows[0]);
