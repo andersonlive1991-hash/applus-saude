@@ -714,12 +714,3 @@ setInterval(async () => {
   }
 }, 3600000);
 
-// Rota temporaria para limpar banco — REMOVER APOS USO
-app.post('/api/admin/limpar-tudo', async (req, res) => {
-  try {
-    await pool.query('TRUNCATE TABLE familias RESTART IDENTITY CASCADE');
-    res.json({ ok: true, msg: 'Banco limpo com sucesso' });
-  } catch(e) {
-    res.status(500).json({ erro: e.message });
-  }
-});
