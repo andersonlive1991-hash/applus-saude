@@ -7,6 +7,14 @@ const { encrypt, decrypt } = require('../crypto');
 db.query('ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS nome_completo VARCHAR(200)')
   .catch(e => console.log('ALTER perfil_idoso nome_completo:', e.message));
 
+// Ampliar colunas para suportar dados criptografados
+db.query('ALTER TABLE perfil_idoso ALTER COLUMN tipo_sanguineo TYPE TEXT')
+  .catch(e => console.log('ALTER tipo_sanguineo:', e.message));
+db.query('ALTER TABLE perfil_idoso ALTER COLUMN cpf TYPE TEXT')
+  .catch(e => console.log('ALTER cpf:', e.message));
+db.query('ALTER TABLE perfil_idoso ALTER COLUMN alergias TYPE TEXT')
+  .catch(e => console.log('ALTER alergias:', e.message));
+
 // Buscar perfil
 router.get('/:membro_id', async (req, res) => {
   try {
