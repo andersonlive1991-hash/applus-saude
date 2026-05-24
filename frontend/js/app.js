@@ -3978,7 +3978,7 @@ async function carregarMedsCuidador() {
   try {
     if (!window._cuidadorFamiliaId) return;
     const meds = await api('GET', '/api/medicamentos/' + window._cuidadorFamiliaId);
-    const el = document.getElementById('cuid-meds-lista');
+    const el = document.getElementById('cuid-meds-lista-home');
     if (!el) return;
     if (!meds || !meds.length) { el.innerHTML = '<div style="text-align:center;color:#999;font-size:13px;padding:10px;">Nenhum medicamento cadastrado.</div>'; return; }
     const agora = new Date();
@@ -4009,7 +4009,7 @@ async function carregarEventosCuidador() {
   try {
     if (!window._cuidadorFamiliaId) return;
     const eventos = await api('GET', '/api/eventos/' + window._cuidadorFamiliaId);
-    const el = document.getElementById('cuid-eventos-lista');
+    const el = document.getElementById('cuid-eventos-lista-home');
     if (!el) return;
     const hoje = new Date().toISOString().split('T')[0];
     const hojeEvs = (eventos || []).filter(e => e.data && e.data.startsWith(hoje));
