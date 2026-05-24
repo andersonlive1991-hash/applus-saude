@@ -175,6 +175,28 @@ app.use('/api/rotina-tea', require('./routes/rotina_tea'));
 // Socket.io
 io.on('connection', (socket) => {
   console.log('Cliente conectado:', socket.id);
+  
+  socket.on('baba-entrou', (data) => {
+    const { familiaId } = data;
+    // Pega todos os sockets da room da família
+    const room = io.sockets.adapter.rooms.get(String(familiaId));
+    const paisOnline = [];
+    if (room) {
+      room.forEach(socketId => {
+        const s = io.sockets.sockets.get(socketId);
+        if (s && s.membroNome && s.membroId !== data.babaId) {
+          paisOnline.push(s.membroNome);
+        }
+      });
+    }
+    socket.emit('baba-pais-online', { pais: paisOnline });
+  });
+
+  socket.on('membro-identificado', (data) => {
+    socket.membroNome = data.nome;
+    socket.membroId = data.id;
+  });
+
   socket.on('entrar-familia', (familiaId) => {
     familiaId = String(familiaId);
     console.log('Entrou na sala:', familiaId);

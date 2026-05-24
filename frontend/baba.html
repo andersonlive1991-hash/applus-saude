@@ -346,6 +346,7 @@ async function iniciarApp() {
 function conectarSocket() {
   socket = io();
   socket.emit('entrar-familia', String(FAMILIA_ID));
+  socket.emit('baba-entrou', { familiaId: FAMILIA_ID, babaId: BABA.id });
   socket.on('baba-video-recebendo', async (data) => {
     pendingOffer = data.offer;
     document.getElementById('incoming-call').classList.add('open');
@@ -764,7 +765,7 @@ function gerarPDFPlantao() {
   window.open(url, '_blank');
 }
 
-socket.on('baba-pai-online', (data) => {
+socket.on('baba-pais-online', (data) => {
   const el = document.getElementById('lista-pais-online');
   const painel = document.getElementById('painel-pais');
   if (!el || !painel) return;

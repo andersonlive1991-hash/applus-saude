@@ -838,6 +838,7 @@ function navegarPara(pagina) {
   if (pagina === 'remedios') carregarMedicamentos();
   if (pagina === 'agenda') carregarAgenda();
   if (pagina === 'chat') carregarChat();
+  if (pagina === 'mais') { carregarBabasSalvas(); }
   if (pagina === 'mais') carregarMais();
   if (pagina === 'saude') carregarSinais();
   if (pagina === 'perfil') { carregarPerfil(); setTimeout(preencherNomePerfil, 500); }
@@ -3867,4 +3868,27 @@ async function carregarFotoPerfil() {
       preview.dataset.foto = '';
     }
   } catch(e) { console.log('Erro foto perfil:', e); }
+}
+
+async function carregarBabasSalvas() {
+  try {
+    if (!APP.familiaId) return;
+    const membros = await api('GET', '/api/membros/' + APP.familiaId);
+    const babas = (membros || []).filter(m => m.tipo === 'baba' || m.relacao === 'baba' || m.relacao === 'Babá / Nanny');
+    const el = document.getElementById('lista-babas-salvas');
+    if (!el) return;
+    if (!babas.length) { el.innerHTML = '<p style="color:#999;font-size:13px;">Nenhuma babá cadastrada.</p>'; return; }
+    el.innerHTML = babas.map(b => {
+      const link = 'https://applus-saude.onrender.com/baba.html?id=' + b.id_pessoal;
+      return `<div style="background:white;border-radius:12px;padding:12px;margin-bottom:8px;border:0.5px solid #e5e7eb;">
+        <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:4px;">👶 ${b.nome}</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:6px;">ID: ${b.id_pessoal}</div>
+        <div style="font-size:11px;color:#1a9e6e;word-break:break-all;margin-bottom:8px;">${link}</div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="navigator.clipboard.writeText('${link}').then(()=>alerta('✅ Link copiado!'))" style="flex:1;background:#e8f5e9;color:#0f6647;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;">📋 Copiar link</button>
+          <button onclick="navigator.share({title:'AP+ Saúde — Babá',url:'${link}'})" style="flex:1;background:#1a9e6e;color:white;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;">📤 Compartilhar</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.log('Erro babas:', e); }
 }
