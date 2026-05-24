@@ -2783,6 +2783,41 @@ async function meudiaCarregarAgua() {
   } catch(e) {}
 }
 
+function atualizarContadoresHome() {
+  // Atualiza contadores da home em tempo real sem regenerar o relatório do Gemini
+  try {
+    const elAgua = document.getElementById('resumo-agua');
+    const elSono = document.getElementById('resumo-sono');
+    const elHumor = document.getElementById('resumo-humor');
+    if (elAgua) {
+      api('GET', '/api/cuidados/hidratacao/' + APP.familiaId).then(d => {
+        if (d && elAgua) elAgua.textContent = (d.total || 0) + '/' + meudiaMetaAgua;
+      }).catch(()=>{});
+    }
+    if (elSono) {
+      api('GET', '/api/cuidados/sono/' + APP.familiaId).then(lista => {
+        if (!lista || !lista.length) return;
+        const s = lista[lista.length-1];
+        if (s && s.inicio && s.fim) {
+          const d = s.inicio.split(':').map(Number);
+          const a = s.fim.split(':').map(Number);
+          let h = (a[0]-d[0]) + (a[1]-d[1])/60;
+          if (h < 0) h += 24;
+          if (elSono) elSono.textContent = Math.round(h*10)/10 + 'h';
+        }
+      }).catch(()=>{});
+    }
+    if (elHumor) {
+      api('GET', '/api/cuidados/humor/' + APP.familiaId).then(lista => {
+        if (!lista || !lista.length) return;
+        const emojis = {1:'😢',2:'😔',3:'😐',4:'🙂',5:'😄'};
+        const ultimo = lista[lista.length-1];
+        if (ultimo && elHumor) elHumor.textContent = emojis[ultimo.humor] || '😊';
+      }).catch(()=>{});
+    }
+  } catch(e) {}
+}
+
 async function meudiaRegistrarAgua(qtd) {
   try {
     var totalAtual = parseInt(document.getElementById('meudia-total-agua').textContent) || 0;
@@ -2791,6 +2826,7 @@ async function meudiaRegistrarAgua(qtd) {
       familia_id: APP.familiaId, membro_id: APP.membroId, copos: qtd
     });
     await meudiaCarregarAgua();
+    atualizarContadoresHome();
     if (novoTotal >= meudiaMetaAgua) alerta('💧 Meta de hidratação atingida! Parabéns!');
   } catch(e) { alerta('Erro ao registrar água'); }
 }
@@ -2818,6 +2854,7 @@ async function meudiaRegistrarRefeicao(tipo) {
     });
     alerta('✅ ' + tipo + ' registrado!');
     await meudiaCarregarRefeicoes();
+    atualizarContadoresHome();
   } catch(e) { alerta('Erro ao registrar refeição'); }
 }
 
@@ -2861,6 +2898,7 @@ async function meudiaRegistrarSono() {
     });
     alerta('✅ Sono registrado!');
     await meudiaCarregarSono();
+    atualizarContadoresHome();
   } catch(e) { alerta('Erro ao registrar sono'); }
 }
 
@@ -2893,6 +2931,7 @@ async function meudiaRegistrarAtividade() {
     document.getElementById('meudia-atv-obs').value = '';
     alerta('✅ Atividade registrada!');
     await meudiaCarregarAtividades();
+    atualizarContadoresHome();
   } catch(e) { alerta('Erro ao registrar atividade'); }
 }
 
@@ -2921,6 +2960,7 @@ async function meudiaRegistrarHumor() {
     });
     alerta('✅ Humor registrado!');
     await meudiaCarregarHumor();
+    atualizarContadoresHome();
   } catch(e) { alerta('Erro ao registrar humor'); }
 }
 
