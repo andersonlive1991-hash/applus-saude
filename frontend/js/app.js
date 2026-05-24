@@ -24,7 +24,8 @@ async function loginGoogle() {
             localStorage.setItem('applus_membro_id', res.membroId);
             localStorage.setItem('applus_membro_nome', res.membroNome);
             if (res.foto) localStorage.setItem('applus_foto', res.foto);
-            mostrarPagina('home');
+            mostrarApp();
+            navegarPara('home');
             carregarHome();
             alerta('✅ Bem-vindo, ' + res.membroNome + '!');
           }
