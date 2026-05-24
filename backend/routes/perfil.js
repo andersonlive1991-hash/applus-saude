@@ -62,7 +62,11 @@ router.post('/', async (req, res) => {
        encrypt(alergias), encrypt(cpf), cartao_sus, convenio, contato_emergencia, tel_emergencia]
     );
     console.log('[perfil] salvo id:', result.rows[0].id);
-    res.json(result.rows[0]);
+    const saved = result.rows[0];
+    saved.cpf = decrypt(saved.cpf);
+    saved.alergias = decrypt(saved.alergias);
+    saved.tipo_sanguineo = decrypt(saved.tipo_sanguineo);
+    res.json(saved);
   } catch (e) {
     console.log('[perfil] ERRO:', e.message);
     res.status(500).json({ erro: e.message });
