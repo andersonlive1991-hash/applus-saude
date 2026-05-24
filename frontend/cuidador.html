@@ -317,6 +317,31 @@ body{background:#f0f7ff;min-height:100vh;padding-bottom:80px;}
 <script>
 const socket = io();
 let CUIDADOR = null, FAMILIA_ID = null, CHECKIN_ID = null;
+
+// Recuperar sessão salva
+(function() {
+  try {
+    const sessao = JSON.parse(localStorage.getItem('cuidador_sessao') || 'null');
+    if (sessao && sessao.id) {
+      fetch('/api/membros/id/' + sessao.id).then(r => r.json()).then(m => {
+        if (!m || !m.id) return;
+        CUIDADOR = m;
+        FAMILIA_ID = m.familia_id;
+        document.getElementById('cuid-nome').textContent = m.nome;
+        document.getElementById('cuid-familia').textContent = m.nome_familia || 'Família';
+        document.getElementById('tela-login').style.display = 'none';
+        document.getElementById('tela-app').style.display = 'block';
+        socket.emit('entrar-familia', String(FAMILIA_ID));
+        socket.emit('membro-identificado', { nome: m.nome, id: m.id });
+        socket.emit('cuidador-entrou', { familiaId: FAMILIA_ID, cuidadorId: m.id });
+        carregarDados();
+        carregarRegistros();
+        carregarInstrucoes();
+        verificarCheckin();
+      }).catch(() => localStorage.removeItem('cuidador_sessao'));
+    }
+  } catch(e) {}
+})();
 let humorSel = null, passSel = null, dorSel = null;
 let registros = [];
 
@@ -339,6 +364,7 @@ async function fazerLogin() {
     socket.emit('entrar-familia', String(FAMILIA_ID));
     socket.emit('membro-identificado', { nome: m.nome, id: m.id });
     socket.emit('cuidador-entrou', { familiaId: FAMILIA_ID, cuidadorId: m.id });
+    localStorage.setItem('cuidador_sessao', JSON.stringify({ id: m.id_pessoal, nome: m.nome, familia_id: m.familia_id, nome_familia: m.nome_familia || '' }));
     carregarDados();
     carregarRegistros();
     carregarInstrucoes();
