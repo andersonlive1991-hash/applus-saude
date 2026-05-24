@@ -69,6 +69,18 @@ router.get('/atividades/:familia_id', async (req, res) => {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+
+// Atividades do cuidador filtradas por membro_id
+router.get('/atividades/:familia_id/cuidador/:membro_id', async (req, res) => {
+  try {
+    const r = await db.query(
+      'SELECT * FROM cuidados_atividades WHERE familia_id=$1 AND membro_id=$2 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC',
+      [req.params.familia_id, req.params.membro_id]
+    );
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 // HUMOR
 router.post('/humor', async (req, res) => {
   const { familia_id, membro_id, humor, obs } = req.body;

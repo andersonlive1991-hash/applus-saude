@@ -861,6 +861,7 @@ function navegarPara(pagina) {
       carregarFeedCuidados();
     }
   }
+  if (pagina === 'painel-cuidador') { carregarFeedCuidadorFamilia(); }
   if (pagina === 'tea') {
     // Buscar membro TEA da família
     api('GET', `/api/membros/familia/${APP.familiaId}`).then(membros => {
@@ -905,6 +906,14 @@ async function carregarHome() {
     // Card Cuidados escondido — módulo será recriado futuramente
     const cardCuidados = document.getElementById('card-cuidados');
     if (cardCuidados) cardCuidados.style.display = 'none';
+    const temCuidador = membros.some(m => m.tipo === 'cuidador');
+    const cardCuidador = document.getElementById('card-cuidador');
+    if (cardCuidador) cardCuidador.style.display = temCuidador ? 'flex' : 'none';
+    if (temCuidador) {
+      const memCuid = membros.find(m => m.tipo === 'cuidador');
+      if (memCuid) window._cuidadorId = memCuid.id;
+      document.getElementById('cuidador-nome-painel').textContent = membros.find(m=>m.tipo==='cuidador').nome;
+    }
 
     const temBaba = membros.some(m => m.tipo === 'baba');
     const cardBaba = document.getElementById('card-baba');
@@ -1303,6 +1312,23 @@ function conectarSocket() {
   });
   APP.socket.on('alerta-emergencia', (data) => {
     mostrarAlertaEmergencia(data);
+  });
+
+  
+  APP.socket.on('cuidador-novo-registro', (data) => {
+    if (data.familiaId == APP.familiaId) {
+      mostrarToast('💚 ' + (data.cuidadorNome||'Cuidador') + ' registrou: ' + (data.registro.tipo||''));
+      carregarFeedCuidadorFamilia();
+    }
+  });
+
+  APP.socket.on('cuidador-online', (data) => {
+    const bar = document.getElementById('cuidador-online-bar');
+    const txt = document.getElementById('cuidador-status-txt');
+    if (bar && txt) {
+      bar.style.display = 'block';
+      txt.textContent = (data.nome||'Cuidador') + ' está online agora';
+    }
   });
 
   APP.socket.on('baba-novo-registro', (data) => {
@@ -3914,4 +3940,31 @@ async function carregarBabasSalvas() {
     if (!html) html = '<p style="color:#999;font-size:13px;">Nenhuma babá ou cuidador cadastrado.</p>';
     el.innerHTML = html;
   } catch(e) { console.log('Erro babas/cuidadores:', e); }
+}
+
+async function carregarFeedCuidadorFamilia() {
+  try {
+    if (!window._cuidadorId) return;
+    const r = await fetch('/api/cuidados/atividades/' + APP.familiaId + '/cuidador/' + window._cuidadorId);
+    const lista = await r.json();
+    const feed = document.getElementById('cuidador-feed');
+    if (!lista || !lista.length) {
+      feed.innerHTML = '<div style="text-align:center;color:#999;font-size:13px;padding:20px;">Nenhum registro hoje ainda.</div>';
+      return;
+    }
+    const icons = {banho:'🛁',alimentacao:'🍽️',medicamento:'💊',humor:'😊',sono:'😴',dor:'🤕',intercorrencia:'⚠️',passagem:'🔄',sos:'🚨'};
+    document.getElementById('cuid-count-ativ').textContent = lista.length;
+    document.getElementById('cuid-count-meds').textContent = lista.filter(r=>r.tipo==='medicamento').length;
+    const humor = lista.find(r=>r.tipo==='humor');
+    if (humor) document.getElementById('cuid-humor-atual').textContent = humor.obs ? humor.obs.split(' ')[0] : '--';
+    feed.innerHTML = lista.map(r => `
+      <div style="background:white;border-radius:10px;padding:10px 12px;margin-bottom:8px;border-left:3px solid #1a6eb5;display:flex;gap:10px;align-items:flex-start;">
+        <div style="font-size:20px;flex-shrink:0;">${icons[r.tipo]||'📋'}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:#111;">${r.tipo.charAt(0).toUpperCase()+r.tipo.slice(1)}</div>
+          <div style="font-size:12px;color:#555;margin-top:2px;">${r.obs||''}</div>
+          <div style="font-size:10px;color:#999;margin-top:3px;">${new Date(r.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) { console.log('Erro feed cuidador:', e); }
 }
