@@ -100,6 +100,41 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+app.get('/api/cuidador/relatorio-pdf/:familia_id/:cuidador_id', async (req, res) => {
+  try {
+    const { familia_id, cuidador_id } = req.params;
+    const PDFDocument = require('pdfkit');
+    const db = require('./db');
+    const ativs = await db.query(
+      "SELECT * FROM cuidados_atividades WHERE familia_id=$1 AND membro_id=$2 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em ASC",
+      [familia_id, cuidador_id]
+    );
+    const cuid = await db.query('SELECT nome FROM membros WHERE id=$1', [cuidador_id]);
+    const nome = cuid.rows[0] ? cuid.rows[0].nome : 'Cuidador';
+    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=plantao-cuidador.pdf');
+    doc.pipe(res);
+    doc.fontSize(20).fillColor('#1a6eb5').text('AP+ Saúde — Relatório do Plantão', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(12).fillColor('#333').text('Cuidador: ' + nome, { align: 'center' });
+    doc.text('Data: ' + new Date().toLocaleDateString('pt-BR'), { align: 'center' });
+    doc.moveDown(1);
+    if (!ativs.rows.length) {
+      doc.fontSize(12).fillColor('#666').text('Nenhum registro hoje.', { align: 'center' });
+    } else {
+      ativs.rows.forEach(r => {
+        doc.fontSize(13).fillColor('#1a6eb5').text('• ' + (r.tipo||'').toUpperCase());
+        doc.fontSize(11).fillColor('#333').text('  ' + (r.obs||''));
+        doc.fontSize(10).fillColor('#999').text('  ' + new Date(r.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+        doc.moveDown(0.4);
+      });
+    }
+    doc.end();
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 app.use('/.well-known', express.static(path.join(__dirname, '../frontend/.well-known'), {
   setHeaders: (res) => { res.setHeader('Content-Type', 'application/json'); }
 }));
@@ -176,6 +211,26 @@ app.use('/api/rotina-tea', require('./routes/rotina_tea'));
 io.on('connection', (socket) => {
   console.log('Cliente conectado:', socket.id);
   
+  
+  socket.on('cuidador-entrou', (data) => {
+    const { familiaId, cuidadorId } = data;
+    const room = io.sockets.adapter.rooms.get(String(familiaId));
+    const paisOnline = [];
+    if (room) {
+      room.forEach(socketId => {
+        const s = io.sockets.sockets.get(socketId);
+        if (s && s.membroNome && s.membroId !== cuidadorId) {
+          paisOnline.push(s.membroNome);
+        }
+      });
+    }
+    socket.emit('cuidador-pais-online', { pais: paisOnline });
+  });
+
+  socket.on('cuidador-registro', (data) => {
+    io.to(String(data.familiaId)).emit('cuidador-novo-registro', data);
+  });
+
   socket.on('baba-entrou', (data) => {
     const { familiaId } = data;
     // Pega todos os sockets da room da família

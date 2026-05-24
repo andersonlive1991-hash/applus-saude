@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP+ Saúde — Cuidador</title>
+<link rel="manifest" href="/manifest.json">
+<script src="/socket.io/socket.io.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+body{background:#f0f7ff;min-height:100vh;padding-bottom:80px;}
+.header{background:#1a6eb5;color:#fff;padding:16px;position:sticky;top:0;z-index:100;}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.header-nome{font-size:16px;font-weight:600;}
+.header-sub{font-size:12px;opacity:0.85;}
+.idoso-bar{background:rgba(255,255,255,0.18);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;}
+.idoso-av{width:36px;height:36px;border-radius:50%;background:#fff;color:#1a6eb5;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}
+.idoso-info{flex:1;}
+.idoso-nome{font-size:14px;font-weight:600;color:#fff;}
+.idoso-sub{font-size:11px;color:rgba(255,255,255,0.85);}
+.btn-checkin{background:#fff;color:#1a6eb5;border:none;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-checkin.checkout{background:#ffecec;color:#c0392b;}
+.section{padding:12px 14px 4px;font-size:11px;font-weight:600;color:#1a6eb5;text-transform:uppercase;letter-spacing:0.06em;}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 14px;}
+.quick-btn{background:#fff;border:1.5px solid #d0e4f7;border-radius:12px;padding:12px 4px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:all .15s;}
+.quick-btn:active{transform:scale(0.95);background:#d0e4f7;}
+.quick-ico{font-size:22px;}
+.quick-lbl{font-size:10px;color:#555;font-weight:500;}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 14px 8px;}
+.stat{background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #d0e4f7;}
+.stat-v{font-size:20px;font-weight:700;color:#1a6eb5;}
+.stat-l{font-size:10px;color:#888;margin-top:2px;}
+.log-list{padding:0 14px;}
+.log-item{background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;border-left:3px solid #1a6eb5;}
+.log-item.banho{border-color:#3498db;}
+.log-item.alimentacao{border-color:#f39c12;}
+.log-item.sono{border-color:#9b59b6;}
+.log-item.humor{border-color:#e74c3c;}
+.log-item.medicamento{border-color:#1abc9c;}
+.log-item.intercorrencia{border-color:#e74c3c;}
+.log-item.sos{border-color:#dc2626;background:#fef2f2;}
+.log-dot{width:8px;height:8px;border-radius:50%;background:#1a6eb5;margin-top:4px;flex-shrink:0;}
+.log-content{flex:1;}
+.log-titulo{font-size:13px;font-weight:600;color:#222;}
+.log-detalhe{font-size:12px;color:#555;margin-top:2px;}
+.log-hora{font-size:11px;color:#999;margin-top:3px;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;}
+.modal-overlay.aberto{display:flex;}
+.modal{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:85vh;overflow-y:auto;}
+.modal-titulo{font-size:16px;font-weight:700;color:#222;margin-bottom:16px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;font-weight:600;color:#555;margin-bottom:5px;display:block;}
+.form-input{width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;}
+.form-input:focus{border-color:#1a6eb5;}
+.form-select{width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:10px 12px;font-size:14px;background:#fff;}
+.emoji-row{display:flex;gap:8px;flex-wrap:wrap;}
+.emoji-opt{font-size:24px;padding:8px;border-radius:10px;border:2px solid transparent;cursor:pointer;}
+.emoji-opt.sel{border-color:#1a6eb5;background:#e8f0fb;}
+.btn-salvar{width:100%;background:#1a6eb5;color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;}
+.btn-cancelar{width:100%;background:#f0f0f0;color:#666;border:none;padding:12px;border-radius:12px;font-size:14px;cursor:pointer;}
+.sos-btn{background:#dc2626;color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin:8px 14px;width:calc(100% - 28px);}
+.nav-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e0e0e0;display:flex;padding:6px 0 10px;z-index:100;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px;}
+.nav-ico{font-size:20px;}
+.nav-lbl{font-size:10px;color:#999;}
+.nav-btn.ativo .nav-lbl{color:#1a6eb5;font-weight:600;}
+.pais-bar{background:rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;margin-top:6px;font-size:11px;color:rgba(255,255,255,0.9);}
+.instrucoes-box{background:#fff;border-radius:12px;margin:8px 14px;padding:14px;border:1px solid #d0e4f7;}
+.instrucoes-txt{font-size:13px;color:#333;line-height:1.6;white-space:pre-wrap;}
+.ia-box{background:#fff;border-radius:12px;margin:8px 14px;padding:14px;}
+.ia-msgs{min-height:100px;max-height:200px;overflow-y:auto;margin-bottom:10px;}
+.ia-msg-bot{background:#e8f0fb;border-radius:10px;padding:8px 10px;font-size:12px;color:#1a6eb5;margin-bottom:6px;}
+.ia-msg-user{background:#1a6eb5;border-radius:10px;padding:8px 10px;font-size:12px;color:#fff;margin-bottom:6px;text-align:right;}
+.ia-input-row{display:flex;gap:8px;}
+.ia-input{flex:1;border:1.5px solid #d0e4f7;border-radius:10px;padding:8px 12px;font-size:13px;}
+.ia-send{background:#1a6eb5;color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:18px;cursor:pointer;}
+.tab-content{display:none;}
+.tab-content.ativo{display:block;}
+.dor-row{display:flex;gap:6px;justify-content:center;margin:8px 0;}
+.dor-btn{flex:1;background:#f5f5f5;border:2px solid transparent;border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;font-size:11px;}
+.dor-btn.sel{border-color:#1a6eb5;background:#e8f0fb;}
+.passagem-box{background:#fff3cd;border-radius:12px;margin:8px 14px;padding:14px;border:1px solid #ffc107;}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;display:none;}
+</style>
+</head>
+<body>
+
+<div id="tela-login" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:#1a6eb5;">
+  <div style="font-size:48px;margin-bottom:16px;">💚</div>
+  <div style="font-size:24px;font-weight:700;color:#fff;margin-bottom:4px;">Portal do Cuidador</div>
+  <div style="font-size:14px;color:rgba(255,255,255,0.8);margin-bottom:32px;">AP+ Saúde</div>
+  <div style="background:#fff;border-radius:16px;padding:20px;width:100%;max-width:360px;">
+    <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:12px;">Digite seu ID de cuidador</div>
+    <input id="input-id" type="text" placeholder="Ex: CUI-AB3X9" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px;font-size:16px;margin-bottom:12px;text-transform:uppercase;">
+    <button onclick="fazerLogin()" style="width:100%;background:#1a6eb5;color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;">Entrar</button>
+  </div>
+</div>
+
+<div id="tela-app" style="display:none;">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-nome">Olá, <span id="cuid-nome">Cuidador</span> 👋</div>
+        <div class="header-sub">Cuidador · <span id="cuid-familia">Família</span></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="btn-checkin" class="btn-checkin" onclick="toggleCheckin()">Check-in</button>
+      </div>
+    </div>
+    <div class="idoso-bar">
+      <div class="idoso-av" id="idoso-av">?</div>
+      <div class="idoso-info">
+        <div class="idoso-nome" id="idoso-nome">Carregando...</div>
+        <div class="idoso-sub" id="idoso-sub">Paciente</div>
+      </div>
+    </div>
+    <div class="pais-bar" id="pais-bar">👨‍👩‍👧 Família: verificando...</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-v" id="s-atividades">0</div><div class="stat-l">Atividades</div></div>
+    <div class="stat"><div class="stat-v" id="s-meds">0</div><div class="stat-l">Remédios</div></div>
+    <div class="stat"><div class="stat-v" id="s-horas">0h</div><div class="stat-l">Plantão</div></div>
+  </div>
+
+  <button class="sos-btn" onclick="cuidadorSOS()">🚨 SOS — EMERGÊNCIA</button>
+
+  <div class="section">Registrar agora</div>
+  <div class="quick-grid">
+    <div class="quick-btn" onclick="abrirModal('banho')"><div class="quick-ico">🛁</div><div class="quick-lbl">Banho</div></div>
+    <div class="quick-btn" onclick="abrirModal('alimentacao')"><div class="quick-ico">🍽️</div><div class="quick-lbl">Refeição</div></div>
+    <div class="quick-btn" onclick="abrirModal('medicamento')"><div class="quick-ico">💊</div><div class="quick-lbl">Remédio</div></div>
+    <div class="quick-btn" onclick="abrirModal('humor')"><div class="quick-ico">😊</div><div class="quick-lbl">Humor</div></div>
+    <div class="quick-btn" onclick="abrirModal('sono')"><div class="quick-ico">😴</div><div class="quick-lbl">Sono</div></div>
+    <div class="quick-btn" onclick="abrirModal('dor')"><div class="quick-ico">🤕</div><div class="quick-lbl">Dor</div></div>
+    <div class="quick-btn" onclick="abrirModal('intercorrencia')"><div class="quick-ico">⚠️</div><div class="quick-lbl">Ocorrência</div></div>
+    <div class="quick-btn" onclick="abrirModal('passagem')"><div class="quick-ico">🔄</div><div class="quick-lbl">Passagem</div></div>
+  </div>
+
+  <div id="tab-hoje" class="tab-content ativo">
+    <div class="section">Diário de hoje</div>
+    <div class="log-list" id="log-list"><div style="text-align:center;color:#999;padding:20px;font-size:13px;">Nenhum registro ainda hoje</div></div>
+    <div style="padding:8px 14px;">
+      <button onclick="gerarPDF()" style="width:100%;background:#1a6eb5;color:#fff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">📄 Relatório PDF do plantão</button>
+    </div>
+  </div>
+
+  <div id="tab-instrucoes" class="tab-content">
+    <div class="section">Instruções da família</div>
+    <div class="instrucoes-box">
+      <div class="instrucoes-txt" id="instrucoes-txt">Carregando instruções...</div>
+    </div>
+  </div>
+
+  <div id="tab-ia" class="tab-content">
+    <div class="section">Assistente IA</div>
+    <div class="ia-box">
+      <div class="ia-msgs" id="ia-msgs">
+        <div class="ia-msg-bot">Olá! Sou o assistente de saúde do AP+ Saúde. Posso ajudar com dúvidas sobre cuidados, medicamentos e emergências. Como posso ajudar?</div>
+      </div>
+      <div class="ia-input-row">
+        <input class="ia-input" id="ia-input" placeholder="Faça uma pergunta..." onkeydown="if(event.key==='Enter')enviarIA()">
+        <button class="ia-send" onclick="enviarIA()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <div class="nav-btn ativo" onclick="mostrarTab('hoje',this)"><div class="nav-ico">📋</div><div class="nav-lbl">Hoje</div></div>
+    <div class="nav-btn" onclick="mostrarTab('instrucoes',this)"><div class="nav-ico">📝</div><div class="nav-lbl">Instruções</div></div>
+    <div class="nav-btn" onclick="mostrarTab('ia',this)"><div class="nav-ico">🤖</div><div class="nav-lbl">IA</div></div>
+  </div>
+</div>
+
+<!-- MODAIS -->
+<div id="modal-banho" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🛁 Registrar Banho</div>
+    <div class="form-group"><label class="form-label">Hora</label><input type="time" id="banho-hora" class="form-input"></div>
+    <div class="form-group"><label class="form-label">Observações</label><textarea id="banho-obs" class="form-input" rows="2" placeholder="Ex: banho completo, sem intercorrências"></textarea></div>
+    <button class="btn-salvar" onclick="salvar('banho')">💾 Salvar</button>
+    <button class="btn-cancelar" onclick="fecharModal('modal-banho')">Cancelar</button>
+  </div>
+</div>
+
+<div id="modal-alimentacao" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🍽️ Registrar Refeição</div>
+    <div class="form-group"><label class="form-label">Refeição</label>
+      <select id="alim-tipo" class="form-select">
+        <option>☕ Café da manhã</option><option>🍱 Almoço</option><option>🥪 Lanche</option><option>🍽️ Jantar</option><option>🌙 Ceia</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Quantidade consumida</label>
+      <select id="alim-qtd" class="form-select">
+        <option>✅ Tudo</option><option>🔶 Metade</option><option>⚠️ Pouco</option><option>❌ Recusou</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Observações</label><textarea id="alim-obs" class="form-input" rows="2" placeholder="Ex: comeu bem, sem dificuldade"></textarea></div>
+    <button class="btn-salvar" onclick="salvar('alimentacao')">💾 Salvar</button>
+    <button class="btn-cancelar" onclick="fecharModal('modal-alimentacao')">Cancelar</button>
+  </div>
+</div>
+
+<div id="modal-medicamento" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">💊 Registrar Medicamento</div>
+    <div class="form-group"><label class="form-label">Medicamento</label><input type="text" id="med-nome" class="form-input" placeholder="Nome do medicamento"></div>
+    <div class="form-group"><label class="form-label">Hora</label><input type="time" id="med-hora" class="form-input"></div>
+    <div class="form-group"><label class="form-label">Administrado?</label>
+      <select id="med-status" class="form-select">
+        <option>✅ Sim, administrado</option><option>❌ Recusou</option><option>⚠️ Dificuldade</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Observações</label><textarea id="med-obs" class="form-input" rows="2"></textarea></div>
+    <button class="btn-salvar" onclick="salvar('medicamento')">💾 Salvar</button>
+    <button class="btn-cancelar" onclick="fecharModal('modal-medicamento')">Cancelar</button>
+  </div>
+</div>
+
+<div id="modal-humor" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">😊 Humor do Idoso</div>
+    <div class="form-group"><label class="form-label">Como está?</label>
+      <div class="emoji-row" id="humor-opts">
+        <div class="emoji-opt" onclick="selEmoji(this,'humor')">😄</div>
+        <div class="emoji-opt" onclick="selEmoji(this,'humor')">🙂</div>
+        <div class="emoji-opt" onclick="selEmoji(this,'humor')">😐</div>
+        <div class="emoji-opt" onclick="selEmoji(this,'humor')">😔</div>
+        <div class="emoji-opt" onclick="selEmoji(this,'humor')">😢</div>
+        <div class="emoji-opt" onclick="selEmoji(this,'humor')">😤</div>
+        <div class="emoji-opt" onclick="selEmoji(this,'humor')">😰</div>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Observações</label><textarea id="humor-obs" class="form-input" rows="2"></textarea></div>
+    <button class="btn-salvar" onclick="salvar('humor')">💾 Salvar</button>
+    <button class="btn-cancelar" onclick="fecharModal('modal-humor')">Cancelar</button>
+  </div>
+</div>
+
+<div id="modal-sono" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">😴 Registrar Sono</div>
+    <div class="form-group"><label class="form-label">Dormiu às</label><input type="time" id="sono-ini" class="form-input"></div>
+    <div class="form-group"><label class="form-label">Acordou às</label><input type="time" id="sono-fim" class="form-input"></div>
+    <div class="form-group"><label class="form-label">Qualidade</label>
+      <select id="sono-qual" class="form-select">
+        <option>😴 Ótima</option><option>🙂 Boa</option><option>😐 Regular</option><option>😔 Ruim</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Observações</label><textarea id="sono-obs" class="form-input" rows="2"></textarea></div>
+    <button class="btn-salvar" onclick="salvar('sono')">💾 Salvar</button>
+    <button class="btn-cancelar" onclick="fecharModal('modal-sono')">Cancelar</button>
+  </div>
+</div>
+
+<div id="modal-dor" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🤕 Escala de Dor</div>
+    <div class="form-group"><label class="form-label">Nível de dor</label>
+      <div class="dor-row" id="dor-opts">
+        <div class="dor-btn" onclick="selDor(this,0)">😊<br><span style="font-size:9px;">Sem dor</span></div>
+        <div class="dor-btn" onclick="selDor(this,1)">😐<br><span style="font-size:9px;">Leve</span></div>
+        <div class="dor-btn" onclick="selDor(this,2)">😟<br><span style="font-size:9px;">Moderada</span></div>
+        <div class="dor-btn" onclick="selDor(this,3)">😣<br><span style="font-size:9px;">Intensa</span></div>
+        <div class="dor-btn" onclick="selDor(this,4)">😭<br><span style="font-size:9px;">Insuportável</span></div>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Local da dor</label><input type="text" id="dor-local" class="form-input" placeholder="Ex: costas, perna direita"></div>
+    <div class="form-group"><label class="form-label">Observações</label><textarea id="dor-obs" class="form-input" rows="2"></textarea></div>
+    <button class="btn-salvar" onclick="salvar('dor')">💾 Salvar</button>
+    <button class="btn-cancelar" onclick="fecharModal('modal-dor')">Cancelar</button>
+  </div>
+</div>
+
+<div id="modal-intercorrencia" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">⚠️ Registrar Ocorrência</div>
+    <div class="form-group"><label class="form-label">Tipo</label>
+      <select id="inter-tipo" class="form-select">
+        <option>🤕 Queda</option><option>💊 Recusa de medicamento</option><option>😤 Agitação</option><option>😣 Dor</option><option>🤢 Vômito</option><option>🌡️ Febre</option><option>⚠️ Outro</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Hora</label><input type="time" id="inter-hora" class="form-input"></div>
+    <div class="form-group"><label class="form-label">O que aconteceu</label><textarea id="inter-desc" class="form-input" rows="3" placeholder="Descreva a ocorrência"></textarea></div>
+    <button class="btn-salvar" onclick="salvar('intercorrencia')" style="background:#dc2626;">🚨 Registrar e alertar família</button>
+    <button class="btn-cancelar" onclick="fecharModal('modal-intercorrencia')">Cancelar</button>
+  </div>
+</div>
+
+<div id="modal-passagem" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-titulo">🔄 Passagem de Plantão</div>
+    <div class="form-group"><label class="form-label">Como o idoso ficou?</label>
+      <div class="emoji-row" id="pass-opts">
+        <div class="emoji-opt" onclick="selEmoji(this,'pass')">😄</div>
+        <div class="emoji-opt" onclick="selEmoji(this,'pass')">🙂</div>
+        <div class="emoji-opt" onclick="selEmoji(this,'pass')">😐</div>
+        <div class="emoji-opt" onclick="selEmoji(this,'pass')">😔</div>
+        <div class="emoji-opt" onclick="selEmoji(this,'pass')">😢</div>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Resumo do turno</label><textarea id="pass-resumo" class="form-input" rows="3" placeholder="O que foi feito, como passou o dia..."></textarea></div>
+    <div class="form-group"><label class="form-label">Intercorrências</label><textarea id="pass-inter" class="form-input" rows="2" placeholder="Se houve alguma ocorrência importante..."></textarea></div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="pass-meds" style="width:18px;height:18px;"> Todos os medicamentos foram administrados
+      </label>
+    </div>
+    <button class="btn-salvar" onclick="salvar('passagem')">💾 Registrar passagem</button>
+    <button class="btn-cancelar" onclick="fecharModal('modal-passagem')">Cancelar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const socket = io();
+let CUIDADOR = null, FAMILIA_ID = null, CHECKIN_ID = null;
+let humorSel = null, passSel = null, dorSel = null;
+let registros = [];
+
+const horaAtual = () => new Date().toTimeString().slice(0,5);
+
+async function fazerLogin() {
+  const id = document.getElementById('input-id').value.trim().toUpperCase();
+  if (!id) return mostrarToast('Digite seu ID');
+  try {
+    const r = await fetch('/api/membros/id/' + id);
+    const m = await r.json();
+    if (!m || !m.id) return mostrarToast('ID não encontrado');
+    if (m.tipo !== 'cuidador') return mostrarToast('Este ID não é de um cuidador');
+    CUIDADOR = m;
+    FAMILIA_ID = m.familia_id;
+    document.getElementById('cuid-nome').textContent = m.nome;
+    document.getElementById('cuid-familia').textContent = m.nome_familia || 'Família';
+    document.getElementById('tela-login').style.display = 'none';
+    document.getElementById('tela-app').style.display = 'block';
+    socket.emit('entrar-familia', String(FAMILIA_ID));
+    socket.emit('membro-identificado', { nome: m.nome, id: m.id });
+    socket.emit('cuidador-entrou', { familiaId: FAMILIA_ID, cuidadorId: m.id });
+    carregarDados();
+    carregarRegistros();
+    carregarInstrucoes();
+    verificarCheckin();
+  } catch(e) { mostrarToast('Erro ao entrar: ' + e.message); }
+}
+
+async function carregarDados() {
+  try {
+    const r = await fetch('/api/membros/familia/' + FAMILIA_ID);
+    const membros = await r.json();
+    const idoso = membros.find(m => m.relacao === 'Idoso — familiar sendo cuidado' || m.tipo === 'idoso' || m.relacao === 'idoso');
+    if (idoso) {
+      document.getElementById('idoso-nome').textContent = idoso.nome;
+      document.getElementById('idoso-av').textContent = idoso.nome[0].toUpperCase();
+      document.getElementById('idoso-sub').textContent = 'Paciente sendo cuidado';
+    } else {
+      document.getElementById('idoso-nome').textContent = 'Familiar';
+      document.getElementById('idoso-av').textContent = '👴';
+    }
+  } catch(e) {}
+}
+
+async function carregarRegistros() {
+  try {
+    const r = await fetch('/api/cuidados/registros/' + FAMILIA_ID + '?cuidador_id=' + CUIDADOR.id);
+    const data = await r.json();
+    registros = data || [];
+    renderizarLog();
+    atualizarStats();
+  } catch(e) {
+    // fallback — lista vazia
+    registros = [];
+    renderizarLog();
+  }
+}
+
+async function carregarInstrucoes() {
+  try {
+    const r = await fetch('/api/baba/instrucoes/' + FAMILIA_ID);
+    const d = await r.json();
+    document.getElementById('instrucoes-txt').textContent = d.texto || 'Nenhuma instrução cadastrada pela família ainda.';
+  } catch(e) {
+    document.getElementById('instrucoes-txt').textContent = 'Nenhuma instrução cadastrada ainda.';
+  }
+}
+
+async function verificarCheckin() {
+  try {
+    const r = await fetch('/api/baba/checkin-ativo/' + FAMILIA_ID + '/' + CUIDADOR.id);
+    const d = await r.json();
+    if (d && d.id) {
+      CHECKIN_ID = d.id;
+      const btn = document.getElementById('btn-checkin');
+      btn.textContent = 'Check-out';
+      btn.classList.add('checkout');
+      const ini = new Date(d.inicio);
+      const horas = ((Date.now() - ini) / 3600000).toFixed(1);
+      document.getElementById('s-horas').textContent = horas + 'h';
+    }
+  } catch(e) {}
+}
+
+async function toggleCheckin() {
+  const btn = document.getElementById('btn-checkin');
+  try {
+    if (!CHECKIN_ID) {
+      let gps = null;
+      try { const pos = await new Promise((res,rej) => navigator.geolocation.getCurrentPosition(res,rej,{timeout:3000})); gps = pos.coords.latitude + ',' + pos.coords.longitude; } catch(e) {}
+      const r = await fetch('/api/baba/checkin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ familia_id: FAMILIA_ID, baba_membro_id: CUIDADOR.id, gps }) });
+      const d = await r.json();
+      CHECKIN_ID = d.id;
+      btn.textContent = 'Check-out';
+      btn.classList.add('checkout');
+      socket.emit('baba-checkin', { familiaId: FAMILIA_ID, tipo: 'checkin', nome: CUIDADOR.nome, hora: horaAtual() });
+      mostrarToast('✅ Check-in registrado!');
+    } else {
+      await fetch('/api/baba/checkout/' + CHECKIN_ID, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ familia_id: FAMILIA_ID, baba_membro_id: CUIDADOR.id }) });
+      CHECKIN_ID = null;
+      btn.textContent = 'Check-in';
+      btn.classList.remove('checkout');
+      socket.emit('baba-checkin', { familiaId: FAMILIA_ID, tipo: 'checkout', nome: CUIDADOR.nome });
+      mostrarToast('✅ Check-out registrado!');
+    }
+  } catch(e) { mostrarToast('Erro no check-in'); }
+}
+
+function abrirModal(tipo) {
+  // preenche hora atual
+  const agora = horaAtual();
+  const campos = { banho: 'banho-hora', medicamento: 'med-hora', intercorrencia: 'inter-hora', sono: 'sono-ini' };
+  if (campos[tipo]) document.getElementById(campos[tipo]).value = agora;
+  document.getElementById('modal-' + tipo).classList.add('aberto');
+}
+
+function fecharModal(id) { document.getElementById(id).classList.remove('aberto'); }
+
+function selEmoji(el, tipo) {
+  document.querySelectorAll('#' + (tipo==='humor'?'humor-opts':'pass-opts') + ' .emoji-opt').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
+  if (tipo === 'humor') humorSel = el.textContent;
+  else passSel = el.textContent;
+}
+
+function selDor(el, nivel) {
+  document.querySelectorAll('#dor-opts .dor-btn').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
+  dorSel = nivel;
+}
+
+async function salvar(tipo) {
+  let detalhe = '', extra = {};
+  try {
+    if (tipo === 'banho') {
+      detalhe = document.getElementById('banho-obs').value || 'Banho realizado';
+      extra = { hora: document.getElementById('banho-hora').value };
+    } else if (tipo === 'alimentacao') {
+      const t = document.getElementById('alim-tipo').value;
+      const q = document.getElementById('alim-qtd').value;
+      const o = document.getElementById('alim-obs').value;
+      detalhe = t + ' — ' + q + (o ? '. ' + o : '');
+    } else if (tipo === 'medicamento') {
+      const n = document.getElementById('med-nome').value;
+      const s = document.getElementById('med-status').value;
+      const o = document.getElementById('med-obs').value;
+      detalhe = n + ' — ' + s + (o ? '. ' + o : '');
+      extra = { hora: document.getElementById('med-hora').value };
+    } else if (tipo === 'humor') {
+      if (!humorSel) return mostrarToast('Selecione o humor');
+      detalhe = humorSel + ' ' + (document.getElementById('humor-obs').value || '');
+    } else if (tipo === 'sono') {
+      const ini = document.getElementById('sono-ini').value;
+      const fim = document.getElementById('sono-fim').value;
+      const q = document.getElementById('sono-qual').value;
+      const o = document.getElementById('sono-obs').value;
+      detalhe = ini + ' às ' + fim + ' — ' + q + (o ? '. ' + o : '');
+    } else if (tipo === 'dor') {
+      if (dorSel === null) return mostrarToast('Selecione o nível de dor');
+      const niveis = ['Sem dor','Leve','Moderada','Intensa','Insuportável'];
+      const local = document.getElementById('dor-local').value;
+      detalhe = 'Dor ' + niveis[dorSel] + (local ? ' — ' + local : '') + '. ' + (document.getElementById('dor-obs').value || '');
+    } else if (tipo === 'intercorrencia') {
+      const t = document.getElementById('inter-tipo').value;
+      const d = document.getElementById('inter-desc').value;
+      detalhe = t + ': ' + d;
+      extra = { hora: document.getElementById('inter-hora').value };
+    } else if (tipo === 'passagem') {
+      const r = document.getElementById('pass-resumo').value;
+      const i = document.getElementById('pass-inter').value;
+      const m = document.getElementById('pass-meds').checked;
+      detalhe = r + (i ? '\nIntercorrências: ' + i : '') + (m ? '\n✅ Todos os medicamentos administrados' : '');
+    }
+
+    const reg = { familia_id: FAMILIA_ID, cuidador_id: CUIDADOR.id, tipo, detalhe, hora: horaAtual(), ...extra };
+    
+    // Salva no banco via rota de cuidados
+    await fetch('/api/cuidados/atividade', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ familia_id: FAMILIA_ID, membro_id: CUIDADOR.id, tipo, obs: detalhe, hora: extra.hora || horaAtual() })
+    }).catch(() => {});
+
+    // Emite tempo real para família
+    socket.emit('cuidador-registro', { familiaId: FAMILIA_ID, registro: reg, cuidadorNome: CUIDADOR.nome });
+
+    // Adiciona localmente
+    registros.unshift({ ...reg, criado_em: new Date().toISOString() });
+    renderizarLog();
+    atualizarStats();
+    fecharModal('modal-' + tipo);
+    mostrarToast('✅ ' + tipo.charAt(0).toUpperCase() + tipo.slice(1) + ' registrado!');
+
+    // Alerta família se intercorrência
+    if (tipo === 'intercorrencia') {
+      socket.emit('emergencia', { familiaId: FAMILIA_ID, tipo: 'intercorrencia', mensagem: CUIDADOR.nome + ' registrou: ' + detalhe, nome: CUIDADOR.nome });
+    }
+  } catch(e) { mostrarToast('Erro ao salvar: ' + e.message); }
+}
+
+function renderizarLog() {
+  const el = document.getElementById('log-list');
+  if (!registros.length) { el.innerHTML = '<div style="text-align:center;color:#999;padding:20px;font-size:13px;">Nenhum registro ainda hoje</div>'; return; }
+  const icons = { banho:'🛁', alimentacao:'🍽️', medicamento:'💊', humor:'😊', sono:'😴', dor:'🤕', intercorrencia:'⚠️', passagem:'🔄', sos:'🚨' };
+  el.innerHTML = registros.map(r => `
+    <div class="log-item ${r.tipo}">
+      <div style="font-size:20px;flex-shrink:0;">${icons[r.tipo]||'📋'}</div>
+      <div class="log-content">
+        <div class="log-titulo">${r.tipo.charAt(0).toUpperCase()+r.tipo.slice(1)}</div>
+        <div class="log-detalhe">${r.detalhe||''}</div>
+        <div class="log-hora">${r.hora||new Date(r.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+    </div>`).join('');
+}
+
+function atualizarStats() {
+  document.getElementById('s-atividades').textContent = registros.length;
+  document.getElementById('s-meds').textContent = registros.filter(r => r.tipo === 'medicamento').length;
+}
+
+function cuidadorSOS() {
+  if (!confirm('Disparar alerta SOS para a família?')) return;
+  socket.emit('emergencia', { familiaId: FAMILIA_ID, tipo: 'sos-cuidador', mensagem: CUIDADOR.nome + ' (cuidador) disparou SOS!', nome: CUIDADOR.nome });
+  registros.unshift({ tipo: 'sos', detalhe: 'SOS disparado', hora: horaAtual(), criado_em: new Date().toISOString() });
+  renderizarLog();
+  mostrarToast('🚨 SOS enviado para a família!');
+}
+
+function gerarPDF() {
+  window.open('/api/cuidador/relatorio-pdf/' + FAMILIA_ID + '/' + CUIDADOR.id, '_blank');
+}
+
+async function enviarIA() {
+  const input = document.getElementById('ia-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  const msgs = document.getElementById('ia-msgs');
+  msgs.innerHTML += `<div class="ia-msg-user">${msg}</div>`;
+  msgs.innerHTML += '<div class="ia-msg-bot" id="ia-typing">Pensando...</div>';
+  msgs.scrollTop = msgs.scrollHeight;
+  try {
+    const r = await fetch('/api/ia/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ mensagem: msg, membro_id: CUIDADOR.id, contexto: 'cuidador' }) });
+    const d = await r.json();
+    document.getElementById('ia-typing').textContent = d.resposta || 'Não foi possível responder agora.';
+  } catch(e) { document.getElementById('ia-typing').textContent = 'Erro ao conectar com a IA.'; }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function mostrarTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('ativo'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
+  document.getElementById('tab-' + tab).classList.add('ativo');
+  btn.classList.add('ativo');
+}
+
+function mostrarToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+// Socket events
+socket.on('cuidador-pais-online', (data) => {
+  const el = document.getElementById('pais-bar');
+  if (data.pais && data.pais.length) {
+    el.textContent = '👨‍👩‍👧 Online agora: ' + data.pais.join(', ');
+  } else {
+    el.textContent = '👨‍👩‍👧 Família: nenhum familiar online agora';
+  }
+});
+
+// Hora do check-in atualiza a cada minuto
+setInterval(() => {
+  if (CHECKIN_ID) {
+    const horas = ((Date.now() - window._checkinInicio) / 3600000).toFixed(1);
+    document.getElementById('s-horas').textContent = horas + 'h';
+  }
+}, 60000);
+</script>
+</body>
+</html>
