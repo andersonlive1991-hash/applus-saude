@@ -26,7 +26,10 @@ router.post('/google', async (req, res) => {
       );
     }
     const m = membro.rows[0];
-    res.json({ ok: true, membroId: m.id, membroNome: m.nome, membroTipo: m.tipo, familiaId: m.familia_id, idPessoal: m.id_pessoal, foto: m.google_foto });
+    db.query('SELECT codigo FROM familias WHERE id=$1', [m.familia_id]).then(f => {
+      const codigo = f.rows[0] ? f.rows[0].codigo : '';
+      res.json({ ok: true, membroId: m.id, membroNome: m.nome, membroTipo: m.tipo, familiaId: m.familia_id, idPessoal: m.id_pessoal, foto: m.google_foto, codigoFamilia: codigo });
+    }).catch(() => res.json({ ok: true, membroId: m.id, membroNome: m.nome, membroTipo: m.tipo, familiaId: m.familia_id, idPessoal: m.id_pessoal, foto: m.google_foto }));
   } catch(e) {
     console.error('Google auth erro:', e.message);
     res.status(500).json({ erro: e.message });

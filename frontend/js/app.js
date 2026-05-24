@@ -28,7 +28,8 @@ async function loginGoogle() {
               membroId: res.membroId,
               membroNome: res.membroNome,
               membroTipo: res.membroTipo,
-              idPessoal: res.idPessoal
+              idPessoal: res.idPessoal,
+              codigoFamilia: res.codigoFamilia
             }));
             if (res.foto) localStorage.setItem('applus_foto', res.foto);
             mostrarApp();
