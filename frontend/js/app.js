@@ -17,12 +17,19 @@ async function loginGoogle() {
             userInfo
           });
           if (res && res.ok) {
-            APP.familiaId = res.familiaId;
+            APP.familiaId = String(res.familiaId);
             APP.membroId = res.membroId;
-            APP.membroAtivo = { id: res.membroId, nome: res.membroNome, tipo: res.membroTipo };
-            localStorage.setItem('applus_familia_id', res.familiaId);
-            localStorage.setItem('applus_membro_id', res.membroId);
-            localStorage.setItem('applus_membro_nome', res.membroNome);
+            APP.membroNome = res.membroNome;
+            APP.membroTipo = res.membroTipo;
+            APP.idPessoal = res.idPessoal;
+            APP.membroAtivo = { id: res.membroId, nome: res.membroNome, tipo: res.membroTipo, id_pessoal: res.idPessoal };
+            localStorage.setItem('applus_sessao', JSON.stringify({
+              familiaId: res.familiaId,
+              membroId: res.membroId,
+              membroNome: res.membroNome,
+              membroTipo: res.membroTipo,
+              idPessoal: res.idPessoal
+            }));
             if (res.foto) localStorage.setItem('applus_foto', res.foto);
             mostrarApp();
             navegarPara('home');
