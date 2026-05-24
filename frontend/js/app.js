@@ -3872,8 +3872,10 @@ async function carregarFotoPerfil() {
 
 async function carregarBabasSalvas() {
   try {
-    if (!APP.familiaId) return;
+    console.log("BABAS - familiaId:", APP.familiaId);
+    if (!APP.familiaId) { console.log("BABAS - sem familiaId"); return; }
     const membros = await api('GET', '/api/membros/' + APP.familiaId);
+    console.log("BABAS - membros:", JSON.stringify(membros));
     const babas = (membros || []).filter(m => m.tipo === 'baba' || m.relacao === 'baba' || m.relacao === 'Babá / Nanny');
     const cuidadores = (membros || []).filter(m => m.tipo === 'cuidador' || m.relacao === 'cuidador' || m.relacao === 'Cuidador profissional');
     const el = document.getElementById('lista-babas-salvas');
