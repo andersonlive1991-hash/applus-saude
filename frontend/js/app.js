@@ -1066,17 +1066,16 @@ async function buscarMedicamentoANVISA(codigo) {
     alerta('🔍 Buscando medicamento...');
     const r = await fetch('/api/anvisa/buscar/' + codigo);
     const data = await r.json();
-    if (data && data.content && data.content.length > 0) {
-      const med = data.content[0];
-      document.getElementById('med-nome').value = med.nomeProduto || '';
-      document.getElementById('med-dosagem').value = med.apresentacao || '';
-      alerta('✅ Medicamento encontrado: ' + (med.nomeProduto || codigo));
+    if (data && data.encontrado) {
+      document.getElementById('med-nome').value = data.nome || '';
+      document.getElementById('med-dosagem').value = data.dosagem || '';
+      alerta('✅ Medicamento encontrado: ' + (data.nome || codigo) + ' (via ' + (data.fonte === 'cosmos' ? 'Bluesoft' : 'ANVISA') + ')');
     } else {
-      document.getElementById('med-nome').value = codigo;
-      alerta('⚠️ Código ' + codigo + ' não encontrado na ANVISA. Verifique o nome.');
+      document.getElementById('med-nome').value = '';
+      alerta('⚠️ Medicamento não encontrado. Digite o nome manualmente.');
     }
   } catch(e) {
-    alerta('Erro ao buscar na ANVISA. Digite o nome manualmente.');
+    alerta('Erro ao buscar medicamento. Digite o nome manualmente.');
   }
 }
 
