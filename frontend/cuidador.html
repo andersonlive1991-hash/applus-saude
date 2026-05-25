@@ -105,6 +105,146 @@ async function salvarEvento() {
   } catch(e) { mostrarToast('Erro ao salvar'); }
 }
 
+
+// ── ALARME DO CUIDADOR ──
+let _alarmeAudioCtxC = null, _alarmeLoopTimerC = null, _alarmeRepetirC = null;
+const alarmesConfirmadosCuid = new Set(JSON.parse(sessionStorage.getItem('alarmesConfCuid')||'[]'));
+
+function iniciarSomAlarmeCuid() {
+  if (_alarmeLoopTimerC) return;
+  function beep() {
+    _alarmeAudioCtxC = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = _alarmeAudioCtxC.createOscillator();
+    const gain = _alarmeAudioCtxC.createGain();
+    osc.connect(gain); gain.connect(_alarmeAudioCtxC.destination);
+    osc.frequency.value = 880; osc.type = 'sine';
+    gain.gain.setValueAtTime(1, _alarmeAudioCtxC.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, _alarmeAudioCtxC.currentTime + 0.8);
+    osc.start(_alarmeAudioCtxC.currentTime); osc.stop(_alarmeAudioCtxC.currentTime + 0.8);
+  }
+  beep();
+  _alarmeLoopTimerC = setInterval(beep, 1200);
+}
+
+function pararSomAlarmeCuid() {
+  if (_alarmeLoopTimerC) { clearInterval(_alarmeLoopTimerC); _alarmeLoopTimerC = null; }
+  if (_alarmeAudioCtxC) { _alarmeAudioCtxC.close().catch(()=>{}); _alarmeAudioCtxC = null; }
+}
+
+function falarAlarmeCuid(texto) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(texto);
+  u.lang = 'pt-BR'; u.rate = 0.9; u.volume = 1;
+  window.speechSynthesis.speak(u);
+}
+
+function dispararAlarmeCuid(med) {
+  const overlay = document.getElementById('alarme-overlay');
+  overlay.style.display = 'flex';
+  document.getElementById('alarme-nome-cuid').textContent = med.nome;
+  document.getElementById('alarme-dose-cuid').textContent = med.dosagem || '';
+  iniciarSomAlarmeCuid();
+  falarAlarmeCuid('Atenção! Está na hora de dar o remédio ' + med.nome + '. A dose é ' + (med.dosagem || 'conforme prescrito') + '. Por favor administre o medicamento agora.');
+  if (_alarmeRepetirC) clearInterval(_alarmeRepetirC);
+  _alarmeRepetirC = setInterval(() => {
+    falarAlarmeCuid('Atenção! Está na hora de dar o remédio ' + med.nome + '.');
+  }, 120000);
+  overlay.dataset.medId = med.id;
+  overlay.dataset.horario = med._horarioAtivo || '';
+}
+
+function confirmarAlarmeCuid() {
+  const overlay = document.getElementById('alarme-overlay');
+  const chave = overlay.dataset.medId + '-' + overlay.dataset.horario;
+  alarmesConfirmadosCuid.add(chave);
+  sessionStorage.setItem('alarmesConfCuid', JSON.stringify([...alarmesConfirmadosCuid]));
+  fecharAlarmeCuid();
+}
+
+function fecharAlarmeCuid() {
+  document.getElementById('alarme-overlay').style.display = 'none';
+  pararSomAlarmeCuid();
+  if (_alarmeRepetirC) { clearInterval(_alarmeRepetirC); _alarmeRepetirC = null; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+async function verificarAlarmesCuid() {
+  if (!FAMILIA_ID) return;
+  try {
+    // ── Medicamentos ──
+    const r = await fetch('/api/medicamentos/' + FAMILIA_ID);
+    const meds = await r.json();
+    if (Array.isArray(meds)) {
+      const agora = new Date();
+      for (const med of meds) {
+        const horarios = typeof med.horarios === 'string' ? JSON.parse(med.horarios) : med.horarios;
+        if (!Array.isArray(horarios)) continue;
+        for (const horario of horarios) {
+          const chave = med.id + '-' + horario;
+          if (alarmesConfirmadosCuid.has(chave)) continue;
+          const [hh, mm] = horario.split(':').map(Number);
+          const horarioDate = new Date();
+          horarioDate.setHours(hh, mm, 0, 0);
+          const diffMin = (agora - horarioDate) / 60000;
+          if (diffMin >= 0 && diffMin < 30) {
+            med._horarioAtivo = horario;
+            dispararAlarmeCuid(med);
+            break;
+          }
+        }
+      }
+    }
+
+    // ── Eventos — push 1h antes ──
+    const re = await fetch('/api/eventos/' + FAMILIA_ID);
+    const eventos = await re.json();
+    if (Array.isArray(eventos)) {
+      const agora = new Date();
+      const _ag = new Date();
+      const hoje = _ag.getFullYear() + '-' + String(_ag.getMonth()+1).padStart(2,'0') + '-' + String(_ag.getDate()).padStart(2,'0');
+      const hojeEvs = eventos.filter(e => e.data && e.data.startsWith(hoje) && e.hora);
+      for (const ev of hojeEvs) {
+        const chaveEv = 'ev-' + ev.id;
+        if (alarmesConfirmadosCuid.has(chaveEv)) continue;
+        const [hh, mm] = ev.hora.split(':').map(Number);
+        const evDate = new Date();
+        evDate.setHours(hh, mm, 0, 0);
+        const diffMin = (evDate - agora) / 60000;
+        // Avisa se evento for nas proximas 0-60 minutos
+        if (diffMin >= 0 && diffMin <= 60) {
+          alarmesConfirmadosCuid.add(chaveEv);
+          sessionStorage.setItem('alarmesConfCuid', JSON.stringify([...alarmesConfirmadosCuid]));
+          // Push para o cuidador
+          if (CUIDADOR && CUIDADOR.id) {
+            fetch('/api/push/enviar-membro', {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({
+                membro_id: CUIDADOR.id,
+                titulo: '📅 Evento em 1 hora',
+                corpo: ev.titulo + (ev.local ? ' — ' + ev.local : '') + (ev.hora ? ' às ' + ev.hora.substring(0,5) : ''),
+                url: '/cuidador.html'
+              })
+            }).catch(()=>{});
+          }
+          // Toast visual
+          const toast = document.createElement('div');
+          toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a6eb5;color:white;padding:1rem 1.5rem;border-radius:16px;z-index:9999;font-size:1rem;font-weight:600;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:90vw';
+          toast.innerHTML = '📅 Em 1 hora: ' + ev.titulo + '<br><span style="font-size:0.85rem;font-weight:400">' + (ev.hora ? ev.hora.substring(0,5) : '') + (ev.local ? ' — ' + ev.local : '') + '</span>';
+          document.body.appendChild(toast);
+          setTimeout(() => { toast.style.transition='opacity 0.5s'; toast.style.opacity='0'; setTimeout(()=>toast.remove(),500); }, 8000);
+        }
+      }
+    }
+  } catch(e) { console.log('Erro alarme cuid:', e); }
+}
+
+// Iniciar loop de alarmes após login
+function iniciarAlarmesCuid() {
+  verificarAlarmesCuid();
+  setInterval(verificarAlarmesCuid, 30000);
+}
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
@@ -795,147 +935,6 @@ setInterval(() => {
   <button onclick="fecharAlarmeCuid()" style="background:transparent;color:#aaa;border:1px solid #555;border-radius:16px;padding:0.75rem 2rem;font-size:0.9rem;cursor:pointer;width:100%;max-width:300px;margin-top:0.75rem;">Fechar</button>
 </div>
 
-<script>
-// ── ALARME DO CUIDADOR ──
-let _alarmeAudioCtxC = null, _alarmeLoopTimerC = null, _alarmeRepetirC = null;
-const alarmesConfirmadosCuid = new Set(JSON.parse(sessionStorage.getItem('alarmesConfCuid')||'[]'));
-
-function iniciarSomAlarmeCuid() {
-  if (_alarmeLoopTimerC) return;
-  function beep() {
-    _alarmeAudioCtxC = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = _alarmeAudioCtxC.createOscillator();
-    const gain = _alarmeAudioCtxC.createGain();
-    osc.connect(gain); gain.connect(_alarmeAudioCtxC.destination);
-    osc.frequency.value = 880; osc.type = 'sine';
-    gain.gain.setValueAtTime(1, _alarmeAudioCtxC.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, _alarmeAudioCtxC.currentTime + 0.8);
-    osc.start(_alarmeAudioCtxC.currentTime); osc.stop(_alarmeAudioCtxC.currentTime + 0.8);
-  }
-  beep();
-  _alarmeLoopTimerC = setInterval(beep, 1200);
-}
-
-function pararSomAlarmeCuid() {
-  if (_alarmeLoopTimerC) { clearInterval(_alarmeLoopTimerC); _alarmeLoopTimerC = null; }
-  if (_alarmeAudioCtxC) { _alarmeAudioCtxC.close().catch(()=>{}); _alarmeAudioCtxC = null; }
-}
-
-function falarAlarmeCuid(texto) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(texto);
-  u.lang = 'pt-BR'; u.rate = 0.9; u.volume = 1;
-  window.speechSynthesis.speak(u);
-}
-
-function dispararAlarmeCuid(med) {
-  const overlay = document.getElementById('alarme-overlay');
-  overlay.style.display = 'flex';
-  document.getElementById('alarme-nome-cuid').textContent = med.nome;
-  document.getElementById('alarme-dose-cuid').textContent = med.dosagem || '';
-  iniciarSomAlarmeCuid();
-  falarAlarmeCuid('Atenção! Está na hora de dar o remédio ' + med.nome + '. A dose é ' + (med.dosagem || 'conforme prescrito') + '. Por favor administre o medicamento agora.');
-  if (_alarmeRepetirC) clearInterval(_alarmeRepetirC);
-  _alarmeRepetirC = setInterval(() => {
-    falarAlarmeCuid('Atenção! Está na hora de dar o remédio ' + med.nome + '.');
-  }, 120000);
-  overlay.dataset.medId = med.id;
-  overlay.dataset.horario = med._horarioAtivo || '';
-}
-
-function confirmarAlarmeCuid() {
-  const overlay = document.getElementById('alarme-overlay');
-  const chave = overlay.dataset.medId + '-' + overlay.dataset.horario;
-  alarmesConfirmadosCuid.add(chave);
-  sessionStorage.setItem('alarmesConfCuid', JSON.stringify([...alarmesConfirmadosCuid]));
-  fecharAlarmeCuid();
-}
-
-function fecharAlarmeCuid() {
-  document.getElementById('alarme-overlay').style.display = 'none';
-  pararSomAlarmeCuid();
-  if (_alarmeRepetirC) { clearInterval(_alarmeRepetirC); _alarmeRepetirC = null; }
-  if (window.speechSynthesis) window.speechSynthesis.cancel();
-}
-
-async function verificarAlarmesCuid() {
-  if (!FAMILIA_ID) return;
-  try {
-    // ── Medicamentos ──
-    const r = await fetch('/api/medicamentos/' + FAMILIA_ID);
-    const meds = await r.json();
-    if (Array.isArray(meds)) {
-      const agora = new Date();
-      for (const med of meds) {
-        const horarios = typeof med.horarios === 'string' ? JSON.parse(med.horarios) : med.horarios;
-        if (!Array.isArray(horarios)) continue;
-        for (const horario of horarios) {
-          const chave = med.id + '-' + horario;
-          if (alarmesConfirmadosCuid.has(chave)) continue;
-          const [hh, mm] = horario.split(':').map(Number);
-          const horarioDate = new Date();
-          horarioDate.setHours(hh, mm, 0, 0);
-          const diffMin = (agora - horarioDate) / 60000;
-          if (diffMin >= 0 && diffMin < 30) {
-            med._horarioAtivo = horario;
-            dispararAlarmeCuid(med);
-            break;
-          }
-        }
-      }
-    }
-
-    // ── Eventos — push 1h antes ──
-    const re = await fetch('/api/eventos/' + FAMILIA_ID);
-    const eventos = await re.json();
-    if (Array.isArray(eventos)) {
-      const agora = new Date();
-      const _ag = new Date();
-      const hoje = _ag.getFullYear() + '-' + String(_ag.getMonth()+1).padStart(2,'0') + '-' + String(_ag.getDate()).padStart(2,'0');
-      const hojeEvs = eventos.filter(e => e.data && e.data.startsWith(hoje) && e.hora);
-      for (const ev of hojeEvs) {
-        const chaveEv = 'ev-' + ev.id;
-        if (alarmesConfirmadosCuid.has(chaveEv)) continue;
-        const [hh, mm] = ev.hora.split(':').map(Number);
-        const evDate = new Date();
-        evDate.setHours(hh, mm, 0, 0);
-        const diffMin = (evDate - agora) / 60000;
-        // Avisa se evento for nas proximas 0-60 minutos
-        if (diffMin >= 0 && diffMin <= 60) {
-          alarmesConfirmadosCuid.add(chaveEv);
-          sessionStorage.setItem('alarmesConfCuid', JSON.stringify([...alarmesConfirmadosCuid]));
-          // Push para o cuidador
-          if (CUIDADOR && CUIDADOR.id) {
-            fetch('/api/push/enviar-membro', {
-              method: 'POST',
-              headers: {'Content-Type':'application/json'},
-              body: JSON.stringify({
-                membro_id: CUIDADOR.id,
-                titulo: '📅 Evento em 1 hora',
-                corpo: ev.titulo + (ev.local ? ' — ' + ev.local : '') + (ev.hora ? ' às ' + ev.hora.substring(0,5) : ''),
-                url: '/cuidador.html'
-              })
-            }).catch(()=>{});
-          }
-          // Toast visual
-          const toast = document.createElement('div');
-          toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a6eb5;color:white;padding:1rem 1.5rem;border-radius:16px;z-index:9999;font-size:1rem;font-weight:600;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:90vw';
-          toast.innerHTML = '📅 Em 1 hora: ' + ev.titulo + '<br><span style="font-size:0.85rem;font-weight:400">' + (ev.hora ? ev.hora.substring(0,5) : '') + (ev.local ? ' — ' + ev.local : '') + '</span>';
-          document.body.appendChild(toast);
-          setTimeout(() => { toast.style.transition='opacity 0.5s'; toast.style.opacity='0'; setTimeout(()=>toast.remove(),500); }, 8000);
-        }
-      }
-    }
-  } catch(e) { console.log('Erro alarme cuid:', e); }
-}
-
-// Iniciar loop de alarmes após login
-function iniciarAlarmesCuid() {
-  verificarAlarmesCuid();
-  setInterval(verificarAlarmesCuid, 30000);
-}
-</script>
 
 </body>
 </html>
