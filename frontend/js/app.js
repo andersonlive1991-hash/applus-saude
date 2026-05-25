@@ -930,9 +930,10 @@ async function carregarHome() {
 
   try {
     const meds = await api('GET', `/api/medicamentos/${APP.familiaId}?membro_id=${APP.membroId}`);
-    const hoje = new Date().toISOString().split('T')[0];
+    const _agora = new Date();
+    const hoje = _agora.getFullYear() + '-' + String(_agora.getMonth()+1).padStart(2,'0') + '-' + String(_agora.getDate()).padStart(2,'0');
     const eventos = await api('GET', `/api/eventos/${APP.familiaId}?membro_id=${APP.membroId}`);
-    const eventosHoje = eventos.filter(e => e.data === hoje);
+    const eventosHoje = eventos.filter(e => e.data && e.data.startsWith(hoje));
 
     document.getElementById('home-status').textContent =
       `${meds.length} medicamento(s) · ${eventosHoje.length} evento(s) hoje`;
