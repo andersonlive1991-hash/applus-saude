@@ -1988,7 +1988,7 @@ async function ativarNotificacoes() {
 // ── CHECKLIST ──
 async function carregarChecklist() {
   try {
-    const hoje = new Date().toISOString().split('T')[0];
+    const _ag = new Date(); const hoje = _ag.getFullYear() + '-' + String(_ag.getMonth()+1).padStart(2,'0') + '-' + String(_ag.getDate()).padStart(2,'0');
     const tarefas = await api('GET', '/api/checklist/' + APP.familiaId + '?data=' + hoje);
     const lista = document.getElementById('lista-checklist');
     if (!lista) return;
@@ -2088,7 +2088,7 @@ async function carregarHistoricoTEA() {
       lista.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:24px">Nenhum membro TEA cadastrado</p>';
       return;
     }
-    const hoje = new Date().toISOString().split('T')[0];
+    const _ag = new Date(); const hoje = _ag.getFullYear() + '-' + String(_ag.getMonth()+1).padStart(2,'0') + '-' + String(_ag.getDate()).padStart(2,'0');
     let html = '';
     for (const mem of memTEA) {
       const hist = await api('GET', '/api/historico-tea/' + mem.id + '?data=' + hoje);
@@ -4012,7 +4012,7 @@ async function carregarEventosCuidador() {
     const eventos = await api('GET', '/api/eventos/' + window._cuidadorFamiliaId);
     const el = document.getElementById('cuid-eventos-lista-home');
     if (!el) return;
-    const hoje = new Date().toISOString().split('T')[0];
+    const _ag = new Date(); const hoje = _ag.getFullYear() + '-' + String(_ag.getMonth()+1).padStart(2,'0') + '-' + String(_ag.getDate()).padStart(2,'0');
     const hojeEvs = (eventos || []).filter(e => e.data && e.data.startsWith(hoje));
     if (!hojeEvs.length) { el.innerHTML = '<div style="text-align:center;color:#999;font-size:13px;padding:10px;">Nenhum evento hoje.</div>'; return; }
     const icons = { Consulta:'🩺', Exame:'🔬', Medicamento:'💊', Família:'👨‍👩‍👧', Outro:'📋' };
