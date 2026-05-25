@@ -1309,15 +1309,14 @@ async function enviarSOSTea() {
 
 async function registrarComportamento(tipo, descricao) {
   try {
-    await fetch('/api/historico-tea', {
+    await fetch('/api/comportamentos-tea', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         membro_id: TEA.membroId,
         familia_id: TEA.familiaId,
         tipo,
-        descricao,
-        data: new Date().toISOString()
+        descricao
       })
     });
     const cor = tipo === 'positivo' ? '#22c55e' : tipo === 'atencao' ? '#eab308' : '#ef4444';
@@ -1332,7 +1331,7 @@ async function registrarComportamento(tipo, descricao) {
 
 async function carregarEvolucao() {
   try {
-    const r = await fetch('/api/historico-tea/' + TEA.membroId + '?dias=7');
+    const r = await fetch('/api/comportamentos-tea/' + TEA.membroId + '?dias=7');
     const dados = await r.json();
     if (!Array.isArray(dados)) return;
 
