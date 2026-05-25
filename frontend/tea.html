@@ -435,6 +435,7 @@ body {
     <div class="tea-header">
       <div class="tea-avatar">🧩</div>
       <div class="tea-ola" id="tea-nome">Olá!</div>
+      <div id="tea-estrelas" style="font-size:14px;color:#fbbf24;font-weight:700;margin-top:4px;text-align:center;">⭐ 0</div>
     </div>
     <div class="tea-curva"></div>
 
@@ -843,6 +844,7 @@ async function entrarTEA() {
     conectarSocketTEA();
     carregarRotinaTEA();
     iniciarAlarmeRotina();
+    atualizarEstrelasDisplay();
   } catch (e) {
     (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('ID não encontrado. Tenta de novo!');
   }
@@ -900,6 +902,28 @@ async function carregarRotinaTEA() {
   }
 }
 
+let _estrelasHoje = parseInt(localStorage.getItem('tea_estrelas_' + new Date().toISOString().split('T')[0]) || '0');
+
+function atualizarEstrelasDisplay() {
+  const el = document.getElementById('tea-estrelas');
+  if (el) el.textContent = '⭐'.repeat(_estrelasHoje) + ' ' + _estrelasHoje;
+}
+
+function mostrarParabens(emoji, nome) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;';
+  overlay.innerHTML = `
+    <div style="font-size:80px;animation:pulse 0.5s infinite alternate">${emoji}</div>
+    <div style="font-size:32px;font-weight:900;color:#fbbf24;margin:16px 0">Parabéns! ⭐</div>
+    <div style="font-size:20px;color:white;margin-bottom:8px">${nome}</div>
+    <div style="font-size:16px;color:#86efac">Você ganhou uma estrela!</div>
+    <div style="font-size:48px;margin-top:16px">🎉</div>
+    <button onclick="this.parentElement.remove()" style="margin-top:24px;background:#1a9e6e;color:white;border:none;border-radius:16px;padding:14px 32px;font-size:18px;font-weight:700;cursor:pointer">Eba! ✓</button>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 5000);
+}
+
 async function concluirAtividade(id) {
   try {
     await fetch(`/api/rotina-tea/${id}`, {
@@ -907,6 +931,19 @@ async function concluirAtividade(id) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ concluida: true })
     });
+    // Recompensa
+    _estrelasHoje++;
+    const hoje = new Date().toISOString().split('T')[0];
+    localStorage.setItem('tea_estrelas_' + hoje, _estrelasHoje);
+    atualizarEstrelasDisplay();
+    // Busca emoji da atividade para a animação
+    try {
+      const res = await fetch('/api/rotina-tea/' + TEA.membroId + '?data=' + hoje);
+      const rotina = await res.json();
+      const ativ = rotina.find(a => a.id == id);
+      if (ativ) mostrarParabens(ativ.emoji || '✅', ativ.nome);
+      else mostrarParabens('✅', 'Atividade concluída!');
+    } catch(e) { mostrarParabens('✅', 'Atividade concluída!'); }
     carregarRotinaTEA();
   } catch(e) {}
 }
