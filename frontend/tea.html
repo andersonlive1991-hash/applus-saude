@@ -941,7 +941,7 @@ async function concluirAtividade(id) {
       const res = await fetch('/api/rotina-tea/' + TEA.membroId + '?data=' + hoje);
       const rotina = await res.json();
       const ativ = rotina.find(a => a.id == id);
-      if (ativ) mostrarParabens(ativ.emoji || '✅', ativ.nome);
+      if (ativ) mostrarParabens(ativ.emoji || '✅', ativ.atividade || ativ.nome || 'Atividade concluída!');
       else mostrarParabens('✅', 'Atividade concluída!');
     } catch(e) { mostrarParabens('✅', 'Atividade concluída!'); }
     carregarRotinaTEA();
