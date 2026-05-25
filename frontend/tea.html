@@ -804,9 +804,49 @@ async function carregarPictosNoTEA() {
   } catch(e) { console.log('Erro pictos personalizados:', e); }
 }
 
+const CATEGORIAS_PICTO = {
+  'Tudo': null,
+  '🍽️ Necessidades': ['Tenho fome','Tenho sede','Quero ir ao banheiro','Estou cansado','Quero tomar banho','Quero dormir','Quero trocar de roupa','Quero escovação'],
+  '😊 Sentimentos': ['Estou com dor','Estou chateado','Estou feliz','Estou com medo','Estou com raiva','Estou enjoado','Estou com febre','Estou com frio','Estou com calor','Te amo','Tudo bem'],
+  '🎮 Atividades': ['Quero brincar','Quero ver TV','Quero estudar','Quero desenhar','Quero montar puzzle','Quero correr','Quero pintar','Quero usar o celular','Quero ouvir música','Quero passear','Quero sair','Quero amigos'],
+  '🍕 Alimentos': ['Quero pizza','Quero chocolate','Quero leite','Quero fruta','Quero lanche'],
+  '🆘 Ajuda': ['Preciso de ajuda','Sim','Não estou bem','Muito barulho','Muita luz','Espera um momento','Quero ir para casa','Tomei remédio','Quero médico'],
+};
+
+let _categoriaAtiva = 'Tudo';
+
+function renderizarFiltrosCategorias() {
+  const grid = document.getElementById('pict-grid');
+  const filtros = Object.keys(CATEGORIAS_PICTO).map(cat =>
+    `<button onclick="filtrarCategoria('${cat}')" id="filtro-${cat.replace(/[^a-z]/gi,'')}" style="padding:8px 14px;border-radius:20px;border:2px solid ${cat===_categoriaAtiva?'#1a9e6e':'#e5e7eb'};background:${cat===_categoriaAtiva?'#1a9e6e':'white'};color:${cat===_categoriaAtiva?'white':'#374151'};font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">${cat}</button>`
+  ).join('');
+  
+  let container = document.getElementById('picto-filtros');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'picto-filtros';
+    container.style.cssText = 'display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;margin-bottom:4px;scrollbar-width:none';
+    grid.parentElement.insertBefore(container, grid);
+  }
+  container.innerHTML = filtros;
+}
+
+function filtrarCategoria(cat) {
+  _categoriaAtiva = cat;
+  renderizarFiltrosCategorias();
+  carregarPictogramas();
+}
+
 function carregarPictogramas() {
   const grid = document.getElementById('pict-grid');
-  grid.innerHTML = PICTOGRAMAS.map(p => `
+  renderizarFiltrosCategorias();
+  
+  const textosFiltro = CATEGORIAS_PICTO[_categoriaAtiva];
+  const lista = textosFiltro 
+    ? PICTOGRAMAS.filter(p => textosFiltro.includes(p.texto))
+    : PICTOGRAMAS;
+
+  grid.innerHTML = lista.map(p => `
     <div style="display:flex;gap:6px;width:100%;margin-bottom:6px">
       <button class="pict-btn" style="flex:1;border:3px solid #22c55e;background:#f0fdf4" onclick="falarPictograma('${p.emoji}', '${p.texto}')">
         <span class="pict-emoji">${p.emoji}</span>
