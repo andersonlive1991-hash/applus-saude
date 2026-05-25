@@ -1199,12 +1199,13 @@ function falarFraseCompleta() {
 }
 
 function trocarAbaTea(aba) {
-  ['rotina','comunicar','humor','sos'].forEach(a => {
+  ['rotina','comunicar','humor','sos','evolucao'].forEach(a => {
     document.getElementById(`tea-${a}`).style.display = a === aba ? 'block' : 'none';
   });
   document.querySelectorAll('.tea-aba').forEach((btn, i) => {
-    btn.classList.toggle('ativa', ['rotina','comunicar','humor','sos'][i] === aba);
+    btn.classList.toggle('ativa', ['rotina','comunicar','humor','sos','evolucao'][i] === aba);
   });
+  if (aba === 'evolucao') carregarEvolucao();
 }
 
 function falarPictograma(emoji, texto) {
@@ -1303,6 +1304,80 @@ async function enviarSOSTea() {
   } catch(e) {
     (function(m){ const d=document.createElement('div'); d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#ef4444;color:#fff;font-size:14px;font-weight:500;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),4000); })('Erro ao enviar socorro!');
   }
+}
+
+
+async function registrarComportamento(tipo, descricao) {
+  try {
+    await fetch('/api/historico-tea', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        membro_id: TEA.membroId,
+        familia_id: TEA.familiaId,
+        tipo,
+        descricao,
+        data: new Date().toISOString()
+      })
+    });
+    const cor = tipo === 'positivo' ? '#22c55e' : tipo === 'atencao' ? '#eab308' : '#ef4444';
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:' + cor + ';color:#fff;font-size:14px;font-weight:600;z-index:99999;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center';
+    d.textContent = '✅ ' + descricao + ' registrado!';
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 3000);
+    carregarEvolucao();
+  } catch(e) { console.log('Erro registrar comportamento:', e); }
+}
+
+async function carregarEvolucao() {
+  try {
+    const r = await fetch('/api/historico-tea/' + TEA.membroId + '?dias=7');
+    const dados = await r.json();
+    if (!Array.isArray(dados)) return;
+
+    const grafico = document.getElementById('grafico-comportamento');
+    const lista = document.getElementById('lista-comportamentos');
+    if (!grafico || !lista) return;
+
+    // Contar por tipo
+    const positivos = dados.filter(d => d.tipo === 'positivo').length;
+    const atencao = dados.filter(d => d.tipo === 'atencao').length;
+    const crises = dados.filter(d => d.tipo === 'crise').length;
+    const total = positivos + atencao + crises || 1;
+
+    grafico.innerHTML = `
+      <div style="display:flex;gap:8px;align-items:flex-end;height:80px;margin-bottom:8px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="width:100%;background:#22c55e;border-radius:6px 6px 0 0;height:${Math.round((positivos/total)*70)+10}px"></div>
+          <div style="font-size:11px;color:#374151;font-weight:600">${positivos} ✅</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="width:100%;background:#eab308;border-radius:6px 6px 0 0;height:${Math.round((atencao/total)*70)+10}px"></div>
+          <div style="font-size:11px;color:#374151;font-weight:600">${atencao} ⚠️</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="width:100%;background:#ef4444;border-radius:6px 6px 0 0;height:${Math.round((crises/total)*70)+10}px"></div>
+          <div style="font-size:11px;color:#374151;font-weight:600">${crises} 🚨</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;font-size:12px;color:#6b7280">
+        <span>✅ Positivos</span><span>⚠️ Atenção</span><span>🚨 Crises</span>
+      </div>
+    `;
+
+    // Últimos 5 registros
+    lista.innerHTML = dados.slice(0,5).map(d => {
+      const cor = d.tipo === 'positivo' ? '#22c55e' : d.tipo === 'atencao' ? '#eab308' : '#ef4444';
+      const ico = d.tipo === 'positivo' ? '✅' : d.tipo === 'atencao' ? '⚠️' : '🚨';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+        <span style="font-size:18px">${ico}</span>
+        <div style="flex:1;font-size:13px;color:#374151">${d.descricao}</div>
+        <div style="font-size:11px;color:#9ca3af">${new Date(d.data||d.criado_em).toLocaleDateString('pt-BR')}</div>
+      </div>`;
+    }).join('') || '<p style="color:#999;text-align:center;font-size:13px">Nenhum registro ainda</p>';
+
+  } catch(e) { console.log('Erro evolucao:', e); }
 }
 
 document.addEventListener('keydown', e => {
