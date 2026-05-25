@@ -901,8 +901,8 @@ async function verificarAlarmesCuid() {
         const evDate = new Date();
         evDate.setHours(hh, mm, 0, 0);
         const diffMin = (evDate - agora) / 60000;
-        // Entre 55 e 65 minutos antes — janela de 10min para não repetir
-        if (diffMin >= 55 && diffMin <= 65) {
+        // Avisa se evento for nas proximas 0-60 minutos
+        if (diffMin >= 0 && diffMin <= 60) {
           alarmesConfirmadosCuid.add(chaveEv);
           sessionStorage.setItem('alarmesConfCuid', JSON.stringify([...alarmesConfirmadosCuid]));
           // Push para o cuidador
