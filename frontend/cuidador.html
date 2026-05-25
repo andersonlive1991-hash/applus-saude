@@ -862,24 +862,68 @@ function fecharAlarmeCuid() {
 async function verificarAlarmesCuid() {
   if (!FAMILIA_ID) return;
   try {
+    // ── Medicamentos ──
     const r = await fetch('/api/medicamentos/' + FAMILIA_ID);
     const meds = await r.json();
-    if (!Array.isArray(meds)) return;
-    const agora = new Date();
-    for (const med of meds) {
-      const horarios = typeof med.horarios === 'string' ? JSON.parse(med.horarios) : med.horarios;
-      if (!Array.isArray(horarios)) continue;
-      for (const horario of horarios) {
-        const chave = med.id + '-' + horario;
-        if (alarmesConfirmadosCuid.has(chave)) continue;
-        const [hh, mm] = horario.split(':').map(Number);
-        const horarioDate = new Date();
-        horarioDate.setHours(hh, mm, 0, 0);
-        const diffMin = (agora - horarioDate) / 60000;
-        if (diffMin >= 0 && diffMin < 30) {
-          med._horarioAtivo = horario;
-          dispararAlarmeCuid(med);
-          break;
+    if (Array.isArray(meds)) {
+      const agora = new Date();
+      for (const med of meds) {
+        const horarios = typeof med.horarios === 'string' ? JSON.parse(med.horarios) : med.horarios;
+        if (!Array.isArray(horarios)) continue;
+        for (const horario of horarios) {
+          const chave = med.id + '-' + horario;
+          if (alarmesConfirmadosCuid.has(chave)) continue;
+          const [hh, mm] = horario.split(':').map(Number);
+          const horarioDate = new Date();
+          horarioDate.setHours(hh, mm, 0, 0);
+          const diffMin = (agora - horarioDate) / 60000;
+          if (diffMin >= 0 && diffMin < 30) {
+            med._horarioAtivo = horario;
+            dispararAlarmeCuid(med);
+            break;
+          }
+        }
+      }
+    }
+
+    // ── Eventos — push 1h antes ──
+    const re = await fetch('/api/eventos/' + FAMILIA_ID);
+    const eventos = await re.json();
+    if (Array.isArray(eventos)) {
+      const agora = new Date();
+      const _ag = new Date();
+      const hoje = _ag.getFullYear() + '-' + String(_ag.getMonth()+1).padStart(2,'0') + '-' + String(_ag.getDate()).padStart(2,'0');
+      const hojeEvs = eventos.filter(e => e.data && e.data.startsWith(hoje) && e.hora);
+      for (const ev of hojeEvs) {
+        const chaveEv = 'ev-' + ev.id;
+        if (alarmesConfirmadosCuid.has(chaveEv)) continue;
+        const [hh, mm] = ev.hora.split(':').map(Number);
+        const evDate = new Date();
+        evDate.setHours(hh, mm, 0, 0);
+        const diffMin = (evDate - agora) / 60000;
+        // Entre 55 e 65 minutos antes — janela de 10min para não repetir
+        if (diffMin >= 55 && diffMin <= 65) {
+          alarmesConfirmadosCuid.add(chaveEv);
+          sessionStorage.setItem('alarmesConfCuid', JSON.stringify([...alarmesConfirmadosCuid]));
+          // Push para o cuidador
+          if (CUIDADOR && CUIDADOR.id) {
+            fetch('/api/push/enviar-membro', {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({
+                membro_id: CUIDADOR.id,
+                titulo: '📅 Evento em 1 hora',
+                corpo: ev.titulo + (ev.local ? ' — ' + ev.local : '') + (ev.hora ? ' às ' + ev.hora.substring(0,5) : ''),
+                url: '/cuidador.html'
+              })
+            }).catch(()=>{});
+          }
+          // Toast visual
+          const toast = document.createElement('div');
+          toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a6eb5;color:white;padding:1rem 1.5rem;border-radius:16px;z-index:9999;font-size:1rem;font-weight:600;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:90vw';
+          toast.innerHTML = '📅 Em 1 hora: ' + ev.titulo + '<br><span style="font-size:0.85rem;font-weight:400">' + (ev.hora ? ev.hora.substring(0,5) : '') + (ev.local ? ' — ' + ev.local : '') + '</span>';
+          document.body.appendChild(toast);
+          setTimeout(() => { toast.style.transition='opacity 0.5s'; toast.style.opacity='0'; setTimeout(()=>toast.remove(),500); }, 8000);
         }
       }
     }
