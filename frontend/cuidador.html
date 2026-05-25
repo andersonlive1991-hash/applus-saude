@@ -243,6 +243,55 @@ async function verificarAlarmesCuid() {
   } catch(e) { console.log('Erro alarme cuid:', e); }
 }
 
+
+// ── PUSH CUIDADOR ──
+function urlBase64ToUint8ArrayCuid(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function registrarSWCuidador() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw-cuidador.js');
+    console.log('[Cuidador] SW registrado');
+
+    // Listener de mensagens do SW
+    navigator.serviceWorker.addEventListener('message', (e) => {
+      if (e.data && e.data.tipo === 'push-cuidador') {
+        const d = e.data.dados;
+        // Toast visual
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a6eb5;color:white;padding:1rem 1.5rem;border-radius:16px;z-index:9999;font-size:1rem;font-weight:600;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:90vw';
+        toast.innerHTML = '🔔 ' + (d.titulo || 'Aviso') + '<br><span style="font-size:0.85rem;font-weight:400">' + (d.corpo || '') + '</span>';
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.transition='opacity 0.5s'; toast.style.opacity='0'; setTimeout(()=>toast.remove(),500); }, 8000);
+        iniciarSomAlarmeCuid();
+      }
+    });
+
+    // Inscrever push
+    const VAPID = 'BO6JXBRmtjSjiM9OAa7NSy2CtZS6x_caWM582FMie8idIzpapx8McDuQl62PChqMHxQAELiE1ja1kHDmK91nLGE';
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8ArrayCuid(VAPID)
+      });
+    }
+    if (CUIDADOR && CUIDADOR.id) {
+      await fetch('/api/push/inscrever', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ membro_id: CUIDADOR.id, familia_id: FAMILIA_ID, subscription: sub })
+      });
+      console.log('[Cuidador] Push inscrito');
+    }
+  } catch(e) { console.log('[Cuidador] SW/Push erro:', e); }
+}
+
 // Iniciar loop de alarmes após login
 function iniciarAlarmesCuid() {
   verificarAlarmesCuid();
@@ -601,12 +650,14 @@ let CUIDADOR = null, FAMILIA_ID = null, CHECKIN_ID = null;
         carregarMedsPortal();
         carregarEventosPortal();
         iniciarAlarmesCuid();
+        registrarSWCuidador();
       }).catch(() => {
         // Não apaga a sessão — pode ser só lentidão do servidor
         // Tenta carregar mesmo assim com os dados salvos localmente
         carregarMedsPortal();
         carregarEventosPortal();
         iniciarAlarmesCuid();
+        registrarSWCuidador();
       });
     }
   } catch(e) {}
