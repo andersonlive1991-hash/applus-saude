@@ -1019,6 +1019,68 @@ function formatarHorarios(horarios) {
   return Array.isArray(h) ? h.join(', ') : h;
 }
 
+
+let _cameraStream = null;
+let _barcodeInterval = null;
+
+async function lerCodigoBarras() {
+  const container = document.getElementById('barras-video-container');
+  const video = document.getElementById('barras-video');
+  if (!container || !video) return;
+  try {
+    _cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = _cameraStream;
+    container.style.display = 'block';
+    // Usar BarcodeDetector se disponível
+    if ('BarcodeDetector' in window) {
+      const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128'] });
+      _barcodeInterval = setInterval(async () => {
+        try {
+          const codes = await detector.detect(video);
+          if (codes.length > 0) {
+            const code = codes[0].rawValue;
+            clearInterval(_barcodeInterval);
+            pararCamera();
+            await buscarMedicamentoANVISA(code);
+          }
+        } catch(e) {}
+      }, 500);
+    } else {
+      alerta('Seu navegador não suporta leitura automática de código de barras. Digite o código manualmente.');
+      pararCamera();
+    }
+  } catch(e) {
+    alerta('Não foi possível acessar a câmera. Verifique as permissões.');
+  }
+}
+
+function pararCamera() {
+  if (_barcodeInterval) { clearInterval(_barcodeInterval); _barcodeInterval = null; }
+  if (_cameraStream) { _cameraStream.getTracks().forEach(t => t.stop()); _cameraStream = null; }
+  const container = document.getElementById('barras-video-container');
+  if (container) container.style.display = 'none';
+}
+
+async function buscarMedicamentoANVISA(codigo) {
+  try {
+    alerta('🔍 Buscando medicamento...');
+    const r = await fetch('https://consultas.anvisa.gov.br/api/consulta/medicamentos/produtos/?count=1&filter%5BnumeroRegistro%5D=' + codigo);
+    const data = await r.json();
+    if (data && data.content && data.content.length > 0) {
+      const med = data.content[0];
+      document.getElementById('med-nome').value = med.nomeProduto || '';
+      document.getElementById('med-dosagem').value = med.apresentacao || '';
+      alerta('✅ Medicamento encontrado: ' + (med.nomeProduto || codigo));
+    } else {
+      // Tentar busca por nome genérico
+      document.getElementById('med-nome').value = codigo;
+      alerta('⚠️ Código ' + codigo + ' não encontrado na ANVISA. Verifique o nome.');
+    }
+  } catch(e) {
+    alerta('Erro ao buscar na ANVISA. Digite o nome manualmente.');
+  }
+}
+
 async function salvarMedicamento() {
   const nome = document.getElementById('med-nome').value.trim();
   const dosagem = document.getElementById('med-dosagem').value.trim();

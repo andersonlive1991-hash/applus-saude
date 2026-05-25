@@ -1675,6 +1675,11 @@
   <div class="modal">
     <div class="modal-titulo">💊 Novo medicamento</div>
     <div class="form" style="padding:0">
+      <button type="button" onclick="lerCodigoBarras()" style="width:100%;background:#f0f9ff;border:1.5px dashed #1a6eb5;border-radius:12px;padding:12px;font-size:14px;font-weight:600;color:#1a6eb5;cursor:pointer;margin-bottom:12px;">📷 Ler código de barras do medicamento</button>
+      <div id="barras-video-container" style="display:none;margin-bottom:12px;">
+        <video id="barras-video" style="width:100%;border-radius:12px;" autoplay playsinline></video>
+        <button type="button" onclick="pararCamera()" style="width:100%;background:#fee2e2;border:none;border-radius:8px;padding:8px;font-size:13px;color:#dc2626;cursor:pointer;margin-top:6px;">✕ Cancelar leitura</button>
+      </div>
       <div class="campo"><label data-i18n="med.nome">Nome</label><input id="med-nome" type="text" placeholder="Ex: Losartana"></div>
       <div class="campo"><label data-i18n="med.dosagem">Dosagem</label><input id="med-dosagem" type="text" placeholder="Ex: 50mg"></div>
       <div class="campo">
