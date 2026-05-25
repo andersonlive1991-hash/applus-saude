@@ -169,6 +169,7 @@ app.use('/api/ia', require('./routes/ia'));
 app.use('/api/escala', require('./routes/escala'));
 app.use('/api/baba', require('./routes/baba'));
 app.use('/api/mente-sa', require('./routes/mente-sa'));
+app.use('/api/anvisa', require('./routes/anvisa'));
 const rateLimit = require('express-rate-limit');
 
 app.set('trust proxy', 1);

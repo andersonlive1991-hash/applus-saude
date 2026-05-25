@@ -1064,7 +1064,7 @@ function pararCamera() {
 async function buscarMedicamentoANVISA(codigo) {
   try {
     alerta('🔍 Buscando medicamento...');
-    const r = await fetch('https://consultas.anvisa.gov.br/api/consulta/medicamentos/produtos/?count=1&filter%5BnumeroRegistro%5D=' + codigo);
+    const r = await fetch('/api/anvisa/buscar/' + codigo);
     const data = await r.json();
     if (data && data.content && data.content.length > 0) {
       const med = data.content[0];
@@ -1072,7 +1072,6 @@ async function buscarMedicamentoANVISA(codigo) {
       document.getElementById('med-dosagem').value = med.apresentacao || '';
       alerta('✅ Medicamento encontrado: ' + (med.nomeProduto || codigo));
     } else {
-      // Tentar busca por nome genérico
       document.getElementById('med-nome').value = codigo;
       alerta('⚠️ Código ' + codigo + ' não encontrado na ANVISA. Verifique o nome.');
     }
