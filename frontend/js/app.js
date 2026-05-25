@@ -1786,6 +1786,45 @@ function trocarPerfil() {
   mostrarSelecaoPerfil();
 }
 
+async function exportarMeusDados() {
+  try {
+    alerta('⏳ Coletando seus dados...');
+    const [perfil, meds, sinais, vacinas, eventos, doencas, tratamentos, internacoes, gastos] = await Promise.all([
+      api('GET', '/api/perfil/' + APP.membroId).catch(() => null),
+      api('GET', '/api/medicamentos/' + APP.familiaId + '?membro_id=' + APP.membroId).catch(() => []),
+      api('GET', '/api/sinais/' + APP.membroId).catch(() => []),
+      api('GET', '/api/vacinas/' + APP.membroId).catch(() => []),
+      api('GET', '/api/eventos/' + APP.familiaId + '?membro_id=' + APP.membroId).catch(() => []),
+      api('GET', '/api/historico/doencas/' + APP.membroId).catch(() => []),
+      api('GET', '/api/historico/tratamentos/' + APP.membroId).catch(() => []),
+      api('GET', '/api/historico/internacoes/' + APP.membroId).catch(() => []),
+      api('GET', '/api/gastos/' + APP.familiaId).catch(() => []),
+    ]);
+
+    const dados = {
+      exportado_em: new Date().toLocaleString('pt-BR'),
+      perfil,
+      medicamentos: meds,
+      sinais_vitais: sinais,
+      vacinas,
+      eventos,
+      historico: { doencas, tratamentos, internacoes },
+      gastos
+    };
+
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'applus-saude-meus-dados-' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    alerta('✅ Dados exportados com sucesso!');
+  } catch(e) {
+    alerta('Erro ao exportar dados: ' + e.message);
+  }
+}
+
 async function excluirPerfil() {
   try {
     const membros = await api('GET', `/api/membros/familia/${APP.familiaId}`);
