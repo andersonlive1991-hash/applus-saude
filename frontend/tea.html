@@ -446,7 +446,8 @@ body {
         <button class="tea-aba" onclick="trocarAbaTea('comunicar')">💬 Comunicar</button>
         <button class="tea-aba" onclick="trocarAbaTea('humor')">😊 Como estou</button>
         <button class="tea-aba" onclick="trocarAbaTea('sos')">🆘 Socorro</button>
-      </div>
+      
+        <button class="tea-aba" onclick="trocarAbaTea('evolucao')">📊 Evolução</button></div>
 
       <!-- Rotina -->
       <div id="tea-rotina">
@@ -501,6 +502,33 @@ body {
         <div id="humor-enviado" style="display:none;text-align:center;background:white;border-radius:16px;padding:20px">
           <div style="font-size:48px" id="humor-emoji-enviado"></div>
           <div style="font-size:16px;font-weight:800;color:#0369a1;margin-top:8px">Registrado! Obrigado 💙</div>
+        </div>
+      </div>
+
+      <!-- EVOLUÇÃO -->
+      <div id="tea-evolucao" style="display:none">
+        <p style="font-size:16px;font-weight:800;color:#0369a1;margin-bottom:12px;text-align:center">📊 Minha Evolução</p>
+        
+        <div style="background:white;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+          <div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:10px">Registrar comportamento</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <button onclick="registrarComportamento('positivo','Colaborou com atividade')" style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:12px;font-size:13px;font-weight:600;color:#15803d;cursor:pointer">✅ Colaborou</button>
+            <button onclick="registrarComportamento('positivo','Comunicou necessidade')" style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:12px;font-size:13px;font-weight:600;color:#15803d;cursor:pointer">💬 Comunicou</button>
+            <button onclick="registrarComportamento('positivo','Concluiu rotina')" style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:12px;font-size:13px;font-weight:600;color:#15803d;cursor:pointer">🌟 Concluiu rotina</button>
+            <button onclick="registrarComportamento('positivo','Ficou calmo')" style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:12px;font-size:13px;font-weight:600;color:#15803d;cursor:pointer">😊 Ficou calmo</button>
+            <button onclick="registrarComportamento('atencao','Agitação')" style="background:#fef9c3;border:2px solid #eab308;border-radius:12px;padding:12px;font-size:13px;font-weight:600;color:#92400e;cursor:pointer">😤 Agitação</button>
+            <button onclick="registrarComportamento('atencao','Recusa de atividade')" style="background:#fef9c3;border:2px solid #eab308;border-radius:12px;padding:12px;font-size:13px;font-weight:600;color:#92400e;cursor:pointer">🚫 Recusa</button>
+            <button onclick="registrarComportamento('crise','Crise de choro')" style="background:#fef2f2;border:2px solid #ef4444;border-radius:12px;padding:12px;font-size:13px;font-weight:600;color:#dc2626;cursor:pointer">😢 Crise choro</button>
+            <button onclick="registrarComportamento('crise','Crise de agressividade')" style="background:#fef2f2;border:2px solid #ef4444;border-radius:12px;padding:12px;font-size:13px;font-weight:600;color:#dc2626;cursor:pointer">😡 Agressividade</button>
+          </div>
+        </div>
+
+        <div style="background:white;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+          <div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:10px">Últimos 7 dias</div>
+          <div id="grafico-comportamento" style="min-height:80px">
+            <p style="color:#999;text-align:center;font-size:13px">Carregando...</p>
+          </div>
+          <div id="lista-comportamentos" style="margin-top:10px"></div>
         </div>
       </div>
 
