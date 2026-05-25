@@ -174,6 +174,41 @@ app.use('/api/exames', require('./routes/exames'));
 app.use('/api/comportamentos-tea', require('./routes/comportamentos-tea'));
 const rateLimit = require('express-rate-limit');
 
+// Auto-migration
+const db = require('./db');
+(async () => {
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS comportamentos_tea (
+        id SERIAL PRIMARY KEY,
+        membro_id INTEGER REFERENCES membros(id) ON DELETE CASCADE,
+        familia_id INTEGER,
+        tipo VARCHAR(20) NOT NULL,
+        descricao VARCHAR(200) NOT NULL,
+        data TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS exames (
+        id SERIAL PRIMARY KEY,
+        membro_id INTEGER REFERENCES membros(id) ON DELETE CASCADE,
+        familia_id INTEGER REFERENCES familias(id) ON DELETE CASCADE,
+        titulo VARCHAR(255) NOT NULL,
+        tipo VARCHAR(100),
+        data_exame DATE,
+        laboratorio VARCHAR(255),
+        medico_solicitante VARCHAR(255),
+        resultados JSONB DEFAULT '[]',
+        observacoes TEXT,
+        pdf_url TEXT,
+        fonte VARCHAR(50) DEFAULT 'manual',
+        criado_em TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    console.log('[Migration] Tabelas verificadas/criadas');
+  } catch(e) { console.log('[Migration] Erro:', e.message); }
+})();
+
 app.set('trust proxy', 1);
 
 // Rate limiting — proteção contra força bruta
