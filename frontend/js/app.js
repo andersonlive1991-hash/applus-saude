@@ -3945,7 +3945,11 @@ async function carregarBabasSalvas() {
 
     if (!html) html = '<p style="color:#999;font-size:13px;">Nenhuma babá ou cuidador cadastrado.</p>';
     el.innerHTML = html;
-  } catch(e) { console.log('Erro babas/cuidadores:', e); }
+  } catch(e) {
+    console.log('Erro babas/cuidadores:', e);
+    const el = document.getElementById('lista-babas-salvas');
+    if (el) el.innerHTML = '<p style="color:#999;font-size:13px;">Nenhuma babá ou cuidador cadastrado.</p>';
+  }
 }
 
 async function carregarFeedCuidadorFamilia() {
