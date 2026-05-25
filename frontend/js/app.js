@@ -838,6 +838,7 @@ function navegarPara(pagina) {
   if (pagina === 'remedios') carregarMedicamentos();
   if (pagina === 'agenda') carregarAgenda();
   if (pagina === 'chat') carregarChat();
+  if (pagina === 'exames') carregarExames();
   if (pagina === 'mais') { setTimeout(carregarBabasSalvas, 500); }
   if (pagina === 'mais') carregarMais();
   if (pagina === 'saude') carregarSinais();
@@ -4129,4 +4130,107 @@ async function carregarEventosCuidador() {
         <div style="font-size:13px;font-weight:700;color:#1a6eb5;">${e.hora||''}</div>
       </div>`).join('');
   } catch(e) { console.log('Erro eventos cuidador:', e); }
+}
+
+// ── EXAMES ──
+async function carregarExames() {
+  if (!APP.membroId) return;
+  try {
+    const exames = await api('GET', '/api/exames/' + APP.membroId);
+    const el = document.getElementById('exames-lista');
+    if (!el) return;
+    if (!exames || !exames.length) {
+      el.innerHTML = '<p style="color:#999;text-align:center;padding:20px">Nenhum exame cadastrado ainda.</p>';
+      return;
+    }
+    el.innerHTML = exames.map(e => {
+      const resultados = Array.isArray(e.resultados) ? e.resultados : JSON.parse(e.resultados || '[]');
+      return `<div style="background:white;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,0.05)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#111">${e.titulo}</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:2px">${e.data_exame ? new Date(e.data_exame).toLocaleDateString('pt-BR') : ''} ${e.laboratorio ? '· ' + e.laboratorio : ''}</div>
+          </div>
+          <button onclick="excluirExame(${e.id})" style="background:none;border:none;font-size:18px;cursor:pointer;color:#dc2626">🗑️</button>
+        </div>
+        ${resultados.length ? `<div style="background:#f8fafc;border-radius:8px;padding:8px;margin-top:6px">
+          ${resultados.map(r => `<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #e5e7eb">
+            <span style="color:#374151">${r.nome}</span>
+            <span style="font-weight:600;color:${r.alterado ? '#dc2626' : '#1a9e6e'}">${r.valor} ${r.unidade || ''}</span>
+          </div>`).join('')}
+        </div>` : ''}
+        ${e.observacoes ? `<div style="font-size:12px;color:#6b7280;margin-top:6px">${e.observacoes}</div>` : ''}
+        <div style="font-size:10px;color:#9ca3af;margin-top:6px">via ${e.fonte === 'ia' ? '🤖 IA' : '📝 manual'}</div>
+      </div>`;
+    }).join('');
+  } catch(err) { console.log('Erro exames:', err); }
+}
+
+async function excluirExame(id) {
+  if (!confirm('Excluir este exame?')) return;
+  try {
+    await api('DELETE', '/api/exames/' + id);
+    carregarExames();
+  } catch(e) { alerta('Erro ao excluir exame'); }
+}
+
+function abrirImportarExame() {
+  abrirModal('modal-importar-exame');
+}
+
+async function salvarExame() {
+  const titulo = document.getElementById('exame-titulo').value.trim();
+  const data = document.getElementById('exame-data').value;
+  const lab = document.getElementById('exame-lab').value.trim();
+  const medico = document.getElementById('exame-medico').value.trim();
+  const obs = document.getElementById('exame-obs').value.trim();
+  const pdfInput = document.getElementById('exame-pdf');
+  const statusEl = document.getElementById('exame-ia-status');
+
+  if (!titulo) return alerta('Preencha o título do exame');
+
+  let resultados = [];
+  let fonte = 'manual';
+
+  // Se tem PDF, envia para IA extrair resultados
+  if (pdfInput.files && pdfInput.files[0]) {
+    statusEl.textContent = '🤖 Analisando PDF com IA...';
+    try {
+      const file = pdfInput.files[0];
+      const base64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result.split(',')[1]);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+
+      const resp = await api('POST', '/api/ia/extrair-exame', { pdf: base64, titulo });
+      if (resp && resp.resultados) {
+        resultados = resp.resultados;
+        fonte = 'ia';
+        statusEl.textContent = '✅ ' + resultados.length + ' resultado(s) extraído(s) pela IA';
+      }
+    } catch(e) {
+      statusEl.textContent = '⚠️ Não foi possível extrair automaticamente. Salvando sem resultados.';
+    }
+  }
+
+  try {
+    await api('POST', '/api/exames', {
+      membro_id: APP.membroId,
+      familia_id: APP.familiaId,
+      titulo,
+      data_exame: data || null,
+      laboratorio: lab,
+      medico_solicitante: medico,
+      resultados,
+      observacoes: obs,
+      fonte
+    });
+    fecharModal('modal-importar-exame');
+    alerta('✅ Exame salvo!');
+    carregarExames();
+  } catch(e) {
+    alerta('Erro ao salvar exame: ' + e.message);
+  }
 }

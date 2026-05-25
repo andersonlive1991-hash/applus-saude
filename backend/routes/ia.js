@@ -109,6 +109,47 @@ router.post('/resumo-forcar', async (req, res) => {
   }
 });
 
+
+router.post('/extrair-exame', async (req, res) => {
+  const { pdf, titulo } = req.body;
+  if (!pdf) return res.status(400).json({ erro: 'PDF não enviado' });
+  try {
+    const prompt = `Você é um especialista em análise de exames laboratoriais.
+Analise este exame médico (título: ${titulo || 'exame'}) e extraia os resultados em formato JSON.
+Responda APENAS com um JSON válido, sem markdown, sem explicações, no formato:
+{
+  "resultados": [
+    { "nome": "Nome do exame", "valor": "valor numérico ou texto", "unidade": "unidade", "referencia": "valor de referência", "alterado": true ou false }
+  ]
+}
+Se não conseguir extrair resultados, retorne: {"resultados": []}
+`;
+
+    const body = {
+      contents: [{
+        parts: [
+          { text: prompt },
+          { inline_data: { mime_type: 'application/pdf', data: pdf } }
+        ]
+      }],
+      generationConfig: { temperature: 0.1 }
+    };
+
+    const r = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    );
+    const data = await r.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{"resultados":[]}';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    res.json(parsed);
+  } catch(e) {
+    console.log('Erro extrair exame:', e.message);
+    res.json({ resultados: [] });
+  }
+});
+
 module.exports = router;
 
 // Gerar metas personalizadas com Gemini
