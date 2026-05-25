@@ -47,7 +47,8 @@ async function carregarEventosPortal() {
     const eventos = await r.json();
     const el = document.getElementById('cuid-eventos-portal');
     if (!el) return;
-    const hoje = new Date().toISOString().split('T')[0];
+    const agora = new Date();
+    const hoje = agora.getFullYear() + '-' + String(agora.getMonth()+1).padStart(2,'0') + '-' + String(agora.getDate()).padStart(2,'0');
     const hojeEvs = (eventos || []).filter(e => e.data && e.data.startsWith(hoje));
     if (!hojeEvs.length) { el.innerHTML = '<div style="text-align:center;color:#999;font-size:13px;padding:10px;">Nenhum evento hoje.</div>'; return; }
     const icons = { Consulta:'🩺', Exame:'🔬', Medicamento:'💊', Família:'👨‍👩‍👧', Outro:'📋' };
