@@ -4191,6 +4191,7 @@ async function salvarExame() {
 
   let resultados = [];
   let fonte = 'manual';
+  let pdfBase64 = null;
 
   // Se tem PDF, envia para IA extrair resultados
   if (pdfInput.files && pdfInput.files[0]) {
@@ -4210,6 +4211,7 @@ async function salvarExame() {
         fonte = 'ia';
         statusEl.textContent = '✅ ' + resultados.length + ' resultado(s) extraído(s) pela IA';
       }
+      pdfBase64 = 'data:application/pdf;base64,' + base64;
     } catch(e) {
       statusEl.textContent = '⚠️ Não foi possível extrair automaticamente. Salvando sem resultados.';
     }
@@ -4225,7 +4227,8 @@ async function salvarExame() {
       medico_solicitante: medico,
       resultados,
       observacoes: obs,
-      fonte
+      fonte,
+      pdf_url: pdfBase64
     });
     fecharModal('modal-importar-exame');
     alerta('✅ Exame salvo!');
