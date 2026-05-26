@@ -853,11 +853,11 @@ async function salvar(tipo) {
   let detalhe = '', extra = {};
   try {
     if (tipo === 'banho') {
-      dados.foto = await getFotoBase64('banho') || null;
+      extra.foto = await getFotoBase64('banho') || null;
       detalhe = document.getElementById('banho-obs').value || 'Banho realizado';
       extra = { hora: document.getElementById('banho-hora').value };
     } else if (tipo === 'alimentacao') {
-      dados.foto = await getFotoBase64('alim') || null;
+      extra.foto = await getFotoBase64('alim') || null;
       const t = document.getElementById('alim-tipo').value;
       const q = document.getElementById('alim-qtd').value;
       const o = document.getElementById('alim-obs').value;
@@ -907,7 +907,7 @@ async function salvar(tipo) {
     socket.emit('cuidador-registro', { familiaId: FAMILIA_ID, registro: reg, cuidadorNome: CUIDADOR.nome });
 
     // Adiciona localmente
-    registros.unshift({ ...reg, criado_em: new Date().toISOString() });
+    registros.unshift({ ...reg, foto: extra.foto || null, criado_em: new Date().toISOString() });
     renderizarLog();
     atualizarStats();
     fecharModal('modal-' + tipo);
@@ -931,6 +931,7 @@ function renderizarLog() {
         <div class="log-titulo">${r.tipo.charAt(0).toUpperCase()+r.tipo.slice(1)}</div>
         <div class="log-detalhe">${r.detalhe||''}</div>
         <div class="log-hora">${r.hora||new Date(r.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+        ${r.foto ? `<img src="${r.foto}" style="width:100%;border-radius:8px;margin-top:6px;max-height:160px;object-fit:cover">` : ''}
       </div>
     </div>`).join('');
 }
