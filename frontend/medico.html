@@ -463,7 +463,8 @@ async function carregarHistorico(membro) {
       html += `<div class="paciente-card">
         <div class="card-titulo">🔬 Exames (${exames.length})</div>`;
       exames.forEach(ex => {
-        const resultados = ex.resultados ? JSON.parse(ex.resultados) : [];
+        let resultados = [];
+        try { if (ex.resultados) { const r = typeof ex.resultados === 'string' ? JSON.parse(ex.resultados) : ex.resultados; resultados = Array.isArray(r) ? r : (r.resultados || []); } } catch(e) { resultados = []; }
         const alterados = resultados.filter ? resultados.filter(r => r.alterado).length : 0;
         html += `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:8px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
