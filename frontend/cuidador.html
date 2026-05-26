@@ -574,6 +574,12 @@ body{background:#f0f7ff;min-height:100vh;padding-bottom:80px;}
       </select>
     </div>
     <div class="form-group"><label class="form-label">Observações</label><textarea id="med-obs" class="form-input" rows="2"></textarea></div>
+    <div class="form-group">
+      <label class="form-label">📸 Foto evidência (opcional)</label>
+      <input type="file" id="med-foto" accept="image/*" capture="camera" style="display:none" onchange="previewFoto('med')">
+      <button type="button" onclick="document.getElementById('med-foto').click()" style="width:100%;padding:10px;background:#f0f7ff;border:2px dashed #1a6eb5;border-radius:10px;color:#1a6eb5;font-size:13px;font-weight:600;cursor:pointer;">📷 Tirar foto ou escolher da galeria</button>
+      <div id="med-foto-preview" style="margin-top:8px"></div>
+    </div>
     <button class="btn-salvar" onclick="salvar('medicamento')">💾 Salvar</button>
     <button class="btn-cancelar" onclick="fecharModal('modal-medicamento')">Cancelar</button>
   </div>
@@ -853,9 +859,9 @@ async function salvar(tipo) {
   let detalhe = '', extra = {};
   try {
     if (tipo === 'banho') {
-      extra.foto = await getFotoBase64('banho') || null;
+      const banhoFoto = await getFotoBase64('banho') || null;
       detalhe = document.getElementById('banho-obs').value || 'Banho realizado';
-      extra = { hora: document.getElementById('banho-hora').value };
+      extra = { hora: document.getElementById('banho-hora').value, foto: banhoFoto };
     } else if (tipo === 'alimentacao') {
       extra.foto = await getFotoBase64('alim') || null;
       const t = document.getElementById('alim-tipo').value;
@@ -867,7 +873,8 @@ async function salvar(tipo) {
       const s = document.getElementById('med-status').value;
       const o = document.getElementById('med-obs').value;
       detalhe = n + ' — ' + s + (o ? '. ' + o : '');
-      extra = { hora: document.getElementById('med-hora').value };
+      const medFoto = await getFotoBase64('med') || null;
+      extra = { hora: document.getElementById('med-hora').value, foto: medFoto };
     } else if (tipo === 'humor') {
       if (!humorSel) return mostrarToast('Selecione o humor');
       detalhe = humorSel + ' ' + (document.getElementById('humor-obs').value || '');

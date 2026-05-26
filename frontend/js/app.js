@@ -2561,6 +2561,7 @@ async function carregarAtividades() {
           <div style="font-weight:600">${a.tipo}</div>
           <div style="font-size:0.85rem;color:#666">${a.hora || ''} ${a.obs ? '— ' + a.obs : ''}</div>
           <div style="font-size:0.75rem;color:#999">${a.cuidador_nome || ''}</div>
+          ${a.foto ? `<img src="${a.foto}" style="width:100%;border-radius:8px;margin-top:6px;max-height:160px;object-fit:cover">` : ''}
         </div>
       </div>`).join('');
   } catch(e) { console.log('Erro atividades:', e); }
