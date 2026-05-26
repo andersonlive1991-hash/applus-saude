@@ -9,7 +9,7 @@ db.query(`
     familia_id INTEGER REFERENCES familias(id) ON DELETE CASCADE,
     membro_id INTEGER REFERENCES membros(id) ON DELETE CASCADE,
     tipo VARCHAR(50), hora TIME, obs TEXT,
-    cuidador_nome VARCHAR(100),
+    cuidador_nome VARCHAR(100), foto TEXT,
     criado_em TIMESTAMP DEFAULT NOW()
   );
   CREATE TABLE IF NOT EXISTS cuidados_humor (
@@ -52,12 +52,12 @@ db.query(`
 
 // ATIVIDADES
 router.post('/atividade', async (req, res) => {
-  const { familia_id, membro_id, tipo, hora, obs } = req.body;
+  const { familia_id, membro_id, tipo, hora, obs, foto } = req.body;
   try {
     const mem = await db.query('SELECT nome FROM membros WHERE id=$1', [membro_id]);
     const nome = mem.rows[0]?.nome || '';
-    await db.query('INSERT INTO cuidados_atividades (familia_id, membro_id, tipo, hora, obs, cuidador_nome) VALUES ($1,$2,$3,$4,$5,$6)',
-      [familia_id, membro_id, tipo, hora || null, obs, nome]);
+    await db.query('INSERT INTO cuidados_atividades (familia_id, membro_id, tipo, hora, obs, cuidador_nome, foto) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+      [familia_id, membro_id, tipo, hora || null, obs, nome, foto || null]);
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
