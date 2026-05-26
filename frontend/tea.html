@@ -170,7 +170,10 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; min-height: 100vh
             <div class="tea-sub-nome">Meu espaço especial</div>
           </div>
         </div>
-        <div class="tea-pts" id="tea-estrelas">⭐ 0</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="tea-pts" id="tea-estrelas">⭐ 0</div>
+          <button onclick="sairTEA()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:34px;height:34px;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Sair">🚪</button>
+        </div>
       </div>
     </div>
     <div class="tea-curva"></div>
@@ -956,6 +959,18 @@ function falarFraseCompleta() {
   document.getElementById("voz-emoji").textContent = emojis;
   document.getElementById("voz-texto").textContent = frase;
   document.getElementById("voz-overlay").classList.add("ativo");
+}
+
+function sairTEA() {
+  localStorage.removeItem('tea_sessao');
+  TEA.membroId = null;
+  TEA.membroNome = null;
+  TEA.familiaId = null;
+  TEA.idPessoal = null;
+  if (TEA.socket) TEA.socket.disconnect();
+  document.getElementById('tea-home').style.display = 'none';
+  document.getElementById('login-tea').style.display = 'flex';
+  document.getElementById('tea-id-input').value = '';
 }
 
 function trocarAbaTea(aba) {
