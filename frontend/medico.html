@@ -435,7 +435,7 @@ async function carregarHistorico(membro) {
   content.innerHTML = '<p style="text-align:center;color:#6b7280;padding:20px">Carregando histórico...</p>';
 
   try {
-    const [perfil, meds, aderencia, sinais, vacinas, eventos, doencas, tratamentos, internacoes, dadosTEA] = await Promise.all([
+    const [perfil, meds, aderencia, sinais, vacinas, eventos, doencas, tratamentos, internacoes, exames, dadosTEA] = await Promise.all([
       fetch(`/api/perfil/${membro.id}`).then(r => r.ok ? r.json() : null),
       fetch(`/api/medicamentos/${membro.familia_id}?membro_id=${membro.id}`).then(r => r.json()).catch(() => []),
       fetch(`/api/medicamentos/aderencia/${membro.id}`).then(r => r.json()).catch(() => []),
@@ -445,6 +445,7 @@ async function carregarHistorico(membro) {
       fetch(`/api/historico/doencas/${membro.id}`).then(r => r.json()).catch(() => []),
       fetch(`/api/historico/tratamentos/${membro.id}`).then(r => r.json()).catch(() => []),
       fetch(`/api/historico/internacoes/${membro.id}`).then(r => r.json()).catch(() => []),
+      fetch(`/api/exames/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
       membro.tipo === 'tea' ? Promise.all([
         fetch(`/api/historico-tea/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
         fetch(`/api/rotina-tea/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
@@ -456,6 +457,47 @@ async function carregarHistorico(membro) {
 
     const agora = new Date().toLocaleString('pt-BR');
     let html = `<div class="acesso-log">📋 Acesso registrado em ${agora} — Dr(a). ${MEDICO.nome} · ${MEDICO.crm}</div>`;
+
+    // Exames
+    if (exames && exames.length > 0) {
+      html += '<div class="paciente-card"><div class="card-titulo">🔬 Exames (' + exames.length + ')</div>';
+      exames.forEach(function(ex) {
+        let resultados = [];
+        try {
+          if (ex.resultados) {
+            const r = typeof ex.resultados === 'string' ? JSON.parse(ex.resultados) : ex.resultados;
+            resultados = Array.isArray(r) ? r : (r.resultados || []);
+          }
+        } catch(e) { resultados = []; }
+        const alterados = resultados.filter(function(r){ return r.alterado; }).length;
+        html += '<div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:8px">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+        html += '<div style="font-weight:600;font-size:14px;color:#1a1f2e">' + (ex.titulo || 'Exame') + '</div>';
+        html += alterados > 0
+          ? '<span style="background:#fef2f2;color:#dc2626;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">' + alterados + ' alterado(s)</span>'
+          : '<span style="background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">Normal</span>';
+        html += '</div>';
+        html += '<div style="font-size:12px;color:#6b7280;margin-bottom:6px">'
+          + (ex.data_exame ? formatarData(ex.data_exame) : '—')
+          + (ex.laboratorio ? ' · ' + ex.laboratorio : '')
+          + (ex.medico_solicitante ? ' · Dr(a). ' + ex.medico_solicitante : '')
+          + '</div>';
+        if (resultados.length > 0) {
+          html += '<div style="display:flex;flex-direction:column;gap:4px">';
+          resultados.slice(0,5).forEach(function(r) {
+            html += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 8px;background:' + (r.alterado ? '#fef2f2' : '#f9fafb') + ';border-radius:6px">'
+              + '<span style="color:#374151">' + (r.nome || '') + '</span>'
+              + '<span style="font-weight:600;color:' + (r.alterado ? '#dc2626' : '#16a34a') + '">' + (r.valor || '') + ' ' + (r.unidade || '') + '</span>'
+              + '</div>';
+          });
+          if (resultados.length > 5) html += '<div style="font-size:11px;color:#6b7280;text-align:center;margin-top:2px">+' + (resultados.length - 5) + ' resultado(s)</div>';
+          html += '</div>';
+        }
+        if (ex.pdf_url) html += '<a href="' + ex.pdf_url + '" target="_blank" style="display:inline-block;margin-top:8px;font-size:12px;color:#1a6eb5;font-weight:600">📄 Ver PDF</a>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
 
     // Alergias em destaque
     if (perfil && perfil.alergias && perfil.alergias.trim() !== '') {
