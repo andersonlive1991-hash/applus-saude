@@ -907,7 +907,7 @@ async function salvar(tipo) {
     await fetch('/api/cuidados/atividade', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ familia_id: FAMILIA_ID, membro_id: CUIDADOR.id, tipo, obs: detalhe, hora: extra.hora || horaAtual() })
+      body: JSON.stringify({ familia_id: FAMILIA_ID, membro_id: CUIDADOR.id, tipo, obs: detalhe, hora: extra.hora || horaAtual(), foto: extra.foto || null, cuidador_nome: CUIDADOR.nome })
     }).catch(() => {});
 
     // Emite tempo real para família
