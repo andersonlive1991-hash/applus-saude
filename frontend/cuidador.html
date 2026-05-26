@@ -525,6 +525,13 @@ body{background:#f0f7ff;min-height:100vh;padding-bottom:80px;}
     <div class="modal-titulo">🛁 Registrar Banho</div>
     <div class="form-group"><label class="form-label">Hora</label><input type="time" id="banho-hora" class="form-input"></div>
     <div class="form-group"><label class="form-label">Observações</label><textarea id="banho-obs" class="form-input" rows="2" placeholder="Ex: banho completo, sem intercorrências"></textarea></div>
+    
+    <div class="form-group">
+      <label class="form-label">📸 Foto evidência (opcional)</label>
+      <input type="file" id="banho-foto" accept="image/*" capture="camera" style="display:none" onchange="previewFoto('banho')">
+      <button type="button" onclick="document.getElementById('banho-foto').click()" style="width:100%;padding:10px;background:#f0f7ff;border:2px dashed #1a6eb5;border-radius:10px;color:#1a6eb5;font-size:13px;font-weight:600;cursor:pointer;">📷 Tirar foto ou escolher da galeria</button>
+      <div id="banho-foto-preview" style="margin-top:8px"></div>
+    </div>
     <button class="btn-salvar" onclick="salvar('banho')">💾 Salvar</button>
     <button class="btn-cancelar" onclick="fecharModal('modal-banho')">Cancelar</button>
   </div>
@@ -544,6 +551,13 @@ body{background:#f0f7ff;min-height:100vh;padding-bottom:80px;}
       </select>
     </div>
     <div class="form-group"><label class="form-label">Observações</label><textarea id="alim-obs" class="form-input" rows="2" placeholder="Ex: comeu bem, sem dificuldade"></textarea></div>
+    
+    <div class="form-group">
+      <label class="form-label">📸 Foto evidência (opcional)</label>
+      <input type="file" id="alim-foto" accept="image/*" capture="camera" style="display:none" onchange="previewFoto('alim')">
+      <button type="button" onclick="document.getElementById('alim-foto').click()" style="width:100%;padding:10px;background:#f0f7ff;border:2px dashed #1a6eb5;border-radius:10px;color:#1a6eb5;font-size:13px;font-weight:600;cursor:pointer;">📷 Tirar foto ou escolher da galeria</button>
+      <div id="alim-foto-preview" style="margin-top:8px"></div>
+    </div>
     <button class="btn-salvar" onclick="salvar('alimentacao')">💾 Salvar</button>
     <button class="btn-cancelar" onclick="fecharModal('modal-alimentacao')">Cancelar</button>
   </div>
@@ -839,9 +853,11 @@ async function salvar(tipo) {
   let detalhe = '', extra = {};
   try {
     if (tipo === 'banho') {
+      dados.foto = await getFotoBase64('banho') || null;
       detalhe = document.getElementById('banho-obs').value || 'Banho realizado';
       extra = { hora: document.getElementById('banho-hora').value };
     } else if (tipo === 'alimentacao') {
+      dados.foto = await getFotoBase64('alim') || null;
       const t = document.getElementById('alim-tipo').value;
       const q = document.getElementById('alim-qtd').value;
       const o = document.getElementById('alim-obs').value;
@@ -976,6 +992,29 @@ socket.on('cuidador-pais-online', (data) => {
     el.textContent = '👨‍👩‍👧 Família: nenhum familiar online agora';
   }
 });
+
+
+function previewFoto(id) {
+  const input = document.getElementById(id + '-foto');
+  const preview = document.getElementById(id + '-foto-preview');
+  if (!input || !input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;border-radius:10px;margin-top:4px;max-height:200px;object-fit:cover">';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function getFotoBase64(id) {
+  const input = document.getElementById(id + '-foto');
+  if (!input || !input.files || !input.files[0]) return null;
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result);
+    reader.onerror = rej;
+    reader.readAsDataURL(input.files[0]);
+  });
+}
 
 // Hora do check-in atualiza a cada minuto
 setInterval(() => {
