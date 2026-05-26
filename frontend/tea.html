@@ -563,6 +563,7 @@ function recuperarSessaoTEA() {
     document.getElementById('tea-home').style.display = 'flex';
     document.getElementById('tea-nome').textContent = 'Olá, ' + s.membroNome.split(' ')[0] + '! 👋';
     conectarSocketTEA();
+    setTimeout(registrarPush, 1500);
   } catch(e) { localStorage.removeItem('tea_sessao'); }
 }
 
@@ -959,6 +960,37 @@ function falarFraseCompleta() {
   document.getElementById("voz-emoji").textContent = emojis;
   document.getElementById("voz-texto").textContent = frase;
   document.getElementById("voz-overlay").classList.add("ativo");
+}
+
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+async function registrarPush() {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    const reg = await navigator.serviceWorker.register('/sw2.js');
+    await navigator.serviceWorker.ready;
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+    let sub = await reg.pushManager.getSubscription();
+    if (sub) await sub.unsubscribe();
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array('BO6JXBRmtjSjiM9OAa7NSy2CtZS6x_caWM582FMie8idIzpapx8McDuQl62PChqMHxQAELiE1ja1kHDmK91nLGE')
+    });
+    await fetch('/api/push/inscrever', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ membro_id: TEA.membroId, familia_id: TEA.familiaId, subscription: sub })
+    });
+  } catch(e) { console.log('Push erro:', e.message); }
 }
 
 function sairTEA() {
