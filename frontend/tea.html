@@ -178,12 +178,22 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; min-height: 100vh
     <div class="tea-content">
       <!-- Abas -->
       <div class="tea-abas">
-        <button class="tea-aba ativa" onclick="trocarAbaTea('rotina')">📋 Minha Rotina</button>
-        <button class="tea-aba" onclick="trocarAbaTea('comunicar')">💬 Comunicar</button>
-        <button class="tea-aba" onclick="trocarAbaTea('humor')">😊 Como estou</button>
-        <button class="tea-aba" onclick="trocarAbaTea('sos')">🆘 Socorro</button>
-      
-        <button class="tea-aba" onclick="trocarAbaTea('evolucao')">📊 Evolução</button></div>
+        <button class="tea-aba ativa" onclick="trocarAbaTea('rotina')">
+          <span class="aba-icon">📋</span><span>Rotina</span>
+        </button>
+        <button class="tea-aba" onclick="trocarAbaTea('comunicar')">
+          <span class="aba-icon">💬</span><span>Comunicar</span>
+        </button>
+        <button class="tea-aba" onclick="trocarAbaTea('humor')">
+          <span class="aba-icon">😊</span><span>Como estou</span>
+        </button>
+        <button class="tea-aba" onclick="trocarAbaTea('evolucao')">
+          <span class="aba-icon">📊</span><span>Evolução</span>
+        </button>
+        <button class="tea-aba" onclick="trocarAbaTea('sos')">
+          <span class="aba-icon">🆘</span><span>Socorro</span>
+        </button>
+      </div>
 
       <!-- Rotina -->
       <div id="tea-rotina">
@@ -195,9 +205,9 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; min-height: 100vh
       <!-- Comunicar -->
       <div id="tea-comunicar" style="display:none">
         <!-- Barra de frase -->
-        <div id="barra-frase" style="background:#1e3a5f;border-radius:16px;padding:12px;margin-bottom:12px;min-height:60px;display:flex;flex-direction:column;gap:8px">
+        <div id="barra-frase" style="background:#e0f2fe;border-radius:16px;padding:12px;margin-bottom:12px;min-height:60px;display:flex;flex-direction:column;gap:8px">
           <div id="frase-atual" style="display:flex;flex-wrap:wrap;gap:6px;min-height:32px;align-items:center">
-            <span style="color:#64748b;font-size:13px;font-style:italic">Toque nos pictogramas para montar uma frase...</span>
+            <span style="color:#0369a1;font-size:13px;font-style:italic">Toque nos pictogramas para montar uma frase...</span>
           </div>
           <div style="display:flex;gap:8px">
             <button onclick="falarFraseCompleta()" style="flex:1;padding:10px;background:#1a9e6e;border:none;border-radius:10px;color:white;font-size:14px;font-weight:700;cursor:pointer">🔊 Falar frase</button>
@@ -212,7 +222,7 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; min-height: 100vh
 
       <!-- Humor -->
       <div id="tea-humor" style="display:none">
-        <p style="font-size:16px;font-weight:800;color:#0369a1;margin-bottom:12px;text-align:center">Como você está se sentindo agora?</p>
+        <p style="font-size:13px;font-weight:700;color:#6b7280;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Como você está?</p>
         <div class="humor-grid">
           <button class="humor-btn" onclick="selecionarHumor(1, '😄', 'Ótimo')">
             <span class="humor-emoji">😄</span>
@@ -243,10 +253,22 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; min-height: 100vh
 
       <!-- EVOLUÇÃO -->
       <div id="tea-evolucao" style="display:none">
-        <p style="font-size:16px;font-weight:800;color:#0369a1;margin-bottom:12px;text-align:center">📊 Minha Evolução</p>
+        <p style="font-size:13px;font-weight:700;color:#6b7280;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Evolução</p>
         
-        <div style="background:white;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
-          <div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:10px">Registrar comportamento</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="background:white;border-radius:14px;padding:12px;border:1.5px solid #e5e7eb">
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">Esta semana</div>
+            <div id="evol-total" style="font-size:22px;font-weight:800;color:#1a1f2e">—</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px">comportamentos</div>
+          </div>
+          <div style="background:white;border-radius:14px;padding:12px;border:1.5px solid #e5e7eb">
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">Rotina concluída</div>
+            <div id="evol-rotina" style="font-size:22px;font-weight:800;color:#1a1f2e">—</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px">dias esta semana</div>
+          </div>
+        </div>
+        <div style="background:white;border-radius:16px;padding:14px;margin-bottom:12px;border:1.5px solid #e5e7eb">
+          <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Registrar comportamento</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
             <button onclick="registrarComportamento('positivo','Colaborou com atividade')" style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:12px;font-size:13px;font-weight:600;color:#15803d;cursor:pointer">✅ Colaborou</button>
             <button onclick="registrarComportamento('positivo','Comunicou necessidade')" style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:12px;font-size:13px;font-weight:600;color:#15803d;cursor:pointer">💬 Comunicou</button>
@@ -259,7 +281,7 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; min-height: 100vh
           </div>
         </div>
 
-        <div style="background:white;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+        <div style="background:white;border-radius:16px;padding:14px;border:1.5px solid #e5e7eb">
           <div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:10px">Últimos 7 dias</div>
           <div id="grafico-comportamento" style="min-height:80px">
             <p style="color:#999;text-align:center;font-size:13px">Carregando...</p>
