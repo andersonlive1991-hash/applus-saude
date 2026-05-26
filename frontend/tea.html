@@ -9,410 +9,139 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { font-family: 'Nunito', sans-serif; background: #f0f9ff; min-height: 100vh; }
+.app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
 
-body {
-  font-family: 'Nunito', sans-serif;
-  background: #f0f9ff;
-  min-height: 100vh;
-}
-
-.app {
-  max-width: 480px;
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── LOGIN ── */
+/* LOGIN */
 .login-tea {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 24px;
-  background: linear-gradient(160deg, #0369a1, #0ea5e9, #38bdf8);
-  min-height: 100vh;
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 32px 24px;
+  background: linear-gradient(160deg, #0369a1, #0ea5e9, #38bdf8); min-height: 100vh;
 }
-
 .tea-logo { font-size: 80px; margin-bottom: 16px; animation: bounce 2s infinite; }
 .tea-titulo { font-size: 36px; font-weight: 900; color: white; margin-bottom: 8px; }
 .tea-sub { font-size: 16px; color: rgba(255,255,255,0.8); margin-bottom: 40px; }
-
-.login-box {
-  background: white;
-  border-radius: 24px;
-  padding: 32px 24px;
-  width: 100%;
-}
-
-.login-box label {
-  display: block;
-  font-size: 14px;
-  font-weight: 700;
-  color: #0ea5e9;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 8px;
-}
-
-.login-box input {
-  width: 100%;
-  padding: 16px;
-  border: 3px solid #bae6fd;
-  border-radius: 16px;
-  font-family: 'Nunito', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  text-align: center;
-  text-transform: uppercase;
-  outline: none;
-  margin-bottom: 16px;
-}
-
+.login-box { background: white; border-radius: 24px; padding: 32px 24px; width: 100%; }
+.login-box label { display: block; font-size: 14px; font-weight: 700; color: #0ea5e9; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.login-box input { width: 100%; padding: 16px; border: 2px solid #bae6fd; border-radius: 16px; font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 700; text-align: center; text-transform: uppercase; outline: none; margin-bottom: 16px; }
 .login-box input:focus { border-color: #0ea5e9; }
+.btn-entrar { width: 100%; padding: 18px; background: linear-gradient(135deg, #0ea5e9, #0369a1); color: white; border: none; border-radius: 16px; font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800; cursor: pointer; }
 
-.btn-entrar {
-  width: 100%;
-  padding: 18px;
-  background: linear-gradient(135deg, #0ea5e9, #0369a1);
-  color: white;
-  border: none;
-  border-radius: 16px;
-  font-family: 'Nunito', sans-serif;
-  font-size: 18px;
-  font-weight: 800;
-  cursor: pointer;
-}
+/* HEADER */
+.tea-home { display: none; flex-direction: column; min-height: 100vh; background: #f0f9ff; }
+.tea-header { background: #0ea5e9; padding: 48px 20px 32px; }
+.tea-header-row { display: flex; align-items: center; justify-content: space-between; }
+.tea-avatar-wrap { display: flex; align-items: center; gap: 12px; }
+.tea-avatar { font-size: 44px; }
+.tea-ola { font-size: 20px; font-weight: 800; color: white; }
+.tea-sub-nome { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+.tea-pts { background: rgba(255,255,255,0.2); border-radius: 20px; padding: 6px 14px; font-size: 14px; color: white; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+.tea-curva { width: 100%; height: 24px; background: #f0f9ff; border-radius: 24px 24px 0 0; margin-top: -12px; }
+.tea-content { flex: 1; padding: 0 16px 32px; display: flex; flex-direction: column; gap: 12px; }
 
-/* ── HOME TEA ── */
-.tea-home {
-  display: none;
-  flex-direction: column;
-  min-height: 100vh;
-  background: #f0f9ff;
-}
-
-.tea-header {
-  background: linear-gradient(135deg, #0369a1, #0ea5e9);
-  padding: 48px 24px 28px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.tea-header::before { content:'🌟'; position:absolute; font-size:60px; top:-10px; left:-10px; opacity:0.2; }
-.tea-header::after { content:'⭐'; position:absolute; font-size:60px; bottom:-10px; right:-10px; opacity:0.2; }
-
-.tea-avatar { font-size: 64px; margin-bottom: 8px; }
-.tea-ola { font-size: 28px; font-weight: 900; color: white; }
-
-.tea-curva {
-  width: 100%; height: 40px;
-  background: #f0f9ff;
-  border-radius: 32px 32px 0 0;
-  margin-top: -24px;
-}
-
-.tea-content {
-  flex: 1;
-  padding: 16px 20px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* ── ABAS ── */
-.tea-abas {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-bottom: 4px;
-}
-
+/* ABAS */
+.tea-abas { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 4px 0 8px; }
 .tea-aba {
-  padding: 10px 18px;
-  border-radius: 20px;
-  border: 2px solid #bae6fd;
-  background: white;
-  font-family: 'Nunito', sans-serif;
-  font-size: 13px;
-  font-weight: 800;
-  color: #0369a1;
-  cursor: pointer;
-  white-space: nowrap;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 14px; border-radius: 16px; border: 1.5px solid #bae6fd;
+  background: white; font-family: 'Nunito', sans-serif; font-size: 11px;
+  font-weight: 800; color: #0369a1; cursor: pointer; white-space: nowrap; min-width: 56px;
   transition: all 0.2s;
 }
+.tea-aba .aba-icon { font-size: 18px; }
+.tea-aba.ativa { background: #0ea5e9; border-color: #0ea5e9; color: white; }
 
-.tea-aba.ativa {
-  background: #0ea5e9;
-  color: white;
-  border-color: #0ea5e9;
-}
-
-/* ── ROTINA VISUAL ── */
-.rotina-lista {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
+/* ROTINA */
+.rotina-lista { display: flex; flex-direction: column; gap: 8px; }
 .rotina-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: white;
-  border-radius: 18px;
-  padding: 14px 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  border: 2px solid transparent;
+  display: flex; align-items: center; gap: 12px; background: white;
+  border-radius: 16px; padding: 12px 14px; border: 1.5px solid #e5e7eb;
   transition: all 0.2s;
 }
-
-.rotina-item.concluida {
-  background: #f0fdf4;
-  border-color: #86efac;
-  opacity: 0.7;
-}
-
-.rotina-emoji { font-size: 36px; flex-shrink: 0; }
+.rotina-item.concluida { background: #f0fdf4; border-color: #86efac; opacity: 0.8; }
+.rotina-emoji { font-size: 32px; flex-shrink: 0; }
 .rotina-info { flex: 1; }
-.rotina-nome { font-size: 16px; font-weight: 800; color: #1a1f2e; }
-.rotina-hora { font-size: 13px; color: #6b7280; margin-top: 2px; }
-
+.rotina-nome { font-size: 15px; font-weight: 800; color: #1a1f2e; }
+.rotina-hora { font-size: 12px; color: #6b7280; margin-top: 2px; }
 .btn-concluir {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  border: 3px solid #e5e7eb;
-  background: white;
-  font-size: 20px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.2s;
+  width: 36px; height: 36px; border-radius: 50%; border: 2px solid #e5e7eb;
+  background: white; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s;
 }
+.rotina-item.concluida .btn-concluir { background: #22c55e; border-color: #22c55e; color: white; }
 
-.rotina-item.concluida .btn-concluir {
-  background: #22c55e;
-  border-color: #22c55e;
-}
-
-/* ── COMUNICAÇÃO ── */
-.pict-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
+/* PICTOGRAMAS */
+.pict-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
 .pict-btn {
-  background: white;
-  border: 3px solid #bae6fd;
-  border-radius: 18px;
-  padding: 16px 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.15s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  background: white; border: 2px solid #bae6fd; border-radius: 16px;
+  padding: 14px 8px; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
-
-.pict-btn:active { transform: scale(0.93); background: #e0f2fe; border-color: #0ea5e9; }
-.pict-emoji { font-size: 40px; }
+.pict-btn:active { transform: scale(0.94); background: #e0f2fe; border-color: #0ea5e9; }
+.pict-emoji { font-size: 38px; }
 .pict-texto { font-size: 13px; font-weight: 800; color: #0369a1; text-align: center; }
 
-/* ── HUMOR ── */
-.humor-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
+/* HUMOR */
+.humor-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
 .humor-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  background: white;
-  border: 3px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 12px 4px;
-  cursor: pointer;
-  transition: all 0.15s;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  background: white; border: 2px solid #e5e7eb; border-radius: 16px;
+  padding: 12px 4px; cursor: pointer; transition: all 0.15s;
 }
-
 .humor-btn:active, .humor-btn.selecionado { border-color: #0ea5e9; background: #e0f2fe; }
-.humor-emoji { font-size: 32px; }
+.humor-emoji { font-size: 30px; }
 .humor-label { font-size: 10px; font-weight: 800; color: #6b7280; text-align: center; }
 
-/* ── SOS ── */
+/* SOS */
 .btn-sos-tea {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  border: none;
-  border-radius: 24px;
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  box-shadow: 0 8px 32px rgba(220,38,38,0.4);
-  animation: pulse-sos 2s infinite;
-  width: 100%;
+  background: linear-gradient(135deg, #dc2626, #b91c1c); border: none;
+  border-radius: 20px; padding: 20px 24px; display: flex; align-items: center;
+  gap: 16px; cursor: pointer; width: 100%;
+  box-shadow: 0 6px 24px rgba(220,38,38,0.35); animation: pulse-sos 2s infinite;
 }
+.btn-sos-tea .sos-icone { font-size: 36px; }
+.sos-info { text-align: left; }
+.btn-sos-tea .sos-texto { font-size: 20px; font-weight: 900; color: white; letter-spacing: 1px; display: block; }
+.btn-sos-tea .sos-sub { font-size: 13px; color: rgba(255,255,255,0.8); font-weight: 700; display: block; margin-top: 2px; }
 
-.btn-sos-tea .sos-icone { font-size: 60px; }
-.btn-sos-tea .sos-texto { font-size: 26px; font-weight: 900; color: white; letter-spacing: 2px; }
-.btn-sos-tea .sos-sub { font-size: 14px; color: rgba(255,255,255,0.8); font-weight: 700; }
-
-/* ── VOZ ── */
+/* VOZ */
 .voz-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(3,105,161,0.95);
-  z-index: 300;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 32px;
+  display: none; position: fixed; inset: 0; background: rgba(3,105,161,0.95);
+  z-index: 300; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; padding: 32px;
 }
-
 .voz-overlay.ativo { display: flex; }
 .voz-emoji { font-size: 80px; margin-bottom: 16px; animation: bounce 0.5s infinite; }
 .voz-texto { font-size: 28px; font-weight: 900; color: white; margin-bottom: 32px; }
-.btn-fechar-voz {
-  background: white; color: #0369a1; border: none;
-  border-radius: 16px; padding: 16px 32px;
-  font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800; cursor: pointer;
-}
+.btn-fechar-voz { background: white; color: #0369a1; border: none; border-radius: 16px; padding: 16px 32px; font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800; cursor: pointer; }
 
-/* ── SOS ENVIADO ── */
+/* SOS OVERLAY */
 .sos-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(220,38,38,0.95);
-  z-index: 300;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 32px;
+  display: none; position: fixed; inset: 0; background: rgba(220,38,38,0.95);
+  z-index: 300; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; padding: 32px;
 }
-
 .sos-overlay.ativo { display: flex; }
 .sos-overlay .icone { font-size: 80px; margin-bottom: 16px; animation: bounce 0.5s infinite; }
 .sos-overlay h2 { font-size: 28px; font-weight: 900; color: white; margin-bottom: 8px; }
 .sos-overlay p { font-size: 16px; color: rgba(255,255,255,0.8); margin-bottom: 32px; }
-.sos-overlay button {
-  background: white; color: #dc2626; border: none;
-  border-radius: 16px; padding: 16px 32px;
-  font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800; cursor: pointer;
-}
+.sos-overlay button { background: white; color: #dc2626; border: none; border-radius: 16px; padding: 16px 32px; font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800; cursor: pointer; }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
+/* TEMPORIZADOR */
+.temporizador-box { margin-top: 16px; background: white; border-radius: 20px; padding: 20px 16px; border: 1.5px solid #e5e7eb; text-align: center; }
+.temp-titulo { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+.temp-emoji { font-size: 56px; margin-bottom: 8px; display: block; transition: all 0.3s; }
+.temp-tempo { font-size: 44px; font-weight: 900; color: #1e293b; font-family: monospace; margin-bottom: 12px; }
+.temp-barra-wrap { width: 100%; height: 20px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+.temp-barra { height: 100%; border-radius: 10px; width: 100%; background: #22c55e; transition: width 1s linear, background 1s; }
+.temp-botoes { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+.temp-btn { background: #e0f2fe; color: #0369a1; border: none; border-radius: 12px; padding: 10px 16px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.temp-btn-iniciar { background: #22c55e; color: white; border: none; border-radius: 12px; padding: 12px 32px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; }
+.temp-btn-parar { background: #ef4444; color: white; border: none; border-radius: 12px; padding: 12px 32px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; display: none; }
 
-@keyframes pulse-sos {
-  0%, 100% { box-shadow: 0 8px 32px rgba(220,38,38,0.4); }
-  50% { box-shadow: 0 8px 48px rgba(220,38,38,0.7); transform: scale(1.02); }
-}
-
-/* ── TEMPORIZADOR ── */
-.temporizador-box {
-  margin-top: 24px;
-  background: white;
-  border-radius: 24px;
-  padding: 20px 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  text-align: center;
-}
-.temp-titulo {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 12px;
-}
-.temp-emoji {
-  font-size: 64px;
-  margin-bottom: 8px;
-  display: block;
-  transition: all 0.3s;
-}
-.temp-tempo {
-  font-size: 48px;
-  font-weight: 900;
-  color: #1e293b;
-  font-family: monospace;
-  margin-bottom: 12px;
-}
-.temp-barra-wrap {
-  width: 100%;
-  height: 24px;
-  background: #e2e8f0;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-.temp-barra {
-  height: 100%;
-  border-radius: 12px;
-  width: 100%;
-  background: #22c55e;
-  transition: width 1s linear, background 1s;
-}
-@keyframes pulsar-barra {
-  0%, 100% { opacity: 1; transform: scaleY(1); }
-  50% { opacity: 0.6; transform: scaleY(1.15); }
-}
-.temp-botoes {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.temp-btn {
-  background: #e0f2fe;
-  color: #0369a1;
-  border: none;
-  border-radius: 12px;
-  padding: 10px 16px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.temp-btn-iniciar {
-  background: #22c55e;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 32px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  width: 100%;
-}
-.temp-btn-parar {
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 32px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  width: 100%;
-  display: none;
-}
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes pulse-sos { 0%, 100% { box-shadow: 0 6px 24px rgba(220,38,38,0.35); } 50% { box-shadow: 0 6px 40px rgba(220,38,38,0.6); transform: scale(1.01); } }
+@keyframes pulsar-barra { 0%, 100% { opacity: 1; transform: scaleY(1); } 50% { opacity: 0.6; transform: scaleY(1.15); } }
 </style>
 </head>
 <body>
@@ -433,9 +162,16 @@ body {
   <!-- ── HOME TEA ── -->
   <div class="tea-home" id="tea-home">
     <div class="tea-header">
-      <div class="tea-avatar">🧩</div>
-      <div class="tea-ola" id="tea-nome">Olá!</div>
-      <div id="tea-estrelas" style="font-size:14px;color:#fbbf24;font-weight:700;margin-top:4px;text-align:center;">⭐ 0</div>
+      <div class="tea-header-row">
+        <div class="tea-avatar-wrap">
+          <div class="tea-avatar">🧩</div>
+          <div>
+            <div class="tea-ola" id="tea-nome">Olá!</div>
+            <div class="tea-sub-nome">Meu espaço especial</div>
+          </div>
+        </div>
+        <div class="tea-pts" id="tea-estrelas">⭐ 0</div>
+      </div>
     </div>
     <div class="tea-curva"></div>
 
@@ -536,8 +272,10 @@ body {
       <div id="tea-sos" style="display:none">
         <button class="btn-sos-tea" onclick="enviarSOSTea()">
           <span class="sos-icone">🆘</span>
-          <span class="sos-texto">SOCORRO!</span>
-          <span class="sos-sub">Toca aqui se precisar de ajuda</span>
+          <div class="sos-info">
+            <span class="sos-texto">SOCORRO!</span>
+            <span class="sos-sub">Toca aqui se precisar de ajuda</span>
+          </div>
         </button>
         <div class="temporizador-box">
           <div class="temp-titulo">⏱️ Temporizador Visual</div>
