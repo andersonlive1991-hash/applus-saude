@@ -106,7 +106,7 @@ self.addEventListener('notificationclick', e => {
           return client.focus();
         }
       }
-      return clients.openWindow('https://applus-saude.onrender.com/');
+      return clients.openWindow('https://applus-saude-production.up.railway.app/');
     })
   );
 });

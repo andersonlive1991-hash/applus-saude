@@ -34,7 +34,7 @@ self.addEventListener('notificationclick', e => {
       for (const client of lista) {
         if (client.url.includes('cuidador.html') && 'focus' in client) return client.focus();
       }
-      return clients.openWindow('https://applus-saude.onrender.com/cuidador.html');
+      return clients.openWindow('https://applus-saude-production.up.railway.app/cuidador.html');
     })
   );
 });

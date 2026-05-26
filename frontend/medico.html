@@ -449,7 +449,8 @@ async function carregarHistorico(membro) {
         fetch(`/api/historico-tea/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
         fetch(`/api/rotina-tea/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
         fetch(`/api/sinais/${membro.id}?tipo=humor_tea`).then(r => r.ok ? r.json() : []).catch(() => []),
-        fetch(`/api/rotina-tea/crises/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => [])
+        fetch(`/api/rotina-tea/crises/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`/api/comportamentos-tea/${membro.id}?dias=30`).then(r => r.ok ? r.json() : []).catch(() => [])
       ]) : Promise.resolve([[], [], [], []])
     ]);
 
@@ -593,7 +594,7 @@ async function carregarHistorico(membro) {
     </div>`;
 
     if (membro.tipo === 'tea') {
-      const [histComun, rotina, humor, crises] = dadosTEA;
+      const [histComun, rotina, humor, crises, comportamentos] = dadosTEA;
 
       // Rotina TEA
       html += '<div class="paciente-card"><div class="card-titulo">📋 Rotina TEA</div>';
@@ -614,6 +615,24 @@ async function carregarHistorico(membro) {
       if (crises && crises.length) {
         html += crises.slice(0,10).map(cr => '<div class="info-row"><div><div style="font-size:13px;font-weight:600">' + (cr.descricao || 'Crise registrada') + '</div><div style="font-size:11px;color:#6b7280">' + new Date(cr.criado_em).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'}) + '</div></div></div>').join('');
       } else { html += '<div class="vazio">Nenhuma crise registrada</div>'; }
+      html += '</div>';
+
+      // Comportamentos TEA
+      html += '<div class="paciente-card"><div class="card-titulo">📊 Comportamentos TEA (30 dias)</div>';
+      if (comportamentos && comportamentos.length) {
+        const pos = comportamentos.filter(b => b.tipo === 'positivo').length;
+        const atc = comportamentos.filter(b => b.tipo === 'atencao').length;
+        const crs = comportamentos.filter(b => b.tipo === 'crise').length;
+        html += '<div style="display:flex;gap:12px;margin-bottom:10px">' +
+          '<div style="flex:1;text-align:center;background:#f0fdf4;border-radius:10px;padding:10px"><div style="font-size:20px;font-weight:700;color:#16a34a">' + pos + '</div><div style="font-size:11px;color:#6b7280">✅ Positivos</div></div>' +
+          '<div style="flex:1;text-align:center;background:#fef9c3;border-radius:10px;padding:10px"><div style="font-size:20px;font-weight:700;color:#d97706">' + atc + '</div><div style="font-size:11px;color:#6b7280">⚠️ Atenção</div></div>' +
+          '<div style="flex:1;text-align:center;background:#fef2f2;border-radius:10px;padding:10px"><div style="font-size:20px;font-weight:700;color:#dc2626">' + crs + '</div><div style="font-size:11px;color:#6b7280">🚨 Crises</div></div>' +
+          '</div>';
+        html += comportamentos.slice(0,10).map(b => {
+          const ico = b.tipo === 'positivo' ? '✅' : b.tipo === 'atencao' ? '⚠️' : '🚨';
+          return '<div class="info-row"><span style="font-size:18px">' + ico + '</span><div><div style="font-size:13px;font-weight:600">' + b.descricao + '</div><div style="font-size:11px;color:#6b7280">' + new Date(b.data).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) + '</div></div></div>';
+        }).join('');
+      } else { html += '<div class="vazio">Nenhum comportamento registrado</div>'; }
       html += '</div>';
 
       // Comunicação TEA
