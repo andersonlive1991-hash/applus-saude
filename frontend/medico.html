@@ -437,14 +437,14 @@ async function carregarHistorico(membro) {
   try {
     const [perfil, meds, aderencia, sinais, vacinas, eventos, doencas, tratamentos, internacoes, exames, dadosTEA] = await Promise.all([
       fetch(`/api/perfil/${membro.id}`).then(r => r.ok ? r.json() : null),
-      fetch(`/api/medicamentos/${membro.familia_id}?membro_id=${membro.id}`).then(r => r.json()),
+      fetch(`/api/medicamentos/${membro.familia_id}?membro_id=${membro.id}`).then(r => r.json()).catch(() => []),
       fetch(`/api/medicamentos/aderencia/${membro.id}`).then(r => r.json()).catch(() => []),
-      fetch(`/api/sinais/${membro.id}`).then(r => r.json()),
-      fetch(`/api/vacinas/${membro.id}`).then(r => r.json()),
-      fetch(`/api/eventos/${membro.familia_id}?membro_id=${membro.id}`).then(r => r.json()),
-      fetch(`/api/historico/doencas/${membro.id}`).then(r => r.json()),
-      fetch(`/api/historico/tratamentos/${membro.id}`).then(r => r.json()),
-      fetch(`/api/historico/internacoes/${membro.id}`).then(r => r.json()),
+      fetch(`/api/sinais/${membro.id}`).then(r => r.json()).catch(() => []),
+      fetch(`/api/vacinas/${membro.id}`).then(r => r.json()).catch(() => []),
+      fetch(`/api/eventos/${membro.familia_id}?membro_id=${membro.id}`).then(r => r.json()).catch(() => []),
+      fetch(`/api/historico/doencas/${membro.id}`).then(r => r.json()).catch(() => []),
+      fetch(`/api/historico/tratamentos/${membro.id}`).then(r => r.json()).catch(() => []),
+      fetch(`/api/historico/internacoes/${membro.id}`).then(r => r.json()).catch(() => []),
       fetch(`/api/exames/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
       membro.tipo === 'tea' ? Promise.all([
         fetch(`/api/historico-tea/${membro.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
