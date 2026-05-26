@@ -459,8 +459,8 @@ async function carregarHistorico(membro) {
     let html = `<div class="acesso-log">📋 Acesso registrado em ${agora} — Dr(a). ${MEDICO.nome} · ${MEDICO.crm}</div>`;
 
     // Exames
+    html += '<div class="paciente-card"><div class="card-titulo">🔬 Exames (' + (exames ? exames.length : 0) + ')</div>';
     if (exames && exames.length > 0) {
-      html += '<div class="paciente-card"><div class="card-titulo">🔬 Exames (' + exames.length + ')</div>';
       exames.forEach(function(ex) {
         let resultados = [];
         try {
@@ -497,7 +497,10 @@ async function carregarHistorico(membro) {
         html += '</div>';
       });
       html += '</div>';
+    } else {
+      html += '<div class="vazio">Nenhum exame cadastrado</div>';
     }
+    html += '</div>';
 
     // Alergias em destaque
     if (perfil && perfil.alergias && perfil.alergias.trim() !== '') {
