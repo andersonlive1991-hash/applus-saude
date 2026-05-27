@@ -1,8 +1,8 @@
 [{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.anderson.applusSaude",
-    "sha256_cert_fingerprints": ["27:44:7F:8A:73:60:96:1F:C4:01:9B:7C:DC:7A:67:03:D3:81:5E:B4:09:AA:2A:3C:3D:89:6E:AD:A5:A4:D2:94"]
-  }
-}]
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.anderson.applusSaude",
+        "sha256_cert_fingerprints": ["77:BF:8D:A7:F5:44:38:15:0D:FD:0A:EC:EE:3E:6C:28:11:78:07:AE:FC:02:E1:BC:36:97:2E:36:AE:2E:B3:0E"]
+      }
+    }]
