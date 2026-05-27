@@ -48,7 +48,7 @@ db.query(`
     tipo VARCHAR(50), hora TIME, obs TEXT,
     criado_em TIMESTAMP DEFAULT NOW()
   );
-`).then(() => console.log('✅ Tabelas cuidados OK')).catch(e => console.log('Cuidados:', e.message));
+`).then(() => { console.log('✅ Tabelas cuidados OK'); db.query('ALTER TABLE cuidados_atividades ADD COLUMN IF NOT EXISTS foto TEXT').catch(() => {}); }).catch(e => console.log('Cuidados:', e.message));
 
 // ATIVIDADES
 router.post('/atividade', async (req, res) => {
