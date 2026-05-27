@@ -704,6 +704,9 @@ function conectarSocketTEA() {
   TEA.socket.on('pictos-atualizados', (data) => {
     if (String(data.membroId) === String(TEA.membroId)) carregarPictosNoTEA();
   });
+  TEA.socket.on('rotina-tea-atualizada', (data) => {
+    if (String(data.membroId) === String(TEA.membroId)) carregarRotinaTEA();
+  });
 }
 
 async function carregarRotinaTEA() {
