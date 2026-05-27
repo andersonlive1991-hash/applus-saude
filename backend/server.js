@@ -515,6 +515,10 @@ pool.query(`
 `).catch(e => console.log('Tabela pictos_tea:', e.message));
 
 // ── ID SOS E CONTATOS SOS ──
+pool.query('ALTER TABLE comportamentos_tea ADD COLUMN IF NOT EXISTS abc_antecedente TEXT').catch(()=>{});
+pool.query('ALTER TABLE comportamentos_tea ADD COLUMN IF NOT EXISTS abc_consequencia TEXT').catch(()=>{});
+pool.query('ALTER TABLE comportamentos_tea ADD COLUMN IF NOT EXISTS intensidade INTEGER DEFAULT 3').catch(()=>{});
+pool.query('ALTER TABLE comportamentos_tea ADD COLUMN IF NOT EXISTS duracao VARCHAR(20)').catch(()=>{});
 pool.query(`ALTER TABLE membros ADD COLUMN IF NOT EXISTS id_sos VARCHAR(20) UNIQUE`).catch(()=>{});
 pool.query(`ALTER TABLE membros ADD COLUMN IF NOT EXISTS ultimo_acesso TIMESTAMP`).catch(()=>{});
 pool.query(`ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS fcm_token TEXT`).catch(()=>{});
