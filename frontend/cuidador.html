@@ -770,7 +770,7 @@ async function carregarDados() {
 
 async function carregarRegistros() {
   try {
-    const r = await fetch('/api/cuidados/registros/' + FAMILIA_ID + '?cuidador_id=' + CUIDADOR.id);
+    const r = await fetch('/api/cuidados/atividades/' + FAMILIA_ID + '/cuidador/' + CUIDADOR.id);
     const data = await r.json();
     registros = data || [];
     renderizarLog();
