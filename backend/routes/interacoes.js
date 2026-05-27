@@ -1,3 +1,4 @@
+const { chamarGemini } = require('../gemini');
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -8,29 +9,6 @@ const GEMINI_KEYS = [
   process.env.GEMINI_API_KEY_3,
   process.env.GEMINI_API_KEY_4
 ].filter(Boolean);
-
-async function chamarGemini(prompt) {
-  for (const key of GEMINI_KEYS) {
-    try {
-      const res = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        }
-      );
-      const data = await res.json();
-      console.log('[Gemini RAW]', JSON.stringify(data).substring(0, 300));
-      const texto = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      if (texto) return texto;
-    } catch (e) {
-      console.log('[Gemini] Chave falhou, tentando proxima:', e.message);
-      continue;
-    }
-  }
-  return null;
-}
 
 router.post('/verificar', async (req, res) => {
   const { membro_id, nome_novo } = req.body;
