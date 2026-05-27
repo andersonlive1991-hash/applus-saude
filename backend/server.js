@@ -185,6 +185,10 @@ const db = require('./db');
         familia_id INTEGER,
         tipo VARCHAR(20) NOT NULL,
         descricao VARCHAR(200) NOT NULL,
+        abc_antecedente TEXT,
+        abc_consequencia TEXT,
+        intensidade INTEGER DEFAULT 3,
+        duracao VARCHAR(20),
         data TIMESTAMP DEFAULT NOW()
       )
     `);
