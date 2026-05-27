@@ -165,6 +165,7 @@ app.use('/api/vacinas', require('./routes/vacinas'));
 app.use('/api/mensagens', require('./routes/mensagens'));
 app.use('/api/gastos', require('./routes/gastos'));
 app.use('/api/push', require('./routes/push'));
+app.use('/api/medicos', require('./routes/medicos'));
 app.use('/api/ia', require('./routes/ia'));
 app.use('/api/escala', require('./routes/escala'));
 app.use('/api/baba', require('./routes/baba'));
