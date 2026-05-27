@@ -4092,6 +4092,7 @@ async function carregarFeedCuidadorFamilia() {
           <div style="font-size:13px;font-weight:600;color:#111;">${r.tipo.charAt(0).toUpperCase()+r.tipo.slice(1)}</div>
           <div style="font-size:12px;color:#555;margin-top:2px;">${r.obs||''}</div>
           <div style="font-size:10px;color:#999;margin-top:3px;">${new Date(r.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+          ${r.foto ? `<img src="${r.foto}" style="width:100%;border-radius:8px;margin-top:6px;max-height:160px;object-fit:cover">` : ''}
         </div>
       </div>`).join('');
   } catch(e) { console.log('Erro feed cuidador:', e); }
