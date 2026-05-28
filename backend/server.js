@@ -497,7 +497,7 @@ setInterval(async () => {
       console.log("[Keep-alive] ping local ok -", new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }));
     });
     // Ping externo — garante que o Render nao dorme
-    fetch("https://applus-saude.onrender.com/ping")
+    fetch("https://applus-saude-production.up.railway.app/ping")
       .then(() => console.log("[Keep-alive] ping externo ok"))
       .catch(() => {});
   } catch(e) { console.log("[Keep-alive] erro:", e.message); }
