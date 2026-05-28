@@ -179,15 +179,14 @@ async function registrarSW() {
                 api('GET', '/api/medicamentos/' + APP.familiaId + '?membro_id=' + APP.membroId)
                   .then(meds => {
                     const med = meds.find(m => (dados.medId && m.id == dados.medId) || (dados.corpo && dados.corpo.includes(m.nome))) || meds[0];
-                    if (med) {
+                    const overlay = document.getElementById('alarme-overlay');
+                    const jaAtivo = overlay && overlay.classList.contains('ativo');
+                    const jaConfirmado = APP.alarmesConfirmados && [...APP.alarmesConfirmados].some(k => k.startsWith(String(med && med.id) + '-'));
+                    if (med && !jaAtivo && !jaConfirmado) {
                       navegarPara('remedios');
-                      setTimeout(() => {
-                        dispararAlarme(med);
-                      }, 500);
+                      setTimeout(() => { dispararAlarme(med); }, 500);
                     }
                   }).catch(() => {});
-              } else {
-                setTimeout(() => tentarDisparar(tentativas - 1), 500);
               }
             };
             tentarDisparar(10);
