@@ -1192,6 +1192,7 @@ async function iniciarAlarmes() {
 }
 
 async function verificarAlarmes() {
+  if (APP.alarmeAtivo) return;
   try {
     const meds = await api('GET', `/api/medicamentos/${APP.familiaId}?membro_id=${APP.membroId}`);
     const agora = new Date();
@@ -1236,6 +1237,8 @@ function dispararAlarmeEvento(titulo, corpo) {
 }
 
 function dispararAlarme(med) {
+  if (APP.alarmeAtivo) return;
+  APP.alarmeAtivo = med.id;
   const overlay = document.getElementById('alarme-overlay');
   document.getElementById('alarme-nome').textContent = med.nome;
   document.getElementById('alarme-dose').textContent = med.dosagem || '';
