@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.anderson.applusSaude",
-    "sha256_cert_fingerprints": ["0A:C3:A8:17:39:10:38:5C:57:87:97:D7:C8:F3:09:B9:1C:20:77:7F:3E:6B:55:4D:79:42:53:36:E9:D5:19:27"]
+    "package_name": "com.anderson.applusSaude2",
+    "sha256_cert_fingerprints": ["0C:30:C5:B4:52:35:5F:77:91:1E:B4:D0:8F:95:CF:D0:D3:8B:DC:50:18:33:87:97:79:CE:A5:25:4B:4A:A7:59"]
   }
 }]
