@@ -1165,10 +1165,19 @@ function limparFormMed() {
 }
 
 // ── ALARMES ──
-const _salvos = sessionStorage.getItem('alarmesConfirmados');
-APP.alarmesConfirmados = new Set(_salvos ? JSON.parse(_salvos) : []);
+// Limpar confirmações com mais de 2 horas
+const _salvosRaw = JSON.parse(localStorage.getItem('alarmesConfirmados') || '[]');
+const _metaRaw = JSON.parse(localStorage.getItem('alarmesConfirmadosMeta') || '{}');
+const _agora = Date.now();
+const _validos = _salvosRaw.filter(k => !_metaRaw[k] || (_agora - _metaRaw[k] < 7200000));
+APP.alarmesConfirmados = new Set(_validos);
+
 function _salvarConfirmados() {
-  sessionStorage.setItem('alarmesConfirmados', JSON.stringify([...APP.alarmesConfirmados]));
+  const lista = [...APP.alarmesConfirmados];
+  localStorage.setItem('alarmesConfirmados', JSON.stringify(lista));
+  const meta = JSON.parse(localStorage.getItem('alarmesConfirmadosMeta') || '{}');
+  lista.forEach(k => { if (!meta[k]) meta[k] = Date.now(); });
+  localStorage.setItem('alarmesConfirmadosMeta', JSON.stringify(meta));
 }
 
 async function iniciarAlarmes() {
