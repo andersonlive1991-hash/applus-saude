@@ -4,7 +4,7 @@ const db = require('../db');
 const { chamarGemini } = require('../gemini');
 
 router.post('/perguntar', async (req, res) => {
-  const { pergunta, membro_id, familia_id } = req.body;
+  const { pergunta, membro_id, familia_id, historico = [] } = req.body;
 
   try {
     // Buscar contexto do paciente
@@ -20,12 +20,15 @@ router.post('/perguntar', async (req, res) => {
       }
     }
 
-    const prompt = `Você é um assistente de saúde familiar do app AP+ Saúde. 
+
+    const msgs = historico.slice(-8).map(m =>
+      (m.role === 'user' ? 'Usuário' : 'Assistente') + ': ' + m.content
+    ).join('\n');
+
+    const prompt = `Você é um assistente de saúde familiar do app AP+ Saúde.
 Responda em português brasileiro, de forma clara e acolhedora.
 Sempre termine lembrando que não substitui consulta médica.
-${contexto}
-Pergunta: ${pergunta}`;
-
+${contexto}${msgs ? "Histórico:\n" + msgs + "\n" : ""}Pergunta atual: ${pergunta}`;
     const resposta = await chamarGemini(prompt);
     res.json({ resposta });
   } catch (e) {

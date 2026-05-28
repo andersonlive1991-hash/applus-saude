@@ -1530,6 +1530,7 @@ function mostrarAlertaEmergencia(data) {
 }
 
 // ── ASSISTENTE IA ──
+const IA_HISTORICO = [];
 async function perguntarIA() {
   const input = document.getElementById('ia-input');
   const pergunta = input.value.trim();
@@ -1542,14 +1543,19 @@ async function perguntarIA() {
   container.innerHTML += `<div class="ia-digitando" id="ia-digitando"><span></span><span></span><span></span></div>`;
   container.scrollTop = container.scrollHeight;
 
+  IA_HISTORICO.push({ role: 'user', content: pergunta });
+  if (IA_HISTORICO.length > 20) IA_HISTORICO.splice(0, 2);
+
   try {
     const res = await api('POST', '/api/ia/perguntar', {
       pergunta,
+      historico: IA_HISTORICO.slice(-10),
       membro_id: APP.membroId,
       familia_id: APP.familiaId
     });
 
     document.getElementById('ia-digitando')?.remove();
+    IA_HISTORICO.push({ role: 'assistant', content: res.resposta });
     container.innerHTML += `<div class="ia-msg-bot fade-up">${renderMarkdown(res.resposta)}</div>`;
     container.scrollTop = container.scrollHeight;
   } catch (e) {
