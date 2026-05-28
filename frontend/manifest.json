@@ -29,5 +29,6 @@
       "purpose": "any maskable"
     }
   ],
-  "gcm_sender_id": "814206937925"
+  "gcm_sender_id": "814206937925",
+  "version": "2.0.0"
 }
