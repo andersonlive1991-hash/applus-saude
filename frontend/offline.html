@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP+ Saúde — Sem conexão</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: #f0fdf4; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .card { background: white; border-radius: 20px; padding: 40px 32px; text-align: center; max-width: 360px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .icon { font-size: 64px; margin-bottom: 20px; }
+  h1 { font-size: 22px; font-weight: 700; color: #1a1f2e; margin-bottom: 10px; }
+  p { font-size: 15px; color: #6b7280; line-height: 1.6; margin-bottom: 28px; }
+  .btn { display: inline-block; background: #1a9e6e; color: white; padding: 14px 32px; border-radius: 50px; font-size: 16px; font-weight: 600; text-decoration: none; cursor: pointer; border: none; width: 100%; }
+  .btn:active { opacity: 0.85; }
+  .info { font-size: 13px; color: #9ca3af; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">📡</div>
+  <h1>Sem conexão</h1>
+  <p>Verifique sua internet e tente novamente. Seus dados estão salvos e aparecerão quando a conexão voltar.</p>
+  <button class="btn" onclick="location.reload()">Tentar novamente</button>
+  <p class="info">AP+ Saúde funciona melhor com conexão ativa</p>
+</div>
+</body>
+</html>

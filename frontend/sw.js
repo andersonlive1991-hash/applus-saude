@@ -2,7 +2,7 @@
 const CACHE = 'applus-v22';
 const ARQUIVOS = [
   '/', '/index.html', '/css/style.css',
-  '/js/modulos.js', '/manifest.json',
+  '/js/modulos.js', '/manifest.json', '/offline.html',
   '/icons/icon-192.png', '/icons/icon-512.png',
   '/sounds/alarme.wav'
 ];
@@ -48,6 +48,8 @@ self.addEventListener('fetch', e => {
         const resClone = res.clone();
         caches.open(CACHE).then(cache => cache.put(e.request, resClone));
         return res;
+      }).catch(() => {
+        if (e.request.mode === 'navigate') return caches.match('/offline.html');
       });
     })
   );
