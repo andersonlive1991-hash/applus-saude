@@ -80,7 +80,7 @@ router.get('/:membro_id', async (req, res) => {
     } else vazio();
     doc.moveDown(2);
 
-    doc.fontSize(9).fillColor('#999').text('AP+ Saude | applus-saude.onrender.com | Documento gerado automaticamente', { align: 'center' });
+    doc.fontSize(9).fillColor('#999').text('AP+ Saude | applus-saude-production.up.railway.app | Documento gerado automaticamente', { align: 'center' });
     doc.end();
 
   } catch (e) {
