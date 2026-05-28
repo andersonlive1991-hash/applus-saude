@@ -37,7 +37,7 @@ router.post('/', async (req, res) => {
   try {
     const result = await db.query(
       'INSERT INTO eventos (familia_id, membro_id, titulo, data, hora, tipo, local, observacoes, nome_medico, especialidade, pediu_exame, foto_exame, gerou_receita, data_retorno) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *',
-      [familia_id, membro_id, titulo, data, hora, tipo, local, observacoes, nome_medico, especialidade, pediu_exame || false, foto_exame || null, gerou_receita || false, data_retorno || null]
+      [familia_id, membro_id, titulo, data, hora || null, tipo, local, observacoes, nome_medico, especialidade, pediu_exame || false, foto_exame || null, gerou_receita || false, data_retorno || null]
     );
     res.json(result.rows[0]);
   } catch (e) {
