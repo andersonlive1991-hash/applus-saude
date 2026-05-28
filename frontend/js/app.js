@@ -653,6 +653,16 @@ function _continuarIniciarApp() {
 
 async function carregarPerfil() {
   try {
+    // Gerar anos dinamicamente (ano atual até 1910)
+    const selAno = document.getElementById('pf-nasc-ano');
+    if (selAno && selAno.options.length <= 1) {
+      const anoAtual = new Date().getFullYear() - 1;
+      for (let a = anoAtual; a >= 1910; a--) {
+        const opt = document.createElement('option');
+        opt.value = a; opt.textContent = a;
+        selAno.appendChild(opt);
+      }
+    }
     carregarFotoPerfil();
     const idPessoal = APP.idPessoal || (APP.membroAtivo && APP.membroAtivo.id_pessoal);
     if (!idPessoal) { console.log('sem idPessoal'); return; }
