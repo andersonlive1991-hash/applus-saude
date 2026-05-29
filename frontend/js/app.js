@@ -1244,8 +1244,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnLembrar = document.getElementById('btn-lembrar');
   const btnPular = document.getElementById('btn-pular');
   if (btnTomado) {
-    btnTomado.addEventListener('touchend', (e) => { e.preventDefault(); confirmarDose('tomado'); });
-    btnTomado.addEventListener('click', () => confirmarDose('tomado'));
+    btnTomado.addEventListener('touchend', (e) => { e.preventDefault(); alert('touchend tomado'); confirmarDose('tomado'); });
+    btnTomado.addEventListener('click', () => { alert('click tomado'); confirmarDose('tomado'); });
   }
   if (btnLembrar) {
     btnLembrar.addEventListener('touchend', (e) => { e.preventDefault(); lembrarDepois(); });
