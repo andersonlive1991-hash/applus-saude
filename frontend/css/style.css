@@ -515,6 +515,13 @@ html, body {
 }
 
 .alarme-overlay.ativo { display: flex; }
+.alarme-botoes button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  position: relative;
+  z-index: 301;
+}
 .alarme-icone { font-size: 80px; margin-bottom: 16px; animation: pulsar 1s infinite; }
 .alarme-titulo { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; color: white; margin-bottom: 8px; }
 .alarme-dose { font-size: 18px; color: rgba(255,255,255,0.8); margin-bottom: 40px; }
