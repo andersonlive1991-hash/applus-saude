@@ -1,0 +1,13 @@
+{
+  "appId": "com.anderson.applusSaude2",
+  "appName": "AP+ Saúde",
+  "webDir": "frontend",
+  "server": {
+    "url": "https://applus-saude-production.up.railway.app",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#1a9e6e"
+  }
+}
