@@ -87,17 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', function(e) {
     const el = e.target.closest('#btn-tomado, #btn-lembrar, #btn-pular');
     if (!el) return;
-    e.preventDefault();
-    e.stopPropagation();
-    if (el.id === 'btn-tomado') confirmarDose('tomado');
-    else if (el.id === 'btn-lembrar') lembrarDepois();
-    else if (el.id === 'btn-pular') confirmarDose('pulado');
-  });
-  document.addEventListener('touchend', function(e) {
-    const el = e.target.closest('#btn-tomado, #btn-lembrar, #btn-pular');
-    if (!el) return;
-    e.preventDefault();
-    e.stopPropagation();
     if (el.id === 'btn-tomado') confirmarDose('tomado');
     else if (el.id === 'btn-lembrar') lembrarDepois();
     else if (el.id === 'btn-pular') confirmarDose('pulado');
