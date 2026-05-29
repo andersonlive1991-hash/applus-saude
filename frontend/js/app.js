@@ -893,12 +893,15 @@ function navegarPara(pagina) {
 
 // ── API ──
 async function api(metodo, url, corpo) {
+  const BASE = window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost'
+    ? 'https://applus-saude-production.up.railway.app'
+    : '';
   const opts = {
     method: metodo,
     headers: { 'Content-Type': 'application/json' }
   };
   if (corpo) opts.body = JSON.stringify(corpo);
-  const res = await fetch(url, opts);
+  const res = await fetch(BASE + url, opts);
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.erro || 'Erro na requisição');
