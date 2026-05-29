@@ -82,6 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
   verificarBoasVindas();
   carregarSessao();
   registrarSW();
+
+  // Botões do alarme via addEventListener (compatível com Capacitor)
+  const btnTomado = document.getElementById('btn-tomado');
+  const btnLembrar = document.getElementById('btn-lembrar');
+  const btnPular = document.getElementById('btn-pular');
+  if (btnTomado) btnTomado.addEventListener('click', () => confirmarDose('tomado'));
+  if (btnLembrar) btnLembrar.addEventListener('click', () => lembrarDepois());
+  if (btnPular) btnPular.addEventListener('click', () => confirmarDose('pulado'));
 });
 
 // ── MODO OFFLINE ──
