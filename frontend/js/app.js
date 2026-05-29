@@ -78,7 +78,6 @@ function renderMarkdown(txt) {
 
 // ── INICIALIZAR ──
 document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
   if (typeof verificarIdioma === 'function') verificarIdioma();
   verificarBoasVindas();
   carregarSessao();
@@ -1240,23 +1239,6 @@ function dispararAlarmeEvento(titulo, corpo) {
   }, 8000);
 }
 
-// Listeners removidos
-
-  const btnTomado = document.getElementById('btn-tomado');
-  const btnLembrar = document.getElementById('btn-lembrar');
-  const btnPular = document.getElementById('btn-pular');
-  if (btnTomado) {
-    btnTomado.addEventListener('touchend', (e) => { e.preventDefault(); confirmarDose('tomado'); });
-    btnTomado.addEventListener('click', () => { confirmarDose('tomado'); });
-  }
-  if (btnLembrar) {
-    btnLembrar.addEventListener('touchend', (e) => { e.preventDefault(); lembrarDepois(); });
-    btnLembrar.addEventListener('click', () => lembrarDepois());
-  }
-  if (btnPular) {
-    btnPular.addEventListener('touchend', (e) => { e.preventDefault(); confirmarDose('pulado'); });
-    btnPular.addEventListener('click', () => confirmarDose('pulado'));
-  }
 function dispararAlarme(med) {
   if (APP.alarmeAtivo) return;
   APP.alarmeAtivo = med.id;
