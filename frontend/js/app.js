@@ -78,6 +78,7 @@ function renderMarkdown(txt) {
 
 // ── INICIALIZAR ──
 document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
   if (typeof verificarIdioma === 'function') verificarIdioma();
   verificarBoasVindas();
   carregarSessao();
@@ -1238,6 +1239,7 @@ function dispararAlarmeEvento(titulo, corpo) {
 
 // Listeners dos botões do alarme — compatível com Capacitor
 document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
   const btnTomado = document.getElementById('btn-tomado');
   const btnLembrar = document.getElementById('btn-lembrar');
   const btnPular = document.getElementById('btn-pular');
@@ -1253,6 +1255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnPular.addEventListener('touchend', (e) => { e.preventDefault(); confirmarDose('pulado'); });
     btnPular.addEventListener('click', () => confirmarDose('pulado'));
   }
+  }, 1000);
 });
 
 function dispararAlarme(med) {
