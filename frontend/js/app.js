@@ -1294,9 +1294,11 @@ function falarAlarme(texto) {
 }
 
 async function confirmarDose(status) {
+  mostrarToast('DEBUG: confirmarDose chamada - ' + status, 5000);
   try {
     const overlay = document.getElementById('alarme-overlay');
     const medId = overlay ? overlay.dataset.medId : null;
+    mostrarToast('DEBUG: medId=' + medId + ' membroId=' + APP.membroId, 5000);
     clearInterval(APP.alarmeRepetir);
     if (APP.medFriendTimer) { clearTimeout(APP.medFriendTimer); APP.medFriendTimer = null; }
     speechSynthesis.cancel();
@@ -1307,6 +1309,7 @@ async function confirmarDose(status) {
       if (_chave !== '-') { APP.alarmesConfirmados.add(_chave); _salvarConfirmados(); }
     }
     APP.alarmeAtivo = null;
+    mostrarToast('DEBUG: overlay fechado, salvando historico...', 5000);
     if (medId && APP.membroId) {
       try {
         await api('POST', '/api/medicamentos/historico', {
@@ -1315,12 +1318,15 @@ async function confirmarDose(status) {
           status,
           motivo: status === 'pulado' ? 'Usuário pulou' : null
         });
-      } catch(e) { console.log('Erro historico:', e.message); }
+        mostrarToast('DEBUG: historico salvo OK', 3000);
+      } catch(e) { mostrarToast('DEBUG ERRO api: ' + e.message, 8000); }
+    } else {
+      mostrarToast('DEBUG: sem medId ou membroId', 5000);
     }
     if (status === 'tomado' && medId) {
       api('PUT', '/api/medicamentos/' + medId + '/estoque', {}).catch(() => {});
     }
-  } catch(e) { console.log('Erro confirmarDose:', e.message); }
+  } catch(e) { mostrarToast('DEBUG ERRO geral: ' + e.message, 8000); }
 }
 
 function lembrarDepois() {
