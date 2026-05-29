@@ -1285,26 +1285,33 @@ function falarAlarme(texto) {
 }
 
 async function confirmarDose(status) {
-  const medId = document.getElementById('alarme-overlay').dataset.medId;
-  clearInterval(APP.alarmeRepetir);
-  if (APP.medFriendTimer) { clearTimeout(APP.medFriendTimer); APP.medFriendTimer = null; }
-  speechSynthesis.cancel();
-  pararSomAlarme();
-  document.getElementById('alarme-overlay').classList.remove('ativo');
-  APP.alarmeAtivo = null;
-  const _overlay = document.getElementById('alarme-overlay');
-  const _chave = (_overlay.dataset.medId || '') + '-' + (_overlay.dataset.horario || '');
-  if (_chave !== '-') { APP.alarmesConfirmados.add(_chave); _salvarConfirmados(); }
-
-  await api('POST', '/api/medicamentos/historico', {
-    med_id: medId,
-    membro_id: APP.membroId,
-    status,
-    motivo: status === 'pulado' ? 'Usuário pulou' : null
-  });
-  if (status === 'tomado') {
-    api('PUT', '/api/medicamentos/' + medId + '/estoque', {}).catch(() => {});
-  }
+  try {
+    const overlay = document.getElementById('alarme-overlay');
+    const medId = overlay ? overlay.dataset.medId : null;
+    clearInterval(APP.alarmeRepetir);
+    if (APP.medFriendTimer) { clearTimeout(APP.medFriendTimer); APP.medFriendTimer = null; }
+    speechSynthesis.cancel();
+    pararSomAlarme();
+    if (overlay) {
+      overlay.classList.remove('ativo');
+      const _chave = (overlay.dataset.medId || '') + '-' + (overlay.dataset.horario || '');
+      if (_chave !== '-') { APP.alarmesConfirmados.add(_chave); _salvarConfirmados(); }
+    }
+    APP.alarmeAtivo = null;
+    if (medId && APP.membroId) {
+      try {
+        await api('POST', '/api/medicamentos/historico', {
+          med_id: medId,
+          membro_id: APP.membroId,
+          status,
+          motivo: status === 'pulado' ? 'Usuário pulou' : null
+        });
+      } catch(e) { console.log('Erro historico:', e.message); }
+    }
+    if (status === 'tomado' && medId) {
+      api('PUT', '/api/medicamentos/' + medId + '/estoque', {}).catch(() => {});
+    }
+  } catch(e) { console.log('Erro confirmarDose:', e.message); }
 }
 
 function lembrarDepois() {
