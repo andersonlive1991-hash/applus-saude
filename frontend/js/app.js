@@ -1240,15 +1240,14 @@ function dispararAlarmeEvento(titulo, corpo) {
   }, 8000);
 }
 
-// Listeners dos botões do alarme — compatível com Capacitor
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
+// Listeners removidos
+
   const btnTomado = document.getElementById('btn-tomado');
   const btnLembrar = document.getElementById('btn-lembrar');
   const btnPular = document.getElementById('btn-pular');
   if (btnTomado) {
-    btnTomado.addEventListener('touchend', (e) => { e.preventDefault(); alert('touchend tomado'); confirmarDose('tomado'); });
-    btnTomado.addEventListener('click', () => { alert('click tomado'); confirmarDose('tomado'); });
+    btnTomado.addEventListener('touchend', (e) => { e.preventDefault(); confirmarDose('tomado'); });
+    btnTomado.addEventListener('click', () => { confirmarDose('tomado'); });
   }
   if (btnLembrar) {
     btnLembrar.addEventListener('touchend', (e) => { e.preventDefault(); lembrarDepois(); });
@@ -1258,9 +1257,6 @@ document.addEventListener('DOMContentLoaded', () => {
     btnPular.addEventListener('touchend', (e) => { e.preventDefault(); confirmarDose('pulado'); });
     btnPular.addEventListener('click', () => confirmarDose('pulado'));
   }
-  }, 1000);
-});
-
 function dispararAlarme(med) {
   if (APP.alarmeAtivo) return;
   APP.alarmeAtivo = med.id;
