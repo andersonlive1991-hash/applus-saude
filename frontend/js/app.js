@@ -83,13 +83,25 @@ document.addEventListener('DOMContentLoaded', () => {
   carregarSessao();
   registrarSW();
 
-  // Botões do alarme via addEventListener (compatível com Capacitor)
-  const btnTomado = document.getElementById('btn-tomado');
-  const btnLembrar = document.getElementById('btn-lembrar');
-  const btnPular = document.getElementById('btn-pular');
-  if (btnTomado) btnTomado.addEventListener('click', () => confirmarDose('tomado'));
-  if (btnLembrar) btnLembrar.addEventListener('click', () => lembrarDepois());
-  if (btnPular) btnPular.addEventListener('click', () => confirmarDose('pulado'));
+  // Botões do alarme — listener global no document (compatível com Capacitor WebView)
+  document.addEventListener('click', function(e) {
+    const el = e.target.closest('#btn-tomado, #btn-lembrar, #btn-pular');
+    if (!el) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (el.id === 'btn-tomado') confirmarDose('tomado');
+    else if (el.id === 'btn-lembrar') lembrarDepois();
+    else if (el.id === 'btn-pular') confirmarDose('pulado');
+  });
+  document.addEventListener('touchend', function(e) {
+    const el = e.target.closest('#btn-tomado, #btn-lembrar, #btn-pular');
+    if (!el) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (el.id === 'btn-tomado') confirmarDose('tomado');
+    else if (el.id === 'btn-lembrar') lembrarDepois();
+    else if (el.id === 'btn-pular') confirmarDose('pulado');
+  });
 });
 
 // ── MODO OFFLINE ──
