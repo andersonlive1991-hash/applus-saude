@@ -1257,6 +1257,20 @@ function dispararAlarme(med) {
   overlay.classList.add('ativo');
   iniciarSomAlarme();
 
+  // Acender tela via plugin nativo (Capacitor)
+  try {
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      const { AlarmPlugin } = window.Capacitor.Plugins;
+      if (AlarmPlugin) {
+        AlarmPlugin.dispararAlarme({
+          medNome: med.nome || 'Medicamento',
+          medDose: med.dosagem || '',
+          medId: String(med.id || '')
+        });
+      }
+    }
+  } catch(e) { console.log('AlarmPlugin erro:', e.message); }
+
   // Voz
   falarAlarme(`Atenção! Está na hora de tomar ${med.nome}. A dose é ${med.dosagem || 'conforme prescrito'}. Por favor tome o seu medicamento agora.`);
 
