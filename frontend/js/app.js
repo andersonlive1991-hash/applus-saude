@@ -1285,11 +1285,11 @@ function dispararAlarme(med) {
 
 function falarAlarme(texto) {
   if ('speechSynthesis' in window) {
-    speechSynthesis.cancel();
+    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(texto);
     utterance.lang = 'pt-BR';
     utterance.rate = 0.9;
-    speechSynthesis.speak(utterance);
+    if (typeof speechSynthesis !== "undefined") speechSynthesis.speak(utterance);
   }
 }
 
@@ -1301,7 +1301,7 @@ async function confirmarDose(status) {
     mostrarToast('DEBUG: medId=' + medId + ' membroId=' + APP.membroId, 5000);
     clearInterval(APP.alarmeRepetir);
     if (APP.medFriendTimer) { clearTimeout(APP.medFriendTimer); APP.medFriendTimer = null; }
-    speechSynthesis.cancel();
+    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
     pararSomAlarme();
     if (overlay) {
       overlay.classList.remove('ativo');
@@ -1332,7 +1332,7 @@ async function confirmarDose(status) {
 function lembrarDepois() {
   clearInterval(APP.alarmeRepetir);
   if (APP.medFriendTimer) { clearTimeout(APP.medFriendTimer); APP.medFriendTimer = null; }
-  speechSynthesis.cancel();
+  if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
   pararSomAlarme();
   document.getElementById('alarme-overlay').classList.remove('ativo');
   setTimeout(() => {
@@ -1434,10 +1434,10 @@ function conectarSocket() {
     document.body.appendChild(div);
     setTimeout(() => div.remove(), 8000);
     if ('speechSynthesis' in window) {
-      speechSynthesis.cancel();
+      if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(data.nome + ' disse: ' + data.texto);
       u.lang = 'pt-BR';
-      speechSynthesis.speak(u);
+      if (typeof speechSynthesis !== "undefined") speechSynthesis.speak(u);
     }
   });
   APP.socket.on('alerta-emergencia', (data) => {
