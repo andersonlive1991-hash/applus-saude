@@ -1361,25 +1361,10 @@ async function confirmarDose(status) {
     } catch(e) {}
     if (overlay) {
       overlay.classList.remove('ativo');
-      const _medId = overlay.dataset.medId || '';
-      const _horario = overlay.dataset.horario || '';
-      // Salva chave completa E chave sem horário para garantir
-      if (_medId) {
-        if (_horario) APP.alarmesConfirmados.add(_medId + '-' + _horario);
-        // Salva também todas as chaves que começam com esse medId
-        const agora = new Date();
-        const hh = String(agora.getHours()).padStart(2,'0');
-        const mm = String(agora.getMinutes()).padStart(2,'0');
-        APP.alarmesConfirmados.add(_medId + '-' + hh + ':' + mm);
-        _salvarConfirmados();
-      }
+      const _chave = (overlay.dataset.medId || '') + '-' + (overlay.dataset.horario || '');
+      if (_chave !== '-') { APP.alarmesConfirmados.add(_chave); _salvarConfirmados(); }
     }
     APP.alarmeAtivo = null;
-    // Para o interval temporariamente para não redisparar imediatamente
-    if (APP.alarmeInterval) { clearInterval(APP.alarmeInterval); }
-    setTimeout(() => {
-      APP.alarmeInterval = setInterval(verificarAlarmes, 30000);
-    }, 120000); // 2 minutos de pausa
     if (medId && APP.membroId) {
       try {
         await api('POST', '/api/medicamentos/historico', {

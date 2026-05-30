@@ -4,15 +4,12 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import java.util.Locale;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -30,6 +27,8 @@ public class AlarmPlugin extends Plugin {
                 tts.setSpeechRate(0.9f);
             }
         });
+
+        // Solicita isenção de bateria automaticamente
         solicitarIsencaoBateria();
     }
 
@@ -43,7 +42,9 @@ public class AlarmPlugin extends Plugin {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @PluginMethod
@@ -57,73 +58,45 @@ public class AlarmPlugin extends Plugin {
         if (timestamp <= 0) { call.reject("timestamp invalido"); return; }
 
         Context context = getContext();
-
-        // Salva no SharedPreferences para reagendar após reboot
-        salvarAlarme(context, medNome, medDose, medId, timestamp);
-
         Intent intent = new Intent(context, AlarmReceiver.class);
         intent.putExtra("medNome", medNome);
         intent.putExtra("medDose", medDose);
         intent.putExtra("medId",   medId);
 
         int reqCode = Math.abs(medId.hashCode());
-        PendingIntent pi = PendingIntent.getBroadcast(context, reqCode, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent pi = PendingIntent.getBroadcast(
+            context, reqCode, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
 
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am != null) {
-            // setAlarmClock tem prioridade maxima - Samsung nao consegue matar
-            Intent showIntent = new Intent(context, MainActivity.class);
-            PendingIntent showPi = PendingIntent.getActivity(context, 0, showIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-            AlarmManager.AlarmClockInfo alarmClock = new AlarmManager.AlarmClockInfo(timestamp, showPi);
-            am.setAlarmClock(alarmClock, pi);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (am.canScheduleExactAlarms()) {
+                    am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timestamp, pi);
+                } else {
+                    // Fallback: alarme inexato mas funciona sem permissão
+                    am.set(AlarmManager.RTC_WAKEUP, timestamp, pi);
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timestamp, pi);
+            } else {
+                am.setExact(AlarmManager.RTC_WAKEUP, timestamp, pi);
+            }
         }
         call.resolve();
-    }
-
-    private void salvarAlarme(Context context, String medNome, String medDose, String medId, long timestamp) {
-        try {
-            SharedPreferences prefs = context.getSharedPreferences("applus_alarmes", Context.MODE_PRIVATE);
-            JSONArray alarmes = new JSONArray(prefs.getString("alarmes", "[]"));
-            // Remove se já existe com mesmo medId
-            JSONArray novos = new JSONArray();
-            for (int i = 0; i < alarmes.length(); i++) {
-                if (!alarmes.getJSONObject(i).getString("medId").equals(medId)) {
-                    novos.put(alarmes.getJSONObject(i));
-                }
-            }
-            JSONObject novo = new JSONObject();
-            novo.put("medNome", medNome);
-            novo.put("medDose", medDose);
-            novo.put("medId",   medId);
-            novo.put("timestamp", timestamp);
-            novos.put(novo);
-            prefs.edit().putString("alarmes", novos.toString()).apply();
-        } catch (Exception e) { e.printStackTrace(); }
     }
 
     @PluginMethod
     public void cancelarAlarme(PluginCall call) {
         String medId = call.getString("medId", "");
         Context context = getContext();
-        // Remove do SharedPreferences
-        try {
-            SharedPreferences prefs = context.getSharedPreferences("applus_alarmes", Context.MODE_PRIVATE);
-            JSONArray alarmes = new JSONArray(prefs.getString("alarmes", "[]"));
-            JSONArray novos = new JSONArray();
-            for (int i = 0; i < alarmes.length(); i++) {
-                if (!alarmes.getJSONObject(i).getString("medId").equals(medId)) {
-                    novos.put(alarmes.getJSONObject(i));
-                }
-            }
-            prefs.edit().putString("alarmes", novos.toString()).apply();
-        } catch (Exception e) { e.printStackTrace(); }
-
         Intent intent = new Intent(context, AlarmReceiver.class);
         int reqCode = Math.abs(medId.hashCode());
-        PendingIntent pi = PendingIntent.getBroadcast(context, reqCode, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent pi = PendingIntent.getBroadcast(
+            context, reqCode, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am != null) am.cancel(pi);
         call.resolve();
