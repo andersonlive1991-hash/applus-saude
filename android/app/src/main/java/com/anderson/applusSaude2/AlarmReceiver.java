@@ -82,9 +82,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 String fala = "Atenção! Está na hora de tomar " + finalNome +
                     (!finalDose.isEmpty() ? ". A dose é " + finalDose : "") +
                     ". Por favor tome o seu medicamento agora.";
-                try {
-                    TextToSpeech ttsRef = (TextToSpeech) Thread.currentThread().getContextClassLoader();
-                } catch (Exception ignored) {}
+
             }
             if (finalWl != null && finalWl.isHeld()) finalWl.release();
         });
