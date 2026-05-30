@@ -1,5 +1,6 @@
 package com.anderson.applusSaude2;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -14,14 +15,18 @@ import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import java.util.Locale;
 
 public class AlarmReceiver extends BroadcastReceiver {
     private static final String CHANNEL_ID = "alarme_medicamento";
+    private static final String TAG = "ApplusAlarme";
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        Log.d(TAG, "AlarmReceiver disparado!");
+
         String medNome = intent.getStringExtra("medNome");
         String medDose = intent.getStringExtra("medDose");
         if (medNome == null) medNome = "Medicamento";
@@ -30,14 +35,18 @@ public class AlarmReceiver extends BroadcastReceiver {
         final String nome = medNome;
         final String dose = medDose;
 
-        // WakeLock
+        // WakeLock imediato
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        PowerManager.WakeLock wl = null;
         if (pm != null) {
-            PowerManager.WakeLock wl = pm.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            wl = pm.newWakeLock(
+                PowerManager.FULL_WAKE_LOCK |
+                PowerManager.ACQUIRE_CAUSES_WAKEUP |
+                PowerManager.ON_AFTER_RELEASE,
                 "applus:receiver"
             );
-            wl.acquire(30000);
+            wl.acquire(60000);
+            Log.d(TAG, "WakeLock adquirido");
         }
 
         // Vibrar
@@ -55,6 +64,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         criarCanalNotificacao(context);
         Intent mainIntent = new Intent(context, MainActivity.class);
         mainIntent.putExtra("pagina", "remedios");
+        mainIntent.putExtra("pararAlarme", true);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pi = PendingIntent.getActivity(
             context, (int) System.currentTimeMillis(), mainIntent,
@@ -65,19 +75,24 @@ public class AlarmReceiver extends BroadcastReceiver {
         Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle("💊 Hora do medicamento!")
-            .setContentText(texto)
+            .setContentText("Toque para confirmar: " + texto)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(pi, true)
             .setContentIntent(pi)
-            .setAutoCancel(true)
+            .setOngoing(true)
+            .setAutoCancel(false)
             .setVibrate(new long[]{0, 500, 200, 500})
             .build();
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (nm != null) nm.notify(1001, notification);
+        if (nm != null) {
+            nm.notify(1001, notification);
+            Log.d(TAG, "Notificação exibida");
+        }
 
-        // TTS na thread principal
+        // TTS na main thread
+        final PowerManager.WakeLock finalWl = wl;
         new Handler(Looper.getMainLooper()).post(() -> {
             String fala = "Atenção! Está na hora de tomar " + nome +
                 (!dose.isEmpty() ? ". A dose é " + dose : "") +
@@ -93,11 +108,12 @@ public class AlarmReceiver extends BroadcastReceiver {
                     } else {
                         ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null);
                     }
+                    Log.d(TAG, "TTS falando: " + fala);
                 }
             });
         });
 
-        // Service como fallback para manter processo vivo
+        // Inicia AlarmService para voz em loop
         Intent serviceIntent = new Intent(context, AlarmService.class);
         serviceIntent.putExtra("medNome", nome);
         serviceIntent.putExtra("medDose", dose);
@@ -106,6 +122,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         } else {
             context.startService(serviceIntent);
         }
+        Log.d(TAG, "AlarmService iniciado");
     }
 
     private void criarCanalNotificacao(Context context) {

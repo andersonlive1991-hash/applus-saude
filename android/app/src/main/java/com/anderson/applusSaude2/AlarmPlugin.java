@@ -72,17 +72,12 @@ public class AlarmPlugin extends Plugin {
 
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (am.canScheduleExactAlarms()) {
-                    am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timestamp, pi);
-                } else {
-                    am.set(AlarmManager.RTC_WAKEUP, timestamp, pi);
-                }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timestamp, pi);
-            } else {
-                am.setExact(AlarmManager.RTC_WAKEUP, timestamp, pi);
-            }
+            // setAlarmClock tem prioridade maxima - Samsung nao consegue matar
+            Intent showIntent = new Intent(context, MainActivity.class);
+            PendingIntent showPi = PendingIntent.getActivity(context, 0, showIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            AlarmManager.AlarmClockInfo alarmClock = new AlarmManager.AlarmClockInfo(timestamp, showPi);
+            am.setAlarmClock(alarmClock, pi);
         }
         call.resolve();
     }
