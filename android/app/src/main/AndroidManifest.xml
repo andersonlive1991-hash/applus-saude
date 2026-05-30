@@ -24,29 +24,17 @@
 
         <activity
             android:name=".AlarmActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
             android:exported="false"
-            android:launchMode="singleInstance"
-            android:excludeFromRecents="true" />
+            android:launchMode="singleInstance" />
 
         <service
             android:name=".AlarmService"
-            android:exported="false"
-            android:stopWithTask="false" />
+            android:exported="false" />
 
         <receiver
             android:name=".AlarmReceiver"
             android:exported="false" />
-
-        <receiver
-            android:name=".BootReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"
