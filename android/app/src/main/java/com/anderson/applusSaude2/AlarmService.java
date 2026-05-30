@@ -6,18 +6,20 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.net.Uri;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.speech.tts.TextToSpeech;
+import android.os.Vibrator;
+import android.os.VibrationEffect;
 import androidx.core.app.NotificationCompat;
-import java.util.Locale;
 
 public class AlarmService extends Service {
     private static final String CHANNEL_ID = "alarme_medicamento";
     private PowerManager.WakeLock wakeLock;
-    private TextToSpeech tts;
+    private Vibrator vibrator;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -26,17 +28,18 @@ public class AlarmService extends Service {
 
         criarCanalNotificacao();
         adquirirWakeLock();
+        vibrar();
 
         // Intent para abrir app na tela de medicamentos
         Intent mainIntent = new Intent(this, MainActivity.class);
         mainIntent.putExtra("pagina", "remedios");
-        mainIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        mainIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(
             this, 0, mainIntent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        String texto = medDose != null && !medDose.isEmpty()
+        String texto = (medDose != null && !medDose.isEmpty())
             ? medNome + " — " + medDose
             : medNome;
 
@@ -49,29 +52,13 @@ public class AlarmService extends Service {
             .setFullScreenIntent(pendingIntent, true)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
+            .setVibrate(new long[]{0, 500, 200, 500})
             .build();
 
         startForeground(1, notification);
 
-        // Fala o nome do medicamento via TTS
-        String fala = "Atenção! Está na hora de tomar " + medNome +
-            (medDose != null && !medDose.isEmpty() ? ". A dose é " + medDose : "") +
-            ". Por favor tome o seu medicamento agora.";
-
-        tts = new TextToSpeech(this, status -> {
-            if (status == TextToSpeech.SUCCESS) {
-                tts.setLanguage(new Locale("pt", "BR"));
-                tts.setSpeechRate(0.9f);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    tts.speak(fala, TextToSpeech.QUEUE_FLUSH, null, "alarme");
-                } else {
-                    tts.speak(fala, TextToSpeech.QUEUE_FLUSH, null);
-                }
-            }
-        });
-
-        // Para o serviço após 30 segundos
-        new android.os.Handler().postDelayed(() -> stopSelf(), 30000);
+        // Para após 30s
+        new android.os.Handler(getMainLooper()).postDelayed(() -> stopSelf(), 30000);
 
         return START_NOT_STICKY;
     }
@@ -83,7 +70,6 @@ public class AlarmService extends Service {
                 "Alarme de Medicamento",
                 NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("Alarmes de medicamentos AP+ Saúde");
             channel.enableVibration(true);
             channel.setVibrationPattern(new long[]{0, 500, 200, 500});
             NotificationManager manager = getSystemService(NotificationManager.class);
@@ -102,9 +88,21 @@ public class AlarmService extends Service {
         }
     }
 
+    private void vibrar() {
+        vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+        if (vibrator != null) {
+            long[] pattern = {0, 500, 200, 500, 200, 500};
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1));
+            } else {
+                vibrator.vibrate(pattern, -1);
+            }
+        }
+    }
+
     @Override
     public void onDestroy() {
-        if (tts != null) { tts.stop(); tts.shutdown(); }
+        if (vibrator != null) vibrator.cancel();
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         super.onDestroy();
     }
