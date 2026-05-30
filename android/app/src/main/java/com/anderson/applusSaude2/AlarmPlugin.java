@@ -4,7 +4,10 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import java.util.Locale;
 import com.getcapacitor.Plugin;
@@ -24,6 +27,24 @@ public class AlarmPlugin extends Plugin {
                 tts.setSpeechRate(0.9f);
             }
         });
+
+        // Solicita isenção de bateria automaticamente
+        solicitarIsencaoBateria();
+    }
+
+    private void solicitarIsencaoBateria() {
+        try {
+            Context context = getContext();
+            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            if (pm != null && !pm.isIgnoringBatteryOptimizations(context.getPackageName())) {
+                Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + context.getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @PluginMethod
@@ -42,7 +63,7 @@ public class AlarmPlugin extends Plugin {
         intent.putExtra("medDose", medDose);
         intent.putExtra("medId",   medId);
 
-        int reqCode = medId.hashCode();
+        int reqCode = Math.abs(medId.hashCode());
         PendingIntent pi = PendingIntent.getBroadcast(
             context, reqCode, intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
@@ -50,7 +71,14 @@ public class AlarmPlugin extends Plugin {
 
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (am.canScheduleExactAlarms()) {
+                    am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timestamp, pi);
+                } else {
+                    // Fallback: alarme inexato mas funciona sem permissão
+                    am.set(AlarmManager.RTC_WAKEUP, timestamp, pi);
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timestamp, pi);
             } else {
                 am.setExact(AlarmManager.RTC_WAKEUP, timestamp, pi);
@@ -64,7 +92,7 @@ public class AlarmPlugin extends Plugin {
         String medId = call.getString("medId", "");
         Context context = getContext();
         Intent intent = new Intent(context, AlarmReceiver.class);
-        int reqCode = medId.hashCode();
+        int reqCode = Math.abs(medId.hashCode());
         PendingIntent pi = PendingIntent.getBroadcast(
             context, reqCode, intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
