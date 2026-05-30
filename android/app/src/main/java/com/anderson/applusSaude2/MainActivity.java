@@ -1,5 +1,6 @@
 package com.anderson.applusSaude2;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.WindowManager;
 import com.getcapacitor.BridgeActivity;
@@ -9,6 +10,19 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(AlarmPlugin.class);
         super.onCreate(savedInstanceState);
+        verificarPararAlarme(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        verificarPararAlarme(intent);
+    }
+
+    private void verificarPararAlarme(Intent intent) {
+        if (intent != null && intent.getBooleanExtra("pararAlarme", false)) {
+            stopService(new Intent(this, AlarmService.class));
+        }
     }
 
     public static void wakeScreen(android.app.Activity activity) {

@@ -1352,6 +1352,13 @@ async function confirmarDose(status) {
     if (APP.medFriendTimer) { clearTimeout(APP.medFriendTimer); APP.medFriendTimer = null; }
     if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
     pararSomAlarme();
+    // Para o AlarmService nativo
+    try {
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        const { AlarmPlugin } = window.Capacitor.Plugins;
+        if (AlarmPlugin) AlarmPlugin.pararAlarme();
+      }
+    } catch(e) {}
     if (overlay) {
       overlay.classList.remove('ativo');
       const _chave = (overlay.dataset.medId || '') + '-' + (overlay.dataset.horario || '');
