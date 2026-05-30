@@ -1257,11 +1257,11 @@ function dispararAlarme(med) {
   overlay.classList.add('ativo');
   iniciarSomAlarme();
 
-  // Acender tela via plugin nativo (Capacitor)
+  // Acender tela via plugin nativo APENAS se app estiver em background
   try {
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
       const { AlarmPlugin } = window.Capacitor.Plugins;
-      if (AlarmPlugin) {
+      if (AlarmPlugin && document.visibilityState === 'hidden') {
         AlarmPlugin.dispararAlarme({
           medNome: med.nome || 'Medicamento',
           medDose: med.dosagem || '',
