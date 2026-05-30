@@ -31,7 +31,8 @@ public class AlarmPlugin extends Plugin {
         String medNome = call.getString("medNome", "Medicamento");
         String medDose = call.getString("medDose", "");
         String medId   = call.getString("medId", "");
-        Long timestamp = call.getLong("timestamp", 0L);
+        Double timestampD = call.getDouble("timestamp", 0.0);
+        long timestamp = timestampD.longValue();
 
         if (timestamp <= 0) { call.reject("timestamp invalido"); return; }
 
