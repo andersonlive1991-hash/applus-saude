@@ -1298,12 +1298,19 @@ function dispararAlarme(med) {
 }
 
 function falarAlarme(texto) {
-  if ('speechSynthesis' in window) {
-    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
+  try {
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      const { AlarmPlugin } = window.Capacitor.Plugins;
+      if (AlarmPlugin) { AlarmPlugin.falar({ texto }); return; }
+    }
+  } catch(e) {}
+  // Fallback web
+  if (typeof speechSynthesis !== "undefined") {
+    speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(texto);
     utterance.lang = 'pt-BR';
     utterance.rate = 0.9;
-    if (typeof speechSynthesis !== "undefined") speechSynthesis.speak(utterance);
+    speechSynthesis.speak(utterance);
   }
 }
 
