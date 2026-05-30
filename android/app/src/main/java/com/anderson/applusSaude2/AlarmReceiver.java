@@ -1,6 +1,5 @@
 package com.anderson.applusSaude2;
 
-import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -18,10 +17,14 @@ import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class AlarmReceiver extends BroadcastReceiver {
     private static final String CHANNEL_ID = "alarme_medicamento";
     private static final String TAG = "ApplusAlarme";
+    public static TextToSpeech ttsStatic = null;
+    public static Timer timerRepetir = null;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -34,38 +37,41 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         final String nome = medNome;
         final String dose = medDose;
+        final String fala = "Atenção! Está na hora de tomar " + nome +
+            (!dose.isEmpty() ? ". A dose é " + dose : "") +
+            ". Por favor tome o seu medicamento agora.";
 
-        // WakeLock imediato
+        // WakeLock forte
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        PowerManager.WakeLock wl = null;
         if (pm != null) {
-            wl = pm.newWakeLock(
+            PowerManager.WakeLock wl = pm.newWakeLock(
                 PowerManager.FULL_WAKE_LOCK |
                 PowerManager.ACQUIRE_CAUSES_WAKEUP |
                 PowerManager.ON_AFTER_RELEASE,
                 "applus:receiver"
             );
-            wl.acquire(60000);
-            Log.d(TAG, "WakeLock adquirido");
+            wl.acquire(600000);
         }
 
-        // Vibrar
+        // Vibrar em loop
         Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
         if (vibrator != null) {
             long[] pattern = {0, 500, 200, 500, 200, 500};
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1));
+                vibrator.vibrate(VibrationEffect.createWaveform(pattern, 1));
             } else {
-                vibrator.vibrate(pattern, -1);
+                vibrator.vibrate(pattern, 1);
             }
         }
 
-        // Notificação
+        // Notificação persistente
         criarCanalNotificacao(context);
         Intent mainIntent = new Intent(context, MainActivity.class);
         mainIntent.putExtra("pagina", "remedios");
         mainIntent.putExtra("pararAlarme", true);
-        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+            Intent.FLAG_ACTIVITY_SINGLE_TOP |
+            Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pi = PendingIntent.getActivity(
             context, (int) System.currentTimeMillis(), mainIntent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
@@ -86,43 +92,43 @@ public class AlarmReceiver extends BroadcastReceiver {
             .build();
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (nm != null) {
-            nm.notify(1001, notification);
-            Log.d(TAG, "Notificação exibida");
-        }
+        if (nm != null) nm.notify(1001, notification);
 
-        // TTS na main thread
-        final PowerManager.WakeLock finalWl = wl;
+        // TTS com repeticao - totalmente inline, sem depender do Service
+        final Context appContext = context.getApplicationContext();
         new Handler(Looper.getMainLooper()).post(() -> {
-            String fala = "Atenção! Está na hora de tomar " + nome +
-                (!dose.isEmpty() ? ". A dose é " + dose : "") +
-                ". Por favor tome o seu medicamento agora.";
-
-            TextToSpeech[] ttsHolder = new TextToSpeech[1];
-            ttsHolder[0] = new TextToSpeech(context, status -> {
+            pararTudo();
+            ttsStatic = new TextToSpeech(appContext, status -> {
                 if (status == TextToSpeech.SUCCESS) {
-                    ttsHolder[0].setLanguage(new Locale("pt", "BR"));
-                    ttsHolder[0].setSpeechRate(0.9f);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null, "alarme");
-                    } else {
-                        ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null);
-                    }
-                    Log.d(TAG, "TTS falando: " + fala);
+                    ttsStatic.setLanguage(new Locale("pt", "BR"));
+                    ttsStatic.setSpeechRate(0.9f);
+                    falarTTS(fala);
+                    timerRepetir = new Timer();
+                    timerRepetir.scheduleAtFixedRate(new TimerTask() {
+                        @Override
+                        public void run() {
+                            new Handler(Looper.getMainLooper()).post(() -> falarTTS(fala));
+                        }
+                    }, 30000, 30000);
+                    Log.d(TAG, "TTS iniciado com repeticao a cada 30s");
                 }
             });
         });
+    }
 
-        // Inicia AlarmService para voz em loop
-        Intent serviceIntent = new Intent(context, AlarmService.class);
-        serviceIntent.putExtra("medNome", nome);
-        serviceIntent.putExtra("medDose", dose);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(serviceIntent);
-        } else {
-            context.startService(serviceIntent);
+    public static void falarTTS(String texto) {
+        if (ttsStatic != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                ttsStatic.speak(texto, TextToSpeech.QUEUE_FLUSH, null, "alarme");
+            } else {
+                ttsStatic.speak(texto, TextToSpeech.QUEUE_FLUSH, null);
+            }
         }
-        Log.d(TAG, "AlarmService iniciado");
+    }
+
+    public static void pararTudo() {
+        if (timerRepetir != null) { timerRepetir.cancel(); timerRepetir = null; }
+        if (ttsStatic != null) { ttsStatic.stop(); ttsStatic.shutdown(); ttsStatic = null; }
     }
 
     private void criarCanalNotificacao(Context context) {
@@ -133,8 +139,8 @@ public class AlarmReceiver extends BroadcastReceiver {
             channel.enableVibration(true);
             channel.setVibrationPattern(new long[]{0, 500, 200, 500});
             channel.setShowBadge(true);
-            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            if (nm != null) nm.createNotificationChannel(channel);
+            NotificationManager nm2 = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm2 != null) nm2.createNotificationChannel(channel);
         }
     }
 }

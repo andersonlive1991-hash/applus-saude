@@ -22,6 +22,10 @@ public class MainActivity extends BridgeActivity {
     private void verificarPararAlarme(Intent intent) {
         if (intent != null && intent.getBooleanExtra("pararAlarme", false)) {
             stopService(new Intent(this, AlarmService.class));
+            AlarmReceiver.pararTudo();
+            android.app.NotificationManager nm =
+                (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (nm != null) nm.cancel(1001);
         }
     }
 
