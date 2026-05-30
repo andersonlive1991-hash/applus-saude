@@ -1,5 +1,7 @@
 package com.anderson.applusSaude2;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -22,6 +24,53 @@ public class AlarmPlugin extends Plugin {
                 tts.setSpeechRate(0.9f);
             }
         });
+    }
+
+    @PluginMethod
+    public void agendarAlarme(PluginCall call) {
+        String medNome = call.getString("medNome", "Medicamento");
+        String medDose = call.getString("medDose", "");
+        String medId   = call.getString("medId", "");
+        Long timestamp = call.getLong("timestamp", 0L);
+
+        if (timestamp <= 0) { call.reject("timestamp invalido"); return; }
+
+        Context context = getContext();
+        Intent intent = new Intent(context, AlarmReceiver.class);
+        intent.putExtra("medNome", medNome);
+        intent.putExtra("medDose", medDose);
+        intent.putExtra("medId",   medId);
+
+        int reqCode = medId.hashCode();
+        PendingIntent pi = PendingIntent.getBroadcast(
+            context, reqCode, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (am != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timestamp, pi);
+            } else {
+                am.setExact(AlarmManager.RTC_WAKEUP, timestamp, pi);
+            }
+        }
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void cancelarAlarme(PluginCall call) {
+        String medId = call.getString("medId", "");
+        Context context = getContext();
+        Intent intent = new Intent(context, AlarmReceiver.class);
+        int reqCode = medId.hashCode();
+        PendingIntent pi = PendingIntent.getBroadcast(
+            context, reqCode, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (am != null) am.cancel(pi);
+        call.resolve();
     }
 
     @PluginMethod
@@ -49,7 +98,6 @@ public class AlarmPlugin extends Plugin {
         String medNome = call.getString("medNome", "Medicamento");
         String medDose = call.getString("medDose", "");
         String medId   = call.getString("medId", "");
-
         Context context = getContext();
         Intent intent = new Intent(context, AlarmReceiver.class);
         intent.putExtra("medNome", medNome);
@@ -69,9 +117,6 @@ public class AlarmPlugin extends Plugin {
 
     @Override
     protected void handleOnDestroy() {
-        if (tts != null) {
-            tts.stop();
-            tts.shutdown();
-        }
+        if (tts != null) { tts.stop(); tts.shutdown(); }
     }
 }

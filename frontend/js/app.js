@@ -1203,10 +1203,40 @@ async function iniciarAlarmes() {
   verificarAlarmes();
 }
 
+async function agendarAlarmesNativos(meds) {
+  try {
+    if (!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) return;
+    const { AlarmPlugin } = window.Capacitor.Plugins;
+    if (!AlarmPlugin) return;
+
+    for (const med of meds) {
+      const horarios = typeof med.horarios === 'string' ? JSON.parse(med.horarios) : med.horarios;
+      if (!Array.isArray(horarios)) continue;
+      for (const horario of horarios) {
+        const [hh, mm] = horario.split(':').map(Number);
+        const agora = new Date();
+        const alarmDate = new Date();
+        alarmDate.setHours(hh, mm, 0, 0);
+        // Se já passou hoje, agenda para amanhã
+        if (alarmDate <= agora) alarmDate.setDate(alarmDate.getDate() + 1);
+        const chave = med.id + '-' + horario;
+        if (APP.alarmesConfirmados.has(chave)) continue;
+        await AlarmPlugin.agendarAlarme({
+          medNome: med.nome || 'Medicamento',
+          medDose: med.dosagem || '',
+          medId: String(med.id) + '-' + horario,
+          timestamp: alarmDate.getTime()
+        });
+      }
+    }
+  } catch(e) { console.log('agendarAlarmesNativos erro:', e.message); }
+}
+
 async function verificarAlarmes() {
   if (APP.alarmeAtivo) return;
   try {
     const meds = await api('GET', `/api/medicamentos/${APP.familiaId}?membro_id=${APP.membroId}`);
+    agendarAlarmesNativos(meds); // agenda no AlarmManager nativo
     const agora = new Date();
     const horaAtual = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
 
