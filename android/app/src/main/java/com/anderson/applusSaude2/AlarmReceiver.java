@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -75,40 +77,34 @@ public class AlarmReceiver extends BroadcastReceiver {
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm != null) nm.notify(1001, notification);
 
-        // Verifica se app está rodando
-        boolean appRodando = false;
-        android.app.ActivityManager am = (android.app.ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        if (am != null) {
-            for (android.app.ActivityManager.RunningAppProcessInfo proc : am.getRunningAppProcesses()) {
-                if (proc.processName.equals(context.getPackageName()) &&
-                    proc.importance <= android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE) {
-                    appRodando = true;
-                    break;
-                }
-            }
-        }
+        // TTS na thread principal
+        new Handler(Looper.getMainLooper()).post(() -> {
+            String fala = "Atenção! Está na hora de tomar " + nome +
+                (!dose.isEmpty() ? ". A dose é " + dose : "") +
+                ". Por favor tome o seu medicamento agora.";
 
-        if (appRodando) {
-            // App em 2o plano - usa AlarmService (funciona)
-            Intent serviceIntent = new Intent(context, AlarmService.class);
-            serviceIntent.putExtra("medNome", nome);
-            serviceIntent.putExtra("medDose", dose);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent);
-            } else {
-                context.startService(serviceIntent);
-            }
+            TextToSpeech[] ttsHolder = new TextToSpeech[1];
+            ttsHolder[0] = new TextToSpeech(context, status -> {
+                if (status == TextToSpeech.SUCCESS) {
+                    ttsHolder[0].setLanguage(new Locale("pt", "BR"));
+                    ttsHolder[0].setSpeechRate(0.9f);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null, "alarme");
+                    } else {
+                        ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null);
+                    }
+                }
+            });
+        });
+
+        // Service como fallback para manter processo vivo
+        Intent serviceIntent = new Intent(context, AlarmService.class);
+        serviceIntent.putExtra("medNome", nome);
+        serviceIntent.putExtra("medDose", dose);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(serviceIntent);
         } else {
-            // App fechado - abre AlarmActivity diretamente
-            Intent alarmIntent = new Intent(context, AlarmActivity.class);
-            alarmIntent.putExtra("medNome", nome);
-            alarmIntent.putExtra("medDose", dose);
-            alarmIntent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK |
-                Intent.FLAG_ACTIVITY_NO_USER_ACTION |
-                Intent.FLAG_ACTIVITY_NO_HISTORY
-            );
-            context.startActivity(alarmIntent);
+            context.startService(serviceIntent);
         }
     }
 
