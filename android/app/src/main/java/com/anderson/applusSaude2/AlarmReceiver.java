@@ -8,8 +8,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -77,24 +75,22 @@ public class AlarmReceiver extends BroadcastReceiver {
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm != null) nm.notify(1001, notification);
 
-        // TTS na thread principal
-        new Handler(Looper.getMainLooper()).post(() -> {
-            String fala = "Atenção! Está na hora de tomar " + nome +
-                (!dose.isEmpty() ? ". A dose é " + dose : "") +
-                ". Por favor tome o seu medicamento agora.";
+        // TTS direto - sem Handler (funciona com app fechado)
+        final String fala = "Atenção! Está na hora de tomar " + nome +
+            (!dose.isEmpty() ? ". A dose é " + dose : "") +
+            ". Por favor tome o seu medicamento agora.";
 
-            TextToSpeech[] ttsHolder = new TextToSpeech[1];
-            ttsHolder[0] = new TextToSpeech(context, status -> {
-                if (status == TextToSpeech.SUCCESS) {
-                    ttsHolder[0].setLanguage(new Locale("pt", "BR"));
-                    ttsHolder[0].setSpeechRate(0.9f);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null, "alarme");
-                    } else {
-                        ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null);
-                    }
+        TextToSpeech[] ttsHolder = new TextToSpeech[1];
+        ttsHolder[0] = new TextToSpeech(context.getApplicationContext(), status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                ttsHolder[0].setLanguage(new Locale("pt", "BR"));
+                ttsHolder[0].setSpeechRate(0.9f);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null, "alarme");
+                } else {
+                    ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null);
                 }
-            });
+            }
         });
 
         // Service como fallback para manter processo vivo
