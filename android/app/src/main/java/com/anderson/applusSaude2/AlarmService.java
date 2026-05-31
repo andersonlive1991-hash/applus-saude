@@ -19,11 +19,12 @@ import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import java.util.Locale;
 
 public class AlarmService extends Service {
-    // Canal novo (v2) para forçar recriação com IMPORTANCE_HIGH
+    private static final String TAG = "AP_AlarmService";
     private static final String CHANNEL_ID = "alarme_med_v2";
     public static boolean ativo = false;
 
@@ -39,6 +40,8 @@ public class AlarmService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "onStartCommand() iniciado");
+
         medNome = intent != null ? intent.getStringExtra("medNome") : "Medicamento";
         medDose = intent != null ? intent.getStringExtra("medDose") : "";
         medId   = intent != null ? intent.getStringExtra("medId")   : "";
@@ -46,30 +49,29 @@ public class AlarmService extends Service {
         if (medDose == null) medDose = "";
         if (medId   == null) medId   = "";
 
+        Log.d(TAG, "Medicamento: " + medNome + " / " + medDose);
+
         ativo = true;
         handler = new Handler(Looper.getMainLooper());
 
-        // 1. Canal ANTES de tudo
         criarCanalNotificacao();
+        Log.d(TAG, "Canal de notificação criado");
 
-        // 2. startForeground IMEDIATAMENTE
         Notification notification = construirNotificacao();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
-        } else {
-            startForeground(1, notification);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+            } else {
+                startForeground(1, notification);
+            }
+            Log.d(TAG, "startForeground() OK");
+        } catch (Exception e) {
+            Log.e(TAG, "ERRO no startForeground: " + e.getMessage());
         }
 
-        // 3. WakeLock
         adquirirWakeLock();
-
-        // 4. Som nativo
         tocarSomNativo();
-
-        // 5. Vibrar
         vibrar();
-
-        // 6. TTS
         iniciarTTS();
 
         return START_STICKY;
@@ -115,9 +117,7 @@ public class AlarmService extends Service {
     private void tocarSomNativo() {
         try {
             Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (alarmUri == null) {
-                alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            }
+            if (alarmUri == null) alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             mediaPlayer = new android.media.MediaPlayer();
             mediaPlayer.setDataSource(this, alarmUri);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -132,8 +132,9 @@ public class AlarmService extends Service {
             mediaPlayer.setLooping(true);
             mediaPlayer.prepare();
             mediaPlayer.start();
+            Log.d(TAG, "Som nativo tocando");
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "ERRO som nativo: " + e.getMessage());
         }
     }
 
@@ -146,6 +147,7 @@ public class AlarmService extends Service {
             } else {
                 vibrator.vibrate(pattern, 0);
             }
+            Log.d(TAG, "Vibração iniciada");
         }
     }
 
@@ -161,14 +163,14 @@ public class AlarmService extends Service {
             (dose != null && !dose.isEmpty() ? ". A dose é " + dose : "") +
             ". Por favor tome o seu medicamento agora.";
 
-        // Usar getApplicationContext() em vez de this — mais estável com app fechado
+        Log.d(TAG, "Iniciando TTS...");
         tts = new TextToSpeech(getApplicationContext(), status -> {
             if (status == TextToSpeech.SUCCESS) {
                 tts.setLanguage(new Locale("pt", "BR"));
                 tts.setSpeechRate(0.9f);
                 ttsReady = true;
+                Log.d(TAG, "TTS pronto, falando em 2s");
                 handler.postDelayed(() -> falar(fala), 2000);
-
                 repetirVoz = new Runnable() {
                     @Override
                     public void run() {
@@ -179,11 +181,14 @@ public class AlarmService extends Service {
                     }
                 };
                 handler.postDelayed(repetirVoz, 32000);
+            } else {
+                Log.e(TAG, "TTS falhou: status=" + status);
             }
         });
     }
 
     private void falar(String texto) {
+        Log.d(TAG, "falar(): " + texto.substring(0, Math.min(30, texto.length())));
         if (tts != null && ttsReady) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 tts.speak(texto, TextToSpeech.QUEUE_FLUSH, null, "alarme");
@@ -197,7 +202,6 @@ public class AlarmService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager == null) return;
-            // Só cria se não existir ainda
             if (manager.getNotificationChannel(CHANNEL_ID) == null) {
                 NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID, "Alarme de Medicamento", NotificationManager.IMPORTANCE_HIGH
@@ -225,11 +229,13 @@ public class AlarmService extends Service {
                 "applus:alarme"
             );
             wakeLock.acquire(600000);
+            Log.d(TAG, "WakeLock adquirido");
         }
     }
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "onDestroy()");
         ativo = false;
         ttsReady = false;
         if (handler != null && repetirVoz != null) handler.removeCallbacks(repetirVoz);
