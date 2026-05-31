@@ -23,7 +23,8 @@ import androidx.core.app.NotificationCompat;
 import java.util.Locale;
 
 public class AlarmService extends Service {
-    private static final String CHANNEL_ID = "alarme_medicamento";
+    // Canal novo (v2) para forçar recriação com IMPORTANCE_HIGH
+    private static final String CHANNEL_ID = "alarme_med_v2";
     public static boolean ativo = false;
 
     private PowerManager.WakeLock wakeLock;
@@ -48,11 +49,10 @@ public class AlarmService extends Service {
         ativo = true;
         handler = new Handler(Looper.getMainLooper());
 
-        // 1. Canal de notificação ANTES de tudo
+        // 1. Canal ANTES de tudo
         criarCanalNotificacao();
 
-        // 2. startForeground IMEDIATAMENTE (Android 12+ exige em <10s do startForegroundService)
-        //    Usando tipo mediaPlayback — permitido pelo AlarmManager.setAlarmClock()
+        // 2. startForeground IMEDIATAMENTE
         Notification notification = construirNotificacao();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
@@ -60,16 +60,16 @@ public class AlarmService extends Service {
             startForeground(1, notification);
         }
 
-        // 3. WakeLock para manter CPU ativa
+        // 3. WakeLock
         adquirirWakeLock();
 
-        // 4. Som nativo do sistema (RingtoneManager — funciona mesmo sem TTS)
+        // 4. Som nativo
         tocarSomNativo();
 
         // 5. Vibrar
         vibrar();
 
-        // 6. TTS em loop
+        // 6. TTS
         iniciarTTS();
 
         return START_STICKY;
@@ -89,7 +89,6 @@ public class AlarmService extends Service {
             ? medNome + " — " + medDose
             : medNome;
 
-        // Botão "Tomei agora" direto na notificação
         Intent tomeiIntent = new Intent(this, AlarmReceiver.class);
         tomeiIntent.setAction("PARAR_ALARME");
         tomeiIntent.putExtra("medId", medId);
@@ -143,7 +142,7 @@ public class AlarmService extends Service {
         if (vibrator != null) {
             long[] pattern = {0, 600, 300, 600, 300, 600};
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createWaveform(pattern, 0)); // 0 = repeat from index 0
+                vibrator.vibrate(VibrationEffect.createWaveform(pattern, 0));
             } else {
                 vibrator.vibrate(pattern, 0);
             }
@@ -162,12 +161,12 @@ public class AlarmService extends Service {
             (dose != null && !dose.isEmpty() ? ". A dose é " + dose : "") +
             ". Por favor tome o seu medicamento agora.";
 
-        tts = new TextToSpeech(this, status -> {
+        // Usar getApplicationContext() em vez de this — mais estável com app fechado
+        tts = new TextToSpeech(getApplicationContext(), status -> {
             if (status == TextToSpeech.SUCCESS) {
                 tts.setLanguage(new Locale("pt", "BR"));
                 tts.setSpeechRate(0.9f);
                 ttsReady = true;
-                // Aguardar 2s para não sobrepor o início do som
                 handler.postDelayed(() -> falar(fala), 2000);
 
                 repetirVoz = new Runnable() {
@@ -196,14 +195,25 @@ public class AlarmService extends Service {
 
     private void criarCanalNotificacao() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID, "Alarme de Medicamento", NotificationManager.IMPORTANCE_HIGH
-            );
-            channel.enableVibration(true);
-            channel.setVibrationPattern(new long[]{0, 500, 200, 500});
-            channel.setBypassDnd(true); // ignora modo Não Perturbe
             NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) manager.createNotificationChannel(channel);
+            if (manager == null) return;
+            // Só cria se não existir ainda
+            if (manager.getNotificationChannel(CHANNEL_ID) == null) {
+                NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID, "Alarme de Medicamento", NotificationManager.IMPORTANCE_HIGH
+                );
+                channel.enableVibration(true);
+                channel.setVibrationPattern(new long[]{0, 500, 200, 500});
+                channel.setBypassDnd(true);
+                channel.setSound(
+                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
+                    new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                );
+                manager.createNotificationChannel(channel);
+            }
         }
     }
 
@@ -214,7 +224,7 @@ public class AlarmService extends Service {
                 PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
                 "applus:alarme"
             );
-            wakeLock.acquire(600000); // 10 minutos
+            wakeLock.acquire(600000);
         }
     }
 
@@ -231,7 +241,6 @@ public class AlarmService extends Service {
         }
         pararVibracao();
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
-        // Remover notificação
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (nm != null) nm.cancel(1);
         stopForeground(true);
