@@ -4,12 +4,15 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import java.util.Locale;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -18,6 +21,8 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 @CapacitorPlugin(name = "AlarmPlugin")
 public class AlarmPlugin extends Plugin {
     private TextToSpeech tts;
+    private static final String PREFS_NAME = "AlarmPrefs";
+    private static final String KEY_ALARMES = "alarmes_agendados";
 
     @Override
     public void load() {
@@ -27,8 +32,6 @@ public class AlarmPlugin extends Plugin {
                 tts.setSpeechRate(0.9f);
             }
         });
-
-        // Solicita isenção de bateria automaticamente
         solicitarIsencaoBateria();
     }
 
@@ -71,19 +74,24 @@ public class AlarmPlugin extends Plugin {
 
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am != null) {
+            // setAlarmClock = máxima prioridade + concede permissão para startForegroundService
+            // É o mesmo mecanismo que apps de despertador nativos usam
+            AlarmManager.AlarmClockInfo alarmInfo = new AlarmManager.AlarmClockInfo(timestamp, pi);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (am.canScheduleExactAlarms()) {
-                    am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timestamp, pi);
+                    am.setAlarmClock(alarmInfo, pi);
                 } else {
-                    // Fallback: alarme inexato mas funciona sem permissão
-                    am.set(AlarmManager.RTC_WAKEUP, timestamp, pi);
+                    // Fallback sem permissão de alarme exato
+                    am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timestamp, pi);
                 }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timestamp, pi);
             } else {
-                am.setExact(AlarmManager.RTC_WAKEUP, timestamp, pi);
+                am.setAlarmClock(alarmInfo, pi);
             }
         }
+
+        // Persistir no SharedPreferences para o BootReceiver reagendar após reboot
+        salvarAlarme(context, medId, medNome, medDose, timestamp);
+
         call.resolve();
     }
 
@@ -99,6 +107,10 @@ public class AlarmPlugin extends Plugin {
         );
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am != null) am.cancel(pi);
+
+        // Remover da persistência
+        removerAlarme(context, medId);
+
         call.resolve();
     }
 
@@ -128,11 +140,15 @@ public class AlarmPlugin extends Plugin {
         String medDose = call.getString("medDose", "");
         String medId   = call.getString("medId", "");
         Context context = getContext();
-        Intent intent = new Intent(context, AlarmReceiver.class);
-        intent.putExtra("medNome", medNome);
-        intent.putExtra("medDose", medDose);
-        intent.putExtra("medId",   medId);
-        context.sendBroadcast(intent);
+        Intent serviceIntent = new Intent(context, AlarmService.class);
+        serviceIntent.putExtra("medNome", medNome);
+        serviceIntent.putExtra("medDose", medDose);
+        serviceIntent.putExtra("medId",   medId);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(serviceIntent);
+        } else {
+            context.startService(serviceIntent);
+        }
         call.resolve();
     }
 
@@ -142,6 +158,48 @@ public class AlarmPlugin extends Plugin {
         Intent stopIntent = new Intent(context, AlarmService.class);
         context.stopService(stopIntent);
         call.resolve();
+    }
+
+    // ── Persistência ──────────────────────────────────────────────────────────
+
+    private void salvarAlarme(Context ctx, String medId, String medNome, String medDose, long timestamp) {
+        try {
+            SharedPreferences prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            JSONArray arr = new JSONArray(prefs.getString(KEY_ALARMES, "[]"));
+
+            // Remover entrada anterior com mesmo medId
+            JSONArray novo = new JSONArray();
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject o = arr.getJSONObject(i);
+                if (!medId.equals(o.optString("medId"))) novo.put(o);
+            }
+
+            JSONObject alarme = new JSONObject();
+            alarme.put("medId", medId);
+            alarme.put("medNome", medNome);
+            alarme.put("medDose", medDose);
+            alarme.put("timestamp", timestamp);
+            novo.put(alarme);
+
+            prefs.edit().putString(KEY_ALARMES, novo.toString()).apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void removerAlarme(Context ctx, String medId) {
+        try {
+            SharedPreferences prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            JSONArray arr = new JSONArray(prefs.getString(KEY_ALARMES, "[]"));
+            JSONArray novo = new JSONArray();
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject o = arr.getJSONObject(i);
+                if (!medId.equals(o.optString("medId"))) novo.put(o);
+            }
+            prefs.edit().putString(KEY_ALARMES, novo.toString()).apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
