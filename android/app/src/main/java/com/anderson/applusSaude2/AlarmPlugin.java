@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import java.util.Locale;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,16 +21,21 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 @CapacitorPlugin(name = "AlarmPlugin")
 public class AlarmPlugin extends Plugin {
+    private static final String TAG = "AP_AlarmPlugin";
     private TextToSpeech tts;
     private static final String PREFS_NAME = "AlarmPrefs";
     private static final String KEY_ALARMES = "alarmes_agendados";
 
     @Override
     public void load() {
+        Log.d(TAG, "AlarmPlugin.load() iniciado");
         tts = new TextToSpeech(getContext(), status -> {
             if (status == TextToSpeech.SUCCESS) {
                 tts.setLanguage(new Locale("pt", "BR"));
                 tts.setSpeechRate(0.9f);
+                Log.d(TAG, "TTS inicializado com sucesso");
+            } else {
+                Log.e(TAG, "TTS falhou ao inicializar, status=" + status);
             }
         });
         solicitarIsencaoBateria();
@@ -40,13 +46,16 @@ public class AlarmPlugin extends Plugin {
             Context context = getContext();
             PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
             if (pm != null && !pm.isIgnoringBatteryOptimizations(context.getPackageName())) {
+                Log.d(TAG, "Solicitando isenção de bateria");
                 Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
                 intent.setData(Uri.parse("package:" + context.getPackageName()));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
+            } else {
+                Log.d(TAG, "Já isento de otimização de bateria");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Erro isenção bateria: " + e.getMessage());
         }
     }
 
@@ -58,7 +67,13 @@ public class AlarmPlugin extends Plugin {
         Double timestampD = call.getDouble("timestamp", 0.0);
         long timestamp = timestampD.longValue();
 
-        if (timestamp <= 0) { call.reject("timestamp invalido"); return; }
+        Log.d(TAG, "agendarAlarme() chamado: nome=" + medNome + " id=" + medId + " timestamp=" + timestamp);
+
+        if (timestamp <= 0) {
+            Log.e(TAG, "agendarAlarme() rejeitado: timestamp inválido");
+            call.reject("timestamp invalido");
+            return;
+        }
 
         Context context = getContext();
         Intent intent = new Intent(context, AlarmReceiver.class);
@@ -74,30 +89,34 @@ public class AlarmPlugin extends Plugin {
 
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am != null) {
-            // setAlarmClock = máxima prioridade + concede permissão para startForegroundService
-            // É o mesmo mecanismo que apps de despertador nativos usam
-            AlarmManager.AlarmClockInfo alarmInfo = new AlarmManager.AlarmClockInfo(timestamp, pi);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (am.canScheduleExactAlarms()) {
+                boolean podeExato = am.canScheduleExactAlarms();
+                Log.d(TAG, "Android 12+: canScheduleExactAlarms=" + podeExato);
+                if (podeExato) {
+                    AlarmManager.AlarmClockInfo alarmInfo = new AlarmManager.AlarmClockInfo(timestamp, pi);
                     am.setAlarmClock(alarmInfo, pi);
+                    Log.d(TAG, "Alarme agendado com setAlarmClock para " + new java.util.Date(timestamp));
                 } else {
-                    // Fallback sem permissão de alarme exato
                     am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timestamp, pi);
+                    Log.w(TAG, "Alarme agendado com setAndAllowWhileIdle (sem permissão exata) para " + new java.util.Date(timestamp));
                 }
             } else {
+                AlarmManager.AlarmClockInfo alarmInfo = new AlarmManager.AlarmClockInfo(timestamp, pi);
                 am.setAlarmClock(alarmInfo, pi);
+                Log.d(TAG, "Alarme agendado com setAlarmClock (pre-S) para " + new java.util.Date(timestamp));
             }
+        } else {
+            Log.e(TAG, "AlarmManager é null!");
         }
 
-        // Persistir no SharedPreferences para o BootReceiver reagendar após reboot
         salvarAlarme(context, medId, medNome, medDose, timestamp);
-
         call.resolve();
     }
 
     @PluginMethod
     public void cancelarAlarme(PluginCall call) {
         String medId = call.getString("medId", "");
+        Log.d(TAG, "cancelarAlarme() id=" + medId);
         Context context = getContext();
         Intent intent = new Intent(context, AlarmReceiver.class);
         int reqCode = Math.abs(medId.hashCode());
@@ -107,16 +126,14 @@ public class AlarmPlugin extends Plugin {
         );
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am != null) am.cancel(pi);
-
-        // Remover da persistência
         removerAlarme(context, medId);
-
         call.resolve();
     }
 
     @PluginMethod
     public void falar(PluginCall call) {
         String texto = call.getString("texto", "");
+        Log.d(TAG, "falar() texto=" + texto.substring(0, Math.min(30, texto.length())));
         if (tts != null && !texto.isEmpty()) {
             tts.stop();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -139,6 +156,7 @@ public class AlarmPlugin extends Plugin {
         String medNome = call.getString("medNome", "Medicamento");
         String medDose = call.getString("medDose", "");
         String medId   = call.getString("medId", "");
+        Log.d(TAG, "dispararAlarme() nome=" + medNome);
         Context context = getContext();
         Intent serviceIntent = new Intent(context, AlarmService.class);
         serviceIntent.putExtra("medNome", medNome);
@@ -154,36 +172,32 @@ public class AlarmPlugin extends Plugin {
 
     @PluginMethod
     public void pararAlarme(PluginCall call) {
+        Log.d(TAG, "pararAlarme() chamado");
         Context context = getContext();
         Intent stopIntent = new Intent(context, AlarmService.class);
         context.stopService(stopIntent);
         call.resolve();
     }
 
-    // ── Persistência ──────────────────────────────────────────────────────────
-
     private void salvarAlarme(Context ctx, String medId, String medNome, String medDose, long timestamp) {
         try {
             SharedPreferences prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             JSONArray arr = new JSONArray(prefs.getString(KEY_ALARMES, "[]"));
-
-            // Remover entrada anterior com mesmo medId
             JSONArray novo = new JSONArray();
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject o = arr.getJSONObject(i);
                 if (!medId.equals(o.optString("medId"))) novo.put(o);
             }
-
             JSONObject alarme = new JSONObject();
             alarme.put("medId", medId);
             alarme.put("medNome", medNome);
             alarme.put("medDose", medDose);
             alarme.put("timestamp", timestamp);
             novo.put(alarme);
-
             prefs.edit().putString(KEY_ALARMES, novo.toString()).apply();
+            Log.d(TAG, "Alarme salvo no SharedPreferences: " + medId);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Erro ao salvar alarme: " + e.getMessage());
         }
     }
 
@@ -198,7 +212,7 @@ public class AlarmPlugin extends Plugin {
             }
             prefs.edit().putString(KEY_ALARMES, novo.toString()).apply();
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Erro ao remover alarme: " + e.getMessage());
         }
     }
 
