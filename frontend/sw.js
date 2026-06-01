@@ -97,14 +97,20 @@ self.addEventListener('push', e => {
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(lista => {
-    lista.forEach(c => c.postMessage({ tipo: 'parar-alarme' }));
-  });
+  const dados = e.notification.data || {};
+  const urlAbrir = self.registration.scope + (dados.medId ? '?alarme=' + dados.medId + '&medNome=' + encodeURIComponent(dados.medNome || '') : '');
+
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(lista => {
+      // Para alarme em clientes ativos
+      lista.forEach(c => {
+        c.postMessage({ tipo: 'parar-alarme' });
+        c.postMessage({ tipo: 'alarme-push', dados });
+      });
+      // Se app aberto, foca
       for (const client of lista) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.postMessage({ tipo: 'alarme-push', dados: e.notification.data });
+          client.postMessage({ tipo: 'alarme-push', dados });
           return client.focus();
         }
       }

@@ -666,10 +666,10 @@ setInterval(async () => {
       console.log('[Agendador] Med:', med.nome, '| horarios:', JSON.stringify(horarios), '| horaAtual:', horaAtual, '| match:', horarios.includes(horaAtual));
       if (!Array.isArray(horarios) || !horarios.includes(horaAtual)) continue;
 
-      const subRes = await pool.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [med.membro_id]);
+      const subRes = await pool.query('SELECT subscription, fcm_token FROM push_subscriptions WHERE membro_id = $1', [med.membro_id]);
       if (!subRes.rows.length) continue;
 
-      const sub = typeof subRes.rows[0].subscription === 'string' ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
+      const { subscription, fcm_token } = subRes.rows[0];
       const payload = JSON.stringify({
         titulo: '💊 Hora do medicamento!',
         corpo: `${med.nome}${med.dosagem ? ' — ' + med.dosagem : ''} · ${horaAtual}`,
@@ -678,7 +678,53 @@ setInterval(async () => {
         medId: med.id,
         medNome: med.nome
       });
-      webpush.sendNotification(sub, payload).then(() => console.log('[Push OK] membro', med.membro_id)).catch(e => { console.log('[Push ERRO]', e.statusCode, e.message); if(e.statusCode===410||e.statusCode===404){pool.query('DELETE FROM push_subscriptions WHERE membro_id=$1',[med.membro_id]).catch(()=>{}); } });
+
+      // VAPID (web-push)
+      if (subscription) {
+        const sub = typeof subscription === 'string' ? JSON.parse(subscription) : subscription;
+        webpush.sendNotification(sub, payload)
+          .then(() => console.log('[VAPID OK] membro', med.membro_id))
+          .catch(e => {
+            console.log('[VAPID ERRO]', e.statusCode, e.message);
+            if (e.statusCode===410||e.statusCode===404) {
+              pool.query('DELETE FROM push_subscriptions WHERE membro_id=$1', [med.membro_id]).catch(()=>{});
+            }
+          });
+      }
+
+      // FCM — funciona com app fechado
+      if (fcm_token && admin.apps.length) {
+        admin.messaging().send({
+          token: fcm_token,
+          notification: {
+            title: '💊 Hora do medicamento!',
+            body: `${med.nome}${med.dosagem ? ' — ' + med.dosagem : ''}`
+          },
+          data: {
+            tipo: 'alarme-medicamento',
+            medId: String(med.id),
+            medNome: med.nome,
+            medDose: med.dosagem || '',
+            url: '/#remedios'
+          },
+          android: {
+            priority: 'high',
+            notification: {
+              sound: 'default',
+              channelId: 'alarme_medicamento',
+              priority: 'max',
+              defaultVibrateTimings: true
+            }
+          }
+        })
+        .then(() => console.log('[FCM OK] membro', med.membro_id))
+        .catch(e => {
+          console.log('[FCM ERRO]', e.message);
+          if (e.code === 'messaging/registration-token-not-registered') {
+            pool.query('UPDATE push_subscriptions SET fcm_token=NULL WHERE membro_id=$1', [med.membro_id]).catch(()=>{});
+          }
+        });
+      }
     }
   } catch(e) {
     console.log('Erro agendador:', e.message);
