@@ -2067,6 +2067,57 @@ function sair() {
 // ── PUSH ──
 async function registrarTokenFCM() {
   try {
+    // Capacitor nativo — usa plugin @capacitor/push-notifications
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      const { PushNotifications } = window.Capacitor.Plugins;
+      if (!PushNotifications) return;
+
+      // Pede permissao
+      const perm = await PushNotifications.requestPermissions();
+      if (perm.receive !== 'granted') return;
+
+      // Registra e pega token
+      await PushNotifications.register();
+
+      PushNotifications.addListener('registration', async (tokenData) => {
+        const token = tokenData.value;
+        if (token && APP.membroId) {
+          await api('POST', '/api/push/salvar-fcm-token', {
+            membro_id: APP.membroId,
+            fcm_token: token,
+            familia_id: APP.familiaId
+          });
+          console.log('[FCM Nativo] Token registrado:', token.substring(0, 20) + '...');
+        }
+      });
+
+      PushNotifications.addListener('registrationError', (err) => {
+        console.log('[FCM Nativo] Erro registro:', err.error);
+      });
+
+      // Recebe push com app fechado/background
+      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('[FCM Nativo] Push recebido:', notification.title);
+        const data = notification.data || {};
+        if (data.tipo === 'alarme-medicamento') {
+          dispararAlarme({
+            id: data.medId,
+            nome: data.medNome || notification.title,
+            dosagem: data.medDose || '',
+            _horarioAtivo: data.horario || ''
+          });
+        }
+      });
+
+      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        const data = action.notification.data || {};
+        navegarPara('remedios');
+      });
+
+      return;
+    }
+
+    // Web fallback — Firebase JS SDK
     if (!('serviceWorker' in navigator)) return;
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
     const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js');
@@ -2086,7 +2137,7 @@ async function registrarTokenFCM() {
     });
     if (token && APP.membroId) {
       await api('POST', '/api/push/salvar-fcm-token', { membro_id: APP.membroId, fcm_token: token, familia_id: APP.familiaId });
-      console.log('[FCM] Token registrado:', token.substring(0, 20) + '...');
+      console.log('[FCM Web] Token registrado:', token.substring(0, 20) + '...');
     }
   } catch(e) {
     console.log('[FCM] Erro ao registrar token:', e.message);
