@@ -2085,7 +2085,7 @@ async function registrarTokenFCM() {
       serviceWorkerRegistration: reg
     });
     if (token && APP.membroId) {
-      await api('POST', '/api/push/salvar-fcm-token', { membro_id: APP.membroId, fcm_token: token });
+      await api('POST', '/api/push/salvar-fcm-token', { membro_id: APP.membroId, fcm_token: token, familia_id: APP.familiaId });
       console.log('[FCM] Token registrado:', token.substring(0, 20) + '...');
     }
   } catch(e) {
