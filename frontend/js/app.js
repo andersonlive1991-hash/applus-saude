@@ -2081,12 +2081,14 @@ async function registrarTokenFCM() {
 
       PushNotifications.addListener('registration', async (tokenData) => {
         const token = tokenData.value;
+        mostrarToast('FCM token: ' + token.substring(0, 15) + '...', 5000);
         if (token && APP.membroId) {
           await api('POST', '/api/push/salvar-fcm-token', {
             membro_id: APP.membroId,
             fcm_token: token,
             familia_id: APP.familiaId
           });
+          mostrarToast('✅ FCM salvo no servidor!', 4000);
           console.log('[FCM Nativo] Token registrado:', token.substring(0, 20) + '...');
         }
       });
