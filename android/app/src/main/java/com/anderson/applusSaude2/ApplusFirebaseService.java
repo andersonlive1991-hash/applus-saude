@@ -18,7 +18,7 @@ import java.util.Map;
 
 public class ApplusFirebaseService extends FirebaseMessagingService {
     private static final String TAG = "ApplusFCM";
-    private static final String CHANNEL_ID = "alarme_med_v2";
+    private static final String CHANNEL_ID = "alarme_med_v3";
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {

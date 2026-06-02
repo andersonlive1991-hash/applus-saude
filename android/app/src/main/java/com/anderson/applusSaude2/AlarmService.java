@@ -25,7 +25,7 @@ import java.util.Locale;
 
 public class AlarmService extends Service {
     private static final String TAG = "AP_AlarmService";
-    private static final String CHANNEL_ID = "alarme_med_v2";
+    private static final String CHANNEL_ID = "alarme_med_v3";
     public static boolean ativo = false;
 
     private PowerManager.WakeLock wakeLock;

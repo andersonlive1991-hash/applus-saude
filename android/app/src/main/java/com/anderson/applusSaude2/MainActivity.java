@@ -18,9 +18,9 @@ public class MainActivity extends BridgeActivity {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             android.app.NotificationManager nm = getSystemService(android.app.NotificationManager.class);
             if (nm == null) return;
-            nm.deleteNotificationChannel("alarme_med_v2");
+            nm.deleteNotificationChannel("alarme_med_v3");
             android.app.NotificationChannel channel = new android.app.NotificationChannel(
-                "alarme_med_v2",
+                "alarme_med_v3",
                 "Alarme de Medicamento",
                 android.app.NotificationManager.IMPORTANCE_HIGH
             );
