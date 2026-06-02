@@ -18,7 +18,7 @@ import androidx.core.app.NotificationCompat;
 import java.util.Locale;
 
 public class AlarmReceiver extends BroadcastReceiver {
-    private static final String CHANNEL_ID = "alarme_medicamento";
+    private static final String CHANNEL_ID = "alarme_med_v2";
 
     @Override
     public void onReceive(Context context, Intent intent) {

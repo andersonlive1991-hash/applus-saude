@@ -40,7 +40,7 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
             .build();
 
         WorkManager.getInstance(getApplicationContext())
-            .enqueueUniqueWork("alarme_medicamento", ExistingWorkPolicy.REPLACE, workRequest);
+            .enqueueUniqueWork("alarme_med_v2", ExistingWorkPolicy.REPLACE, workRequest);
 
         Log.d(TAG, "AlarmWorker agendado!");
     }
