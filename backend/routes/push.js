@@ -158,10 +158,10 @@ router.post('/salvar-fcm-token', async (req, res) => {
   if (!membro_id || !fcm_token) return res.status(400).json({ erro: 'Campos obrigatorios' });
   try {
     await db.query(
-      `INSERT INTO push_subscriptions (membro_id, familia_id, fcm_token)
-       VALUES ($1, $2, $3)
+      `INSERT INTO push_subscriptions (membro_id, familia_id, fcm_token, subscription)
+       VALUES ($1, $2, $3, $4)
        ON CONFLICT (membro_id) DO UPDATE SET fcm_token = $3`,
-      [membro_id, familia_id || null, fcm_token]
+      [membro_id, familia_id || null, fcm_token, JSON.stringify({})]
     );
     console.log('[FCM] Token salvo para membro', membro_id);
     res.json({ ok: true });
