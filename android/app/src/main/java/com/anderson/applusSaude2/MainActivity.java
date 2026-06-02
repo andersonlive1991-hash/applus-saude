@@ -10,7 +10,29 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(AlarmPlugin.class);
         super.onCreate(savedInstanceState);
+        criarCanalAlarme();
         verificarPararAlarme(getIntent());
+    }
+
+    private void criarCanalAlarme() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            android.app.NotificationManager nm = getSystemService(android.app.NotificationManager.class);
+            if (nm == null) return;
+            nm.deleteNotificationChannel("alarme_medicamento");
+            android.app.NotificationChannel channel = new android.app.NotificationChannel(
+                "alarme_medicamento",
+                "Alarme de Medicamento",
+                android.app.NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 500, 200, 500});
+            android.net.Uri som = android.media.RingtoneManager.getDefaultUri(
+                android.media.RingtoneManager.TYPE_NOTIFICATION
+            );
+            channel.setSound(som, null);
+            channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+            nm.createNotificationChannel(channel);
+        }
     }
 
     @Override
