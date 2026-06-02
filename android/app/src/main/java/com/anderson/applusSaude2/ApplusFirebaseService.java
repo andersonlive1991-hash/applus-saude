@@ -82,7 +82,7 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
             if (somAlarme == null) somAlarme = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
             AudioAttributes audioAttrs = new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build();
 
