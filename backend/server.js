@@ -696,19 +696,25 @@ setInterval(async () => {
       if (fcm_token && admin.apps.length) {
         admin.messaging().send({
           token: fcm_token,
+          notification: {
+            title: '💊 Hora do medicamento!',
+            body: `${med.nome}${med.dosagem ? ' — ' + med.dosagem : ''}`
+          },
           data: {
             tipo: 'alarme-medicamento',
             medId: String(med.id),
             medNome: med.nome,
             medDose: med.dosagem || '',
-            titulo: '💊 Hora do medicamento!',
-            corpo: `${med.nome}${med.dosagem ? ' — ' + med.dosagem : ''}`,
             url: '/#remedios'
           },
           android: {
             priority: 'high',
-            directBootOk: true,
-            ttl: 60000
+            notification: {
+              sound: 'default',
+              channelId: 'alarme_medicamento',
+              priority: 'max',
+              defaultVibrateTimings: true
+            }
           }
         })
         .then(() => console.log('[FCM OK] membro', med.membro_id))
