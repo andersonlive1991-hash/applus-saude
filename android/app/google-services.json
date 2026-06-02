@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "814206937925",
+    "project_id": "applus-91d09",
+    "storage_bucket": "applus-91d09.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:814206937925:android:ac57ef3f54088020532c2c",
+        "android_client_info": {
+          "package_name": "com.anderson.applusSaude2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnv2kJnxeqs4Vz-Td3eFv3LCWW555XAHU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
