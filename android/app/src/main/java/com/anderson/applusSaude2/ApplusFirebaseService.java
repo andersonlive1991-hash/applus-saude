@@ -7,8 +7,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -85,39 +83,26 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm != null) nm.notify(1001, notification);
 
-        // TTS
+        // TTS direto no thread atual - sem Handler
         final String nome = medNome;
         final String dose = medDose;
         final String fala = "Atenção! Está na hora de tomar " + nome +
             (!dose.isEmpty() ? ". A dose é " + dose : "") +
             ". Por favor tome o seu medicamento agora.";
 
-        new Handler(Looper.getMainLooper()).post(() -> {
-            TextToSpeech[] ttsHolder = new TextToSpeech[1];
-            ttsHolder[0] = new TextToSpeech(getApplicationContext(), status -> {
-                if (status == TextToSpeech.SUCCESS) {
-                    ttsHolder[0].setLanguage(new Locale("pt", "BR"));
-                    ttsHolder[0].setSpeechRate(0.9f);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null, "alarme");
-                    } else {
-                        ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null);
-                    }
-                    Log.d(TAG, "TTS falando: " + fala);
+        TextToSpeech[] ttsHolder = new TextToSpeech[1];
+        ttsHolder[0] = new TextToSpeech(getApplicationContext(), status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                ttsHolder[0].setLanguage(new Locale("pt", "BR"));
+                ttsHolder[0].setSpeechRate(0.9f);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null, "alarme");
+                } else {
+                    ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null);
                 }
-            });
+                Log.d(TAG, "TTS falando: " + fala);
+            }
         });
-
-        // Inicia AlarmService para repetir a voz
-        Intent serviceIntent = new Intent(this, AlarmService.class);
-        serviceIntent.putExtra("medNome", medNome);
-        serviceIntent.putExtra("medDose", medDose);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent);
-        } else {
-            startService(serviceIntent);
-        }
-        Log.d(TAG, "AlarmService iniciado via FCM");
     }
 
     private void criarCanalNotificacao() {
