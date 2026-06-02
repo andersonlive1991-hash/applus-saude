@@ -10,12 +10,10 @@ import android.os.Build;
 import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-import java.util.Locale;
 import java.util.Map;
 
 public class ApplusFirebaseService extends FirebaseMessagingService {
@@ -83,26 +81,17 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm != null) nm.notify(1001, notification);
 
-        // TTS direto no thread atual - sem Handler
-        final String nome = medNome;
-        final String dose = medDose;
-        final String fala = "Atenção! Está na hora de tomar " + nome +
-            (!dose.isEmpty() ? ". A dose é " + dose : "") +
-            ". Por favor tome o seu medicamento agora.";
-
-        TextToSpeech[] ttsHolder = new TextToSpeech[1];
-        ttsHolder[0] = new TextToSpeech(getApplicationContext(), status -> {
-            if (status == TextToSpeech.SUCCESS) {
-                ttsHolder[0].setLanguage(new Locale("pt", "BR"));
-                ttsHolder[0].setSpeechRate(0.9f);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null, "alarme");
-                } else {
-                    ttsHolder[0].speak(fala, TextToSpeech.QUEUE_FLUSH, null);
-                }
-                Log.d(TAG, "TTS falando: " + fala);
-            }
-        });
+        // Abre AlarmActivity diretamente — como despertador nativo
+        Intent alarmIntent = new Intent(this, AlarmActivity.class);
+        alarmIntent.putExtra("medNome", medNome);
+        alarmIntent.putExtra("medDose", medDose);
+        alarmIntent.addFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK |
+            Intent.FLAG_ACTIVITY_NO_USER_ACTION |
+            Intent.FLAG_ACTIVITY_NO_HISTORY
+        );
+        startActivity(alarmIntent);
+        Log.d(TAG, "AlarmActivity aberta via FCM");
     }
 
     private void criarCanalNotificacao() {
@@ -112,8 +101,21 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
             );
             channel.enableVibration(true);
             channel.setVibrationPattern(new long[]{0, 500, 200, 500});
+            // Som de alarme nativo
+            android.net.Uri somAlarme = android.media.RingtoneManager.getDefaultUri(
+                android.media.RingtoneManager.TYPE_ALARM
+            );
+            android.media.AudioAttributes audioAttrs = new android.media.AudioAttributes.Builder()
+                .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+            channel.setSound(somAlarme, audioAttrs);
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (nm != null) nm.createNotificationChannel(channel);
+            if (nm != null) {
+                // Deleta canal antigo para recriar com som
+                nm.deleteNotificationChannel(CHANNEL_ID);
+                nm.createNotificationChannel(channel);
+            }
         }
     }
 
