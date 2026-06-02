@@ -49,7 +49,7 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
 
         String texto = !medDose.isEmpty() ? medNome + " — " + medDose : medNome;
         Uri somAlarme = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-        if (somAlarme == null) somAlarme = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        if (somAlarme == null) somAlarme = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
@@ -79,10 +79,10 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
             nm.deleteNotificationChannel(CHANNEL_ID);
 
             Uri somAlarme = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (somAlarme == null) somAlarme = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            if (somAlarme == null) somAlarme = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
 
             AudioAttributes audioAttrs = new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build();
 
