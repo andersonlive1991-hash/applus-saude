@@ -66,7 +66,30 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm != null) nm.notify(1001, notification);
 
+        // Toca som de alarme diretamente via MediaPlayer
+        tocarSomAlarme();
+
         Log.d(TAG, "Notificacao com som exibida para: " + medNome);
+    }
+
+    private void tocarSomAlarme() {
+        try {
+            android.media.MediaPlayer mp = new android.media.MediaPlayer();
+            android.net.Uri som = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM);
+            if (som == null) som = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE);
+            android.media.AudioAttributes attrs = new android.media.AudioAttributes.Builder()
+                .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+            mp.setAudioAttributes(attrs);
+            mp.setDataSource(getApplicationContext(), som);
+            mp.setLooping(false);
+            mp.prepare();
+            mp.start();
+            mp.setOnCompletionListener(mp2 -> mp2.release());
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao tocar som: " + e.getMessage());
+        }
     }
 
     private void criarCanalComSom() {
