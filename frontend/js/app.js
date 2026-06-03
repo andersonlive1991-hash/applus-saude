@@ -642,28 +642,22 @@ function _continuarIniciarApp() {
   iniciarAlarmes();
   if (APP.membroId) api('PUT', '/api/membros/' + APP.membroId + '/acesso', {}).catch(()=>{});
   registrarTokenFCM();
-  if (Notification.permission === 'granted') {
-    inscreverPush();
-  } else if (Notification.permission === 'default') {
-    // Pede permissão apenas uma vez por sessão
-    if (!sessionStorage.getItem('push_permission_asked')) {
-      sessionStorage.setItem('push_permission_asked', '1');
-      Notification.requestPermission().then(perm => {
-        if (perm === 'granted') inscreverPush();
-      });
-    }
-  }
   atualizarDropdown();
-  // Capacitor WebView precisa de delay para pintar após Promise chain
-  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-    setTimeout(() => {
-      navegarPara('home');
-      if (typeof carregarStatusPin === 'function') carregarStatusPin();
-    }, 300);
-  } else {
-    navegarPara('home');
-    if (typeof carregarStatusPin === 'function') carregarStatusPin();
-  }
+  navegarPara('home');
+  if (typeof carregarStatusPin === 'function') carregarStatusPin();
+  // Pede permissão de notificação APÓS navegar para home
+  setTimeout(() => {
+    if (Notification.permission === 'granted') {
+      inscreverPush();
+    } else if (Notification.permission === 'default') {
+      if (!sessionStorage.getItem('push_permission_asked')) {
+        sessionStorage.setItem('push_permission_asked', '1');
+        Notification.requestPermission().then(perm => {
+          if (perm === 'granted') inscreverPush();
+        });
+      }
+    }
+  }, 1000);
 }
 
 // ── NAVEGAÇÃO ──
