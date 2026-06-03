@@ -441,7 +441,7 @@ async function criarFamilia() {
       };
       try {
         
-      const respPerfil = await fetch('/api/perfil', {
+      const respPerfil = await fetch(getBase() + '/api/perfil', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(dadosPerfil)
@@ -678,7 +678,7 @@ async function carregarPerfil() {
     if (!mem || !mem.id) return;
     APP.membroAtivo = mem;
     document.getElementById('pf-nome').value = mem.nome || '';
-    const res = await fetch('/api/perfil/' + mem.id);
+    const res = await fetch(getBase() + '/api/perfil/' + mem.id);
     if (res.ok) {
       const p = await res.json();
       if (p && !p.erro) {
@@ -731,7 +731,7 @@ async function salvarPerfil() {
       atualizarDropdown();
     }
 
-    const resp = await fetch('/api/perfil', {
+    const resp = await fetch(getBase() + '/api/perfil', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dados)
@@ -899,6 +899,10 @@ function navegarPara(pagina) {
   }
 }
 
+function getBase() {
+  return (window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost')
+    ? 'https://applus-saude-production.up.railway.app' : '';
+}
 // ── API ──
 async function api(metodo, url, corpo) {
   const BASE = window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost'
@@ -1087,7 +1091,7 @@ function pararCamera() {
 async function buscarMedicamentoANVISA(codigo) {
   try {
     alerta('🔍 Buscando medicamento...');
-    const r = await fetch('/api/anvisa/buscar/' + codigo);
+    const r = await fetch(getBase() + '/api/anvisa/buscar/' + codigo);
     const data = await r.json();
     if (data && data.encontrado) {
       document.getElementById('med-nome').value = data.nome || '';
@@ -2536,11 +2540,11 @@ async function carregarPainelBaba() {
   try {
     const fid = APP.familiaId;
     const registros = await api('GET', '/api/baba/registros/' + fid);
-    const ckRes = await fetch('/api/baba/checkin-ativo/' + fid + '/' + APP.membroId);
+    const ckRes = await fetch(getBase() + '/api/baba/checkin-ativo/' + fid + '/' + APP.membroId);
     const checkin = ckRes.ok ? await ckRes.json() : null;
     const estoque = await api('GET', '/api/baba/estoque/' + fid);
     const marcos = await api('GET', '/api/baba/marcos/' + fid);
-    const instrRes = await fetch('/api/baba/instrucoes/' + fid);
+    const instrRes = await fetch(getBase() + '/api/baba/instrucoes/' + fid);
     const instrucoes = instrRes.ok ? await instrRes.json() : { texto: '' };
     const mamadas = registros.filter(r=>r.tipo==='mamada').length;
     const fraldas = registros.filter(r=>r.tipo==='fralda').length;
@@ -4232,7 +4236,7 @@ async function carregarBabasSalvas() {
 async function carregarFeedCuidadorFamilia() {
   try {
     if (!window._cuidadorId) return;
-    const r = await fetch('/api/cuidados/atividades/' + APP.familiaId + '/cuidador/' + window._cuidadorId);
+    const r = await fetch(getBase() + '/api/cuidados/atividades/' + APP.familiaId + '/cuidador/' + window._cuidadorId);
     const lista = await r.json();
     const feed = document.getElementById('cuidador-feed');
     if (!lista || !lista.length) {
