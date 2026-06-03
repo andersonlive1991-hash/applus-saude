@@ -42,12 +42,12 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew bundleRelease
 
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: android/app/build/outputs/apk/release
+          releaseDirectory: android/app/build/outputs/bundle/release
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
           alias: applus
           keyStorePassword: applus2026
@@ -58,5 +58,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AP-Plus-Saude-release
-          path: android/app/build/outputs/apk/release/*.apk
+          name: AP-Plus-Saude-v1.1-aab
+          path: android/app/build/outputs/bundle/release/*.aab
