@@ -286,6 +286,10 @@ function selecionarPerfil(id, nome, tipo, idPessoal) {
   APP.membroTipo = tipo;
   APP.idPessoal = idPessoal;
   APP.membroAtivo = { id, nome, tipo, id_pessoal: idPessoal };
+  // Garante que familiaId está salvo antes de iniciar
+  const familia = JSON.parse(localStorage.getItem('applus_familia') || '{}');
+  if (!APP.familiaId && familia.familiaId) APP.familiaId = String(familia.familiaId);
+  if (!APP.codigoFamilia && familia.codigoFamilia) APP.codigoFamilia = familia.codigoFamilia;
   salvarSessaoMembro();
   iniciarApp();
 }
@@ -2454,7 +2458,6 @@ document.addEventListener('keydown', e => {
 // ── DROPDOWN TROCA DE PERFIL ──
 async function atualizarDropdown() {
   try {
-    mostrarToast('DEBUG dropdown: familiaId=' + APP.familiaId, 4000);
     const membros = await api("GET", `/api/membros/familia/${APP.familiaId}`);
     // Verificar tipo original para nao prender admin que trocou para cuidador
     const perfilOriginal = JSON.parse(localStorage.getItem('applus_perfil_original') || 'null');
