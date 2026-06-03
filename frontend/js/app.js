@@ -853,9 +853,14 @@ function navegarPara(pagina) {
 
   // Carregar dados da página
   if (pagina === 'home') carregarHome();
-  // Força re-render no Capacitor WebView
+  // Força reflow real no Capacitor WebView após navegação
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-    setTimeout(() => { document.body.style.opacity='0.99'; setTimeout(()=>{ document.body.style.opacity='1'; }, 50); }, 100);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const pg = document.getElementById('pag-' + pagina);
+        if (pg) { pg.style.display = 'none'; void pg.offsetHeight; pg.style.display = ''; }
+      });
+    });
   }
   if (pagina === 'painel-baba') carregarPainelBaba();
   if (pagina === 'remedios') carregarMedicamentos();
@@ -4139,9 +4144,14 @@ window.addEventListener('popstate', function(e) {
     const nav = document.querySelector('[data-nav="' + pagina + '"]');
     if (nav) nav.classList.add('ativo');
     if (pagina === 'home') carregarHome();
-  // Força re-render no Capacitor WebView
+  // Força reflow real no Capacitor WebView após navegação
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-    setTimeout(() => { document.body.style.opacity='0.99'; setTimeout(()=>{ document.body.style.opacity='1'; }, 50); }, 100);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const pg = document.getElementById('pag-' + pagina);
+        if (pg) { pg.style.display = 'none'; void pg.offsetHeight; pg.style.display = ''; }
+      });
+    });
   }
   if (pagina === 'painel-baba') carregarPainelBaba();
     if (pagina === 'remedios') carregarMedicamentos();
