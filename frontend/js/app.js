@@ -255,7 +255,7 @@ function mostrarApp() {
   document.getElementById('login-page').style.display = 'none';
   document.getElementById('perfil-page').style.display = 'none';
   document.getElementById('app-page').style.display = 'flex';
-  mostrarToast('mostrarApp: app-page=' + document.getElementById('app-page').style.display + ' pag-home-classes=' + document.getElementById('pag-home').className, 6000);
+
 }
 
 async function carregarPerfisDisponiveis() {
