@@ -2482,7 +2482,7 @@ async function atualizarDropdown() {
         <span style="font-size:9px;color:${ativo?'white':'rgba(255,255,255,0.7)'};font-weight:${ativo?700:400}">${m.nome.split(' ')[0]}</span>
       </div>`;
     }).join("") + (ehCuidador ? "" : `<div onclick="abrirModal(&quot;modal-add-membro&quot;)" style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer"><div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.2);color:white;font-size:18px">+</div><span style="font-size:9px;color:rgba(255,255,255,0.7)">Novo</span></div>`);
-  } catch(e) { console.log("Erro dropdown:", e); }
+  } catch(e) { console.log("Erro dropdown:", e); mostrarToast('ERRO dropdown: ' + e.message, 6000); }
 }
 function toggleDropdown() {
   const dropdown = document.getElementById('perfil-dropdown');
