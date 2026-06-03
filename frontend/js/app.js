@@ -853,6 +853,10 @@ function navegarPara(pagina) {
 
   // Carregar dados da página
   if (pagina === 'home') carregarHome();
+  // Força re-render no Capacitor WebView
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    setTimeout(() => { document.body.style.opacity='0.99'; setTimeout(()=>{ document.body.style.opacity='1'; }, 50); }, 100);
+  }
   if (pagina === 'painel-baba') carregarPainelBaba();
   if (pagina === 'remedios') carregarMedicamentos();
   if (pagina === 'agenda') carregarAgenda();
@@ -923,7 +927,6 @@ async function api(metodo, url, corpo) {
 
 // ── HOME ──
 async function carregarHome() {
-  mostrarToast('HOME: nome=' + APP.membroNome + ' fam=' + APP.familiaId, 5000);
   document.getElementById('home-nome').textContent = `Olá, ${(APP.membroNome||'você').split(' ')[0]} 👋`;
 
   // Mostrar card TEA se família tem membro TEA
@@ -4136,6 +4139,10 @@ window.addEventListener('popstate', function(e) {
     const nav = document.querySelector('[data-nav="' + pagina + '"]');
     if (nav) nav.classList.add('ativo');
     if (pagina === 'home') carregarHome();
+  // Força re-render no Capacitor WebView
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    setTimeout(() => { document.body.style.opacity='0.99'; setTimeout(()=>{ document.body.style.opacity='1'; }, 50); }, 100);
+  }
   if (pagina === 'painel-baba') carregarPainelBaba();
     if (pagina === 'remedios') carregarMedicamentos();
     if (pagina === 'agenda') carregarAgenda();
