@@ -2454,6 +2454,7 @@ document.addEventListener('keydown', e => {
 // ── DROPDOWN TROCA DE PERFIL ──
 async function atualizarDropdown() {
   try {
+    mostrarToast('DEBUG dropdown: familiaId=' + APP.familiaId, 4000);
     const membros = await api("GET", `/api/membros/familia/${APP.familiaId}`);
     // Verificar tipo original para nao prender admin que trocou para cuidador
     const perfilOriginal = JSON.parse(localStorage.getItem('applus_perfil_original') || 'null');
