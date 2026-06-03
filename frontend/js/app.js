@@ -653,8 +653,16 @@ function _continuarIniciarApp() {
     }
   }
   atualizarDropdown();
-  navegarPara('home');
-  if (typeof carregarStatusPin === 'function') carregarStatusPin();
+  // Capacitor WebView precisa de delay para pintar após Promise chain
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    setTimeout(() => {
+      navegarPara('home');
+      if (typeof carregarStatusPin === 'function') carregarStatusPin();
+    }, 300);
+  } else {
+    navegarPara('home');
+    if (typeof carregarStatusPin === 'function') carregarStatusPin();
+  }
 }
 
 // ── NAVEGAÇÃO ──
@@ -853,15 +861,7 @@ function navegarPara(pagina) {
 
   // Carregar dados da página
   if (pagina === 'home') carregarHome();
-  // Força reflow real no Capacitor WebView após navegação
-  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const pg = document.getElementById('pag-' + pagina);
-        if (pg) { pg.style.display = 'none'; void pg.offsetHeight; pg.style.display = ''; }
-      });
-    });
-  }
+
   if (pagina === 'painel-baba') carregarPainelBaba();
   if (pagina === 'remedios') carregarMedicamentos();
   if (pagina === 'agenda') carregarAgenda();
@@ -4144,15 +4144,7 @@ window.addEventListener('popstate', function(e) {
     const nav = document.querySelector('[data-nav="' + pagina + '"]');
     if (nav) nav.classList.add('ativo');
     if (pagina === 'home') carregarHome();
-  // Força reflow real no Capacitor WebView após navegação
-  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const pg = document.getElementById('pag-' + pagina);
-        if (pg) { pg.style.display = 'none'; void pg.offsetHeight; pg.style.display = ''; }
-      });
-    });
-  }
+
   if (pagina === 'painel-baba') carregarPainelBaba();
     if (pagina === 'remedios') carregarMedicamentos();
     if (pagina === 'agenda') carregarAgenda();
