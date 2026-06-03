@@ -18,7 +18,7 @@ import java.util.Map;
 
 public class ApplusFirebaseService extends FirebaseMessagingService {
     private static final String TAG = "ApplusFCM";
-    private static final String CHANNEL_ID = "alarme_med_v3";
+    private static final String CHANNEL_ID = "alarme_med_v4";
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -48,8 +48,7 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
         );
 
         String texto = !medDose.isEmpty() ? medNome + " — " + medDose : medNome;
-        Uri somAlarme = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-        if (somAlarme == null) somAlarme = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        Uri somAlarme = android.net.Uri.parse("android.resource://" + getPackageName() + "/raw/alarme_med");
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
@@ -78,8 +77,7 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
             // Sempre recria para garantir som
             nm.deleteNotificationChannel(CHANNEL_ID);
 
-            Uri somAlarme = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (somAlarme == null) somAlarme = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            Uri somAlarme = android.net.Uri.parse("android.resource://" + getPackageName() + "/raw/alarme_med");
 
             AudioAttributes audioAttrs = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
