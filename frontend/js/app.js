@@ -380,7 +380,8 @@ async function _salvarMembro(nome, tipo) {
     document.getElementById('add-mem-nome').value = '';
     APP._membroNomePendente = null;
     fecharModal('modal-add-membro');
-    mostrarSelecaoPerfil();
+    await atualizarDropdown();
+    mostrarToast('✅ ' + nome + ' adicionado!', 3000);
   } catch (e) {
     alerta('Erro ao adicionar membro');
   }
