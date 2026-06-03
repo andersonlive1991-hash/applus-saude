@@ -131,6 +131,7 @@ function salvarSessaoMembro() {
 function carregarSessao() {
   const sessao = localStorage.getItem('applus_sessao');
   const familia = localStorage.getItem('applus_familia');
+  mostrarToast('DEBUG: sessao=' + (sessao?'SIM':'NAO') + ' familia=' + (familia?'SIM':'NAO'), 5000);
 
   if (sessao) {
     const dados = JSON.parse(sessao);
