@@ -923,7 +923,8 @@ async function api(metodo, url, corpo) {
 
 // ── HOME ──
 async function carregarHome() {
-  document.getElementById('home-nome').textContent = `Olá, ${APP.membroNome.split(' ')[0]} 👋`;
+  mostrarToast('HOME: nome=' + APP.membroNome + ' fam=' + APP.familiaId, 5000);
+  document.getElementById('home-nome').textContent = `Olá, ${(APP.membroNome||'você').split(' ')[0]} 👋`;
 
   // Mostrar card TEA se família tem membro TEA
   try {
