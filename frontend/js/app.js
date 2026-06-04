@@ -645,6 +645,26 @@ function _continuarIniciarApp() {
   atualizarDropdown();
   navegarPara('home');
   if (typeof carregarStatusPin === 'function') carregarStatusPin();
+
+  // Escuta FCM silencioso de resumo pronto — atualiza card na home automaticamente
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    try {
+      const { PushNotifications } = Capacitor.Plugins;
+      if (PushNotifications) {
+        PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          const data = notification.data || {};
+          if (data.tipo === 'resumo-pronto') {
+            console.log('[Home] Resumo pronto — atualizando card...');
+            if (typeof buscarResumoSalvo === 'function') buscarResumoSalvo();
+          }
+          if (data.tipo === 'habito') {
+            // Já tratado pelo Java nativo
+          }
+        });
+      }
+    } catch(e) { console.log('PushNotifications listener erro:', e); }
+  }
+
   // Pede permissão de notificação APÓS navegar para home
   setTimeout(() => {
     if (Notification.permission === 'granted') {

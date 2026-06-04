@@ -872,6 +872,19 @@ setInterval(async () => {
           [membro_id, resumo, JSON.stringify({ copos, metaAgua, sonoInfo, humorTexto })]
         );
         console.log('[Resumo Diário] Gerado para membro', membro_id);
+
+        // Envia FCM silencioso para atualizar o card na home
+        const fcmRes = await pool.query('SELECT fcm_token FROM push_subscriptions WHERE membro_id=$1 AND fcm_token IS NOT NULL', [membro_id]);
+        if (fcmRes.rows.length && admin.apps.length) {
+          admin.messaging().send({
+            token: fcmRes.rows[0].fcm_token,
+            data: {
+              tipo: 'resumo-pronto',
+              membro_id: String(membro_id)
+            },
+            android: { priority: 'high' }
+          }).catch(e => console.log('[Resumo FCM] Erro:', e.message));
+        }
       } catch (e) {
         console.log('[Resumo Diário] Erro membro', membro_id, e.message);
       }

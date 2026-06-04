@@ -41,6 +41,14 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
             return;
         }
 
+        // RESUMO PRONTO — atualiza card na home silenciosamente
+        if ("resumo-pronto".equals(tipo)) {
+            // Envia broadcast local para o app atualizar o card
+            Intent intent = new Intent("com.anderson.applusSaude2.RESUMO_PRONTO");
+            sendBroadcast(intent);
+            return;
+        }
+
         // HÁBITO — notificação com botões Sim/Não
         if ("habito".equals(tipo)) {
             String categoria = data.containsKey("categoria") ? data.get("categoria") : "habito";
