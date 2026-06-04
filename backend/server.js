@@ -840,9 +840,9 @@ setInterval(async () => {
 
         // Buscar dados do dia
         const hoje = new Date().toISOString().split('T')[0];
-        const hidRes = await pool.query('SELECT COALESCE(SUM(quantidade_ml)/250,0) as copos, MAX(meta_ml)/250 as meta FROM hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE', [membro_id]);
+        const hidRes = await pool.query('SELECT COALESCE(SUM(copos),0) as copos FROM cuidados_hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE', [membro_id]);
         const copos = Math.round(hidRes.rows[0].copos || 0);
-        const metaAgua = Math.round(hidRes.rows[0].meta || 8);
+        const metaAgua = 8;
 
         const sonoRes = await pool.query('SELECT * FROM cuidados_sono WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1', [membro_id]);
         const sonoInfo = sonoRes.rows.length ? (sonoRes.rows[0].qualidade || 'registrado') : 'nao registrado';
@@ -850,12 +850,19 @@ setInterval(async () => {
         const humorRes = await pool.query('SELECT humor FROM cuidados_humor WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1', [membro_id]);
         const humorTexto = humorRes.rows.length ? humorRes.rows[0].humor : 'nao registrado';
 
+        const refRes = await pool.query('SELECT COUNT(*) as total FROM cuidados_refeicoes WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE', [membro_id]);
+        const refeicoes = parseInt(refRes.rows[0].total || 0);
+
+        const atRes = await pool.query('SELECT COUNT(*) as total FROM cuidados_atividades WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE', [membro_id]);
+        const atividades = parseInt(atRes.rows[0].total || 0);
+
         const sinaisRes = await pool.query('SELECT tipo, valor FROM sinais_vitais WHERE membro_id=$1 ORDER BY criado_em DESC LIMIT 3', [membro_id]);
         const sinaisTexto = sinaisRes.rows.length ? sinaisRes.rows.map(s => s.tipo+': '+s.valor).join(', ') : 'nenhum';
 
         const medsRes = await pool.query('SELECT nome FROM medicamentos WHERE membro_id=$1 AND ativo=true', [membro_id]);
         const medsTexto = medsRes.rows.length ? medsRes.rows.map(m => m.nome).join(', ') : 'nenhum';
 
+        const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de hoje de ' + nome + ' e faca um resumo em portugues brasileiro. DADOS: Agua: ' + copos + ' de 8 copos. Refeicoes: ' + refeicoes + ' de 5. Atividade fisica: ' + atividades + ' sessao(oes). Sono: ' + sonoInfo + '. Humor: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos ativos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica para amanha. Seja direto e acolhedor.';
         const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de ' + nome + ' e faca um resumo em portugues brasileiro. DADOS: Agua: ' + copos + ' copos (meta: ' + metaAgua + '). Sono: ' + sonoInfo + '. Humor: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica. Seja direto e acolhedor.';
 
         const resumo = await chamarGemini(prompt);
