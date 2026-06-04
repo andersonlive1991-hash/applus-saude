@@ -30,6 +30,14 @@
             android:turnScreenOn="true"
             android:launchMode="singleInstance" />
 
+        <activity
+            android:name=".SOSActivity"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:exported="false"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:launchMode="singleInstance" />
+
         <!--
             foregroundServiceType="mediaPlayback" é OBRIGATÓRIO no Android 14+ (API 34+) para
             ForegroundServices iniciados a partir de um BroadcastReceiver disparado pelo AlarmManager.

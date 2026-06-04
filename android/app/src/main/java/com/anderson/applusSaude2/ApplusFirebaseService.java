@@ -29,6 +29,17 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
         if (data == null || data.isEmpty()) return;
 
         String tipo = data.get("tipo");
+
+        // SOS — abre SOSActivity com tela acesa
+        if ("sos-chamada".equals(tipo)) {
+            String nome = data.containsKey("nome") ? data.get("nome") : "Familiar";
+            Intent sosIntent = new Intent(this, SOSActivity.class);
+            sosIntent.putExtra("nome", nome);
+            sosIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(sosIntent);
+            return;
+        }
+
         if (!"alarme-medicamento".equals(tipo)) return;
 
         String medNome = data.containsKey("medNome") ? data.get("medNome") : "Medicamento";

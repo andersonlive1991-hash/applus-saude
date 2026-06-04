@@ -38,13 +38,24 @@ router.post('/enviar-familia', async (req, res) => {
         try {
           const admin = require('../server').admin;
           if (admin && admin.apps && admin.apps.length) {
-            await admin.messaging().send({
+            const isSOS = titulo && titulo.includes('EMERGÊNCIA');
+            const fcmPayload = {
               token: row.fcm_token,
-              notification: { title: titulo, body: corpo },
-              data: { url: url || '/' },
-              android: { priority: 'high', notification: { sound: 'default', channelId: 'applus_alarmes' } }
-            });
-            console.log('[FCM familia] Enviado para membro', row.membro_id);
+              data: {
+                tipo: isSOS ? 'sos-chamada' : 'notificacao',
+                nome: corpo ? corpo.split(' ')[0] : 'Familiar',
+                url: url || '/',
+                titulo: titulo || '',
+                corpo: corpo || ''
+              },
+              android: { priority: 'high' }
+            };
+            if (!isSOS) {
+              fcmPayload.notification = { title: titulo, body: corpo };
+              fcmPayload.android.notification = { sound: 'default', channelId: 'applus_alarmes' };
+            }
+            await admin.messaging().send(fcmPayload);
+            console.log('[FCM familia] Enviado tipo', isSOS ? 'SOS' : 'notificacao', 'para membro', row.membro_id);
           }
         } catch(e) {
           console.log('[FCM familia] Erro membro', row.membro_id, e.message);
