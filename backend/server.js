@@ -1147,7 +1147,82 @@ app.post('/api/habitos/testar', async (req, res) => {
   }
 });
 
+
+// ── RESUMO IA — BUSCAR SALVO ──
+app.get('/api/ia/resumo-salvo/:membro_id', async (req, res) => {
+  try {
+    const r = await pool.query(
+      'SELECT resumo, dados FROM resumo_diario WHERE membro_id=$1 AND data=CURRENT_DATE ORDER BY id DESC LIMIT 1',
+      [req.params.membro_id]
+    );
+    if (r.rows.length) {
+      res.json({ resumo: r.rows[0].resumo, dados: r.rows[0].dados });
+    } else {
+      res.json({ resumo: null });
+    }
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// ── RESUMO IA — GERAR SOB DEMANDA ──
+app.post('/api/ia/resumo-dia', async (req, res) => {
+  const { membro_id, familia_id } = req.body;
+  if (!membro_id) return res.status(400).json({ erro: 'membro_id obrigatorio' });
+  try {
+    const memRes = await pool.query('SELECT nome FROM membros WHERE id=$1', [membro_id]);
+    if (!memRes.rows.length) return res.status(404).json({ erro: 'Membro nao encontrado' });
+    const nome = memRes.rows[0].nome;
+
+    const hidRes = await pool.query('SELECT COALESCE(SUM(copos),0) as copos FROM cuidados_hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE', [membro_id]);
+    const copos = Math.round(hidRes.rows[0].copos || 0);
+
+    const refRes = await pool.query('SELECT COUNT(*) as total FROM cuidados_refeicoes WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE', [membro_id]);
+    const refeicoes = parseInt(refRes.rows[0].total || 0);
+
+    const atRes = await pool.query('SELECT COUNT(*) as total FROM cuidados_atividades WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE', [membro_id]);
+    const atividades = parseInt(atRes.rows[0].total || 0);
+
+    const sonoRes = await pool.query('SELECT qualidade, inicio, fim FROM cuidados_sono WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1', [membro_id]);
+    const sonoInfo = sonoRes.rows.length ? (sonoRes.rows[0].qualidade || 'registrado') : 'nao registrado';
+    let horasSono = null;
+    if (sonoRes.rows.length && sonoRes.rows[0].inicio && sonoRes.rows[0].fim) {
+      const ini = new Date('1970-01-01T' + sonoRes.rows[0].inicio);
+      const fim = new Date('1970-01-01T' + sonoRes.rows[0].fim);
+      horasSono = Math.round((fim - ini) / 3600000 * 10) / 10;
+    }
+
+    const humorRes = await pool.query('SELECT humor FROM cuidados_humor WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1', [membro_id]);
+    const humorTexto = humorRes.rows.length ? humorRes.rows[0].humor : 'nao registrado';
+
+    const sinaisRes = await pool.query('SELECT tipo, valor FROM sinais_vitais WHERE membro_id=$1 ORDER BY criado_em DESC LIMIT 3', [membro_id]);
+    const sinaisTexto = sinaisRes.rows.length ? sinaisRes.rows.map(s => s.tipo+': '+s.valor).join(', ') : 'nenhum';
+
+    const medsRes = await pool.query('SELECT nome FROM medicamentos WHERE membro_id=$1 AND ativo=true', [membro_id]);
+    const medsTexto = medsRes.rows.length ? medsRes.rows.map(m => m.nome).join(', ') : 'nenhum';
+
+    const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de hoje de ' + nome + ' e faca um resumo em portugues brasileiro. DADOS: Agua: ' + copos + ' de 8 copos. Refeicoes: ' + refeicoes + ' de 5. Atividade fisica: ' + atividades + ' sessao(oes). Sono: ' + sonoInfo + '. Humor: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos ativos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica para amanha. Seja direto e acolhedor.';
+
+    const resumo = await chamarGemini(prompt);
+
+    // Salva para não precisar gerar de novo
+    await pool.query(
+      'INSERT INTO resumo_diario (membro_id, data, resumo, dados) VALUES ($1, CURRENT_DATE, $2, $3) ON CONFLICT (membro_id, data) DO UPDATE SET resumo=$2, dados=$3',
+      [membro_id, resumo, JSON.stringify({ copos, metaAgua: 8, sonoInfo, horasSono, humorTexto, refeicoes, atividades })]
+    ).catch(() => {
+      pool.query('INSERT INTO resumo_diario (membro_id, data, resumo, dados) VALUES ($1, CURRENT_DATE, $2, $3)',
+        [membro_id, resumo, JSON.stringify({ copos, metaAgua: 8, sonoInfo, horasSono, humorTexto, refeicoes, atividades })]
+      ).catch(()=>{});
+    });
+
+    res.json({ resumo, dados: { copos, metaAgua: 8, sonoInfo, horasSono, humorTexto, refeicoes, atividades } });
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 module.exports = { admin };
+
 
 
 
