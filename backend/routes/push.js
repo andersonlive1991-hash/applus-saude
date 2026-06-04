@@ -28,19 +28,42 @@ router.post('/enviar-familia', async (req, res) => {
   const { familia_id, titulo, corpo, url } = req.body;
   try {
     const result = await db.query(
-      'SELECT membro_id, subscription FROM push_subscriptions WHERE familia_id = $1',
+      'SELECT membro_id, subscription, fcm_token FROM push_subscriptions WHERE familia_id = $1',
       [familia_id]
     );
     const payload = JSON.stringify({ titulo, corpo, url: url || '/' });
-    const envios = result.rows.map(row => {
-      const sub = typeof row.subscription === 'string' ? JSON.parse(row.subscription) : row.subscription;
-      return webpush.sendNotification(sub, payload).catch(async (err) => {
-        if (err.statusCode === 404 || err.statusCode === 410 || (err.message && err.message.includes('unexpected'))) {
-          await db.query('DELETE FROM push_subscriptions WHERE membro_id = $1', [row.membro_id]);
-          console.log('[Push] Inscricao invalida removida para membro', row.membro_id);
+    const envios = result.rows.map(async row => {
+      // FCM — para APK Capacitor (app fechado)
+      if (row.fcm_token) {
+        try {
+          const admin = require('../server').admin;
+          if (admin && admin.apps && admin.apps.length) {
+            await admin.messaging().send({
+              token: row.fcm_token,
+              notification: { title: titulo, body: corpo },
+              data: { url: url || '/' },
+              android: { priority: 'high', notification: { sound: 'default', channelId: 'applus_alarmes' } }
+            });
+            console.log('[FCM familia] Enviado para membro', row.membro_id);
+          }
+        } catch(e) {
+          console.log('[FCM familia] Erro membro', row.membro_id, e.message);
+          if (e.code === 'messaging/registration-token-not-registered') {
+            await db.query('UPDATE push_subscriptions SET fcm_token=NULL WHERE membro_id=$1', [row.membro_id]).catch(()=>{});
+          }
         }
-        return null;
-      });
+      }
+      // VAPID — para PWA (navegador)
+      const sub = typeof row.subscription === 'string' ? JSON.parse(row.subscription) : row.subscription;
+      if (sub && sub.endpoint) {
+        return webpush.sendNotification(sub, payload).catch(async (err) => {
+          if (err.statusCode === 404 || err.statusCode === 410 || (err.message && err.message.includes('unexpected'))) {
+            await db.query('DELETE FROM push_subscriptions WHERE membro_id = $1', [row.membro_id]);
+            console.log('[Push] Inscricao invalida removida para membro', row.membro_id);
+          }
+          return null;
+        });
+      }
     });
     await Promise.all(envios);
     res.json({ ok: true, enviados: envios.length });
