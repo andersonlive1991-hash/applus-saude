@@ -951,3 +951,5 @@ setInterval(async () => {
   }
 }, 3600000);
 
+
+module.exports = { admin };
