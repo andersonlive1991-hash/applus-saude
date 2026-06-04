@@ -15,6 +15,7 @@ import androidx.core.app.NotificationCompat;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ApplusFirebaseService extends FirebaseMessagingService {
     private static final String TAG = "ApplusFCM";
@@ -37,6 +38,17 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
             sosIntent.putExtra("nome", nome);
             sosIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(sosIntent);
+            return;
+        }
+
+        // HÁBITO — notificação com botões Sim/Não
+        if ("habito".equals(tipo)) {
+            String categoria = data.containsKey("categoria") ? data.get("categoria") : "habito";
+            String titulo = data.containsKey("titulo") ? data.get("titulo") : "Lembrete de saúde";
+            String corpo = data.containsKey("corpo") ? data.get("corpo") : "";
+            String membroId = data.containsKey("membro_id") ? data.get("membro_id") : "0";
+            String familiaId = data.containsKey("familia_id") ? data.get("familia_id") : "0";
+            mostrarNotificacaoHabito(categoria, titulo, corpo, membroId, familiaId);
             return;
         }
 
@@ -81,6 +93,55 @@ public class ApplusFirebaseService extends FirebaseMessagingService {
         tocarSomAlarme();
 
         Log.d(TAG, "Notificacao com som exibida para: " + medNome);
+    }
+
+    private void mostrarNotificacaoHabito(String categoria, String titulo, String corpo, String membroId, String familiaId) {
+        String CHANNEL_HABITO = "applus_habitos";
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null && nm.getNotificationChannel(CHANNEL_HABITO) == null) {
+                android.app.NotificationChannel ch = new android.app.NotificationChannel(
+                    CHANNEL_HABITO, "Hábitos de Saúde", NotificationManager.IMPORTANCE_DEFAULT);
+                ch.setDescription("Lembretes de hábitos saudáveis");
+                nm.createNotificationChannel(ch);
+            }
+        }
+
+        int notifId = (int) System.currentTimeMillis() % 100000;
+
+        // Intent botão SIM
+        Intent simIntent = new Intent(this, HabitoReceiver.class);
+        simIntent.putExtra("acao", "sim");
+        simIntent.putExtra("categoria", categoria);
+        simIntent.putExtra("membro_id", membroId);
+        simIntent.putExtra("familia_id", familiaId);
+        simIntent.putExtra("notif_id", notifId);
+        PendingIntent simPI = PendingIntent.getBroadcast(this, notifId * 2,
+            simIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        // Intent botão NÃO
+        Intent naoIntent = new Intent(this, HabitoReceiver.class);
+        naoIntent.putExtra("acao", "nao");
+        naoIntent.putExtra("categoria", categoria);
+        naoIntent.putExtra("membro_id", membroId);
+        naoIntent.putExtra("familia_id", familiaId);
+        naoIntent.putExtra("notif_id", notifId);
+        PendingIntent naoPI = PendingIntent.getBroadcast(this, notifId * 2 + 1,
+            naoIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_HABITO)
+            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setContentTitle(titulo)
+            .setContentText(corpo)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .addAction(android.R.drawable.ic_menu_send, "✅ Sim, fiz!", simPI)
+            .addAction(android.R.drawable.ic_delete, "❌ Não agora", naoPI)
+            .build();
+
+        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm != null) nm.notify(notifId, notification);
+        Log.d(TAG, "Notificacao habito exibida: " + categoria);
     }
 
     private void tocarSomAlarme() {

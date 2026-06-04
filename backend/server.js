@@ -952,4 +952,130 @@ setInterval(async () => {
 }, 3600000);
 
 
+
+// ── AGENDADOR DE HÁBITOS DIÁRIOS ──
+const HABITOS_HORARIOS = {
+  'agua':        ['07:00','09:00','11:00','13:00','15:00','17:00','19:00','21:00'],
+  'alimentacao': ['07:30','12:00','15:00','19:30'],
+  'exercicio':   ['07:00'],
+  'sono':        ['22:00'],
+  'pausa':       ['10:00','14:00','17:00']
+};
+const HABITOS_MSG = {
+  'agua':        { emoji: '💧', titulo: 'Hora de beber água!', corpo: 'Mantenha-se hidratado. Beba um copo agora!' },
+  'alimentacao': { emoji: '🍽️', titulo: 'Hora de se alimentar!', corpo: 'Uma refeição saudável agora faz bem ao corpo.' },
+  'exercicio':   { emoji: '🏃', titulo: 'Hora de se exercitar!', corpo: 'Que tal uma caminhada ou alongamento hoje?' },
+  'sono':        { emoji: '😴', titulo: 'Hora de dormir!', corpo: 'Um bom sono é essencial para sua saúde.' },
+  'pausa':       { emoji: '🧘', titulo: 'Pausa mental!', corpo: 'Respire fundo. Um minuto de pausa faz diferença.' }
+};
+
+setInterval(async () => {
+  try {
+    const agora = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const horaAtual = String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0');
+
+    // Verifica se algum hábito deve ser disparado agora
+    for (const [tipo, horarios] of Object.entries(HABITOS_HORARIOS)) {
+      if (!horarios.includes(horaAtual)) continue;
+
+      const msg = HABITOS_MSG[tipo];
+      console.log('[Habitos] Disparando:', tipo, 'às', horaAtual);
+
+      // Busca todos os membros ativos com FCM token
+      const membros = await pool.query(
+        'SELECT ps.membro_id, ps.fcm_token, ps.familia_id FROM push_subscriptions ps WHERE ps.fcm_token IS NOT NULL'
+      );
+
+      for (const row of membros.rows) {
+        if (!row.fcm_token || !admin.apps.length) continue;
+        try {
+          await admin.messaging().send({
+            token: row.fcm_token,
+            data: {
+              tipo: 'habito',
+              categoria: tipo,
+              membro_id: String(row.membro_id),
+              familia_id: String(row.familia_id || ''),
+              titulo: msg.titulo,
+              corpo: msg.corpo
+            },
+            android: {
+              priority: 'high',
+              notification: {
+                title: msg.emoji + ' ' + msg.titulo,
+                body: msg.corpo,
+                channelId: 'applus_habitos',
+                clickAction: 'HABITO_ACTION'
+              }
+            }
+          });
+          console.log('[Habitos] FCM enviado para membro', row.membro_id, tipo);
+        } catch(e) {
+          console.log('[Habitos] Erro FCM membro', row.membro_id, e.message);
+          if (e.code === 'messaging/registration-token-not-registered') {
+            pool.query('UPDATE push_subscriptions SET fcm_token=NULL WHERE membro_id=$1', [row.membro_id]).catch(()=>{});
+          }
+        }
+      }
+    }
+  } catch(e) { console.log('[Habitos] Erro cron:', e.message); }
+}, 60000); // a cada 1 minuto
+
+
+// ── CRIAR TABELA HÁBITOS SE NÃO EXISTIR ──
+pool.query(`
+  CREATE TABLE IF NOT EXISTS habitos_registro (
+    id SERIAL PRIMARY KEY,
+    membro_id INTEGER NOT NULL,
+    familia_id INTEGER,
+    categoria VARCHAR(50) NOT NULL,
+    cumprido BOOLEAN DEFAULT false,
+    criado_em TIMESTAMP DEFAULT NOW()
+  )
+`).then(() => console.log('[Habitos] Tabela ok')).catch(e => console.log('[Habitos] Tabela erro:', e.message));
+
+// ── REGISTRAR HÁBITO ──
+app.post('/api/habitos/registrar', async (req, res) => {
+  const { membro_id, familia_id, categoria, cumprido } = req.body;
+  if (!membro_id || !categoria) return res.status(400).json({ erro: 'Campos obrigatorios' });
+  try {
+    await pool.query(
+      `INSERT INTO habitos_registro (membro_id, familia_id, categoria, cumprido, criado_em)
+       VALUES ($1, $2, $3, $4, NOW() AT TIME ZONE 'America/Sao_Paulo')`,
+      [membro_id, familia_id || null, categoria, cumprido === true || cumprido === 'true']
+    );
+
+    // Se for água e cumprido, registra também na tabela hidratacao
+    if (categoria === 'agua' && (cumprido === true || cumprido === 'true')) {
+      await pool.query(
+        `INSERT INTO hidratacao (membro_id, familia_id, quantidade_ml, meta_ml, data)
+         VALUES ($1, $2, 250, 2000, CURRENT_DATE AT TIME ZONE 'America/Sao_Paulo')
+         ON CONFLICT DO NOTHING`,
+        [membro_id, familia_id || null]
+      ).catch(() => {});
+    }
+
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// ── BUSCAR HÁBITOS DO DIA ──
+app.get('/api/habitos/hoje/:membro_id', async (req, res) => {
+  try {
+    const hoje = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })).toISOString().split('T')[0];
+    const result = await pool.query(
+      `SELECT categoria, cumprido, criado_em FROM habitos_registro
+       WHERE membro_id=$1 AND DATE(criado_em)=$2 ORDER BY criado_em DESC`,
+      [req.params.membro_id, hoje]
+    );
+    res.json(result.rows);
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 module.exports = { admin };
+
+

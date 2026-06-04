@@ -58,6 +58,10 @@
 
         <!-- BootReceiver: reagenda alarmes após reinício do celular -->
         <receiver
+            android:name=".HabitoReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".BootReceiver"
             android:exported="false">
             <intent-filter>
