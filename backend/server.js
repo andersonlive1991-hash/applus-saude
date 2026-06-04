@@ -1037,18 +1037,45 @@ app.post('/api/habitos/registrar', async (req, res) => {
       [membro_id, familia_id || null, categoria, cumprido === true || cumprido === 'true']
     );
 
-    // Se for água e cumprido, registra na tabela cuidados_hidratacao (usada pelo Meu Dia)
-    if (categoria === 'agua' && (cumprido === true || cumprido === 'true')) {
-      const existe = await pool.query(
-        'SELECT id, copos FROM cuidados_hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE',
-        [membro_id]
-      );
-      if (existe.rows.length) {
-        await pool.query('UPDATE cuidados_hidratacao SET copos=$1 WHERE id=$2',
-          [existe.rows[0].copos + 1, existe.rows[0].id]);
-      } else {
-        await pool.query('INSERT INTO cuidados_hidratacao (familia_id, membro_id, copos) VALUES ($1,$2,$3)',
-          [familia_id || null, membro_id, 1]);
+    // Registra na tabela correta do Meu Dia conforme categoria
+    if (cumprido === true || cumprido === 'true') {
+      if (categoria === 'agua') {
+        // Água → cuidados_hidratacao
+        const existe = await pool.query(
+          'SELECT id, copos FROM cuidados_hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE',
+          [membro_id]
+        );
+        if (existe.rows.length) {
+          await pool.query('UPDATE cuidados_hidratacao SET copos=$1 WHERE id=$2',
+            [existe.rows[0].copos + 1, existe.rows[0].id]);
+        } else {
+          await pool.query('INSERT INTO cuidados_hidratacao (familia_id, membro_id, copos) VALUES ($1,$2,$3)',
+            [familia_id || null, membro_id, 1]);
+        }
+      } else if (categoria === 'alimentacao') {
+        // Alimentação → cuidados_refeicoes
+        await pool.query(
+          'INSERT INTO cuidados_refeicoes (familia_id, membro_id, tipo, quantidade, obs) VALUES ($1,$2,$3,$4,$5)',
+          [familia_id || null, membro_id, 'lanche', 1, 'Confirmado via notificação']
+        ).catch(() => {});
+      } else if (categoria === 'exercicio') {
+        // Exercício → cuidados_atividades
+        await pool.query(
+          'INSERT INTO cuidados_atividades (familia_id, membro_id, tipo, hora, obs) VALUES ($1,$2,$3,$4,$5)',
+          [familia_id || null, membro_id, 'exercicio', new Date().toTimeString().slice(0,5), 'Confirmado via notificação']
+        ).catch(() => {});
+      } else if (categoria === 'humor' || categoria === 'pausa') {
+        // Pausa mental → humor positivo
+        await pool.query(
+          'INSERT INTO cuidados_humor (familia_id, membro_id, humor, obs) VALUES ($1,$2,$3,$4)',
+          [familia_id || null, membro_id, 'bem', 'Pausa mental realizada via notificação']
+        ).catch(() => {});
+      } else if (categoria === 'sono') {
+        // Sono → cuidados_sono
+        await pool.query(
+          'INSERT INTO cuidados_sono (familia_id, membro_id, inicio, fim, qualidade, obs) VALUES ($1,$2,$3,$4,$5,$6)',
+          [familia_id || null, membro_id, '22:00', null, 'bom', 'Lembrete de sono confirmado']
+        ).catch(() => {});
       }
     }
 
