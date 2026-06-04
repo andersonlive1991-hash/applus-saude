@@ -35,7 +35,8 @@ public class SOSActivity extends Activity {
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setGravity(Gravity.CENTER);
         layout.setBackgroundColor(0xFFB91C1C);
-        layout.setPadding(60, 80, 60, 80);
+        layout.setPadding(40, 60, 40, 60);
+        layout.setMinimumHeight(800);
         TextView emoji = new TextView(this);
         emoji.setText("SOS");
         emoji.setTextSize(72);
@@ -140,7 +141,7 @@ public class SOSActivity extends Activity {
     }
 
     @Override
-    public void onBackPressed() {}
+    public void onBackPressed() { fechar(); }
 
     @Override
     protected void onDestroy() {
