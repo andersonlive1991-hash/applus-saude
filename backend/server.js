@@ -999,15 +999,7 @@ setInterval(async () => {
               titulo: msg.titulo,
               corpo: msg.corpo
             },
-            android: {
-              priority: 'high',
-              notification: {
-                title: msg.emoji + ' ' + msg.titulo,
-                body: msg.corpo,
-                channelId: 'applus_habitos',
-                clickAction: 'HABITO_ACTION'
-              }
-            }
+            android: { priority: 'high' }
           });
           console.log('[Habitos] FCM enviado para membro', row.membro_id, tipo);
         } catch(e) {
