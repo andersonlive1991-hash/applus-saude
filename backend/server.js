@@ -863,7 +863,6 @@ setInterval(async () => {
         const medsTexto = medsRes.rows.length ? medsRes.rows.map(m => m.nome).join(', ') : 'nenhum';
 
         const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de hoje de ' + nome + ' e faca um resumo em portugues brasileiro. DADOS: Agua: ' + copos + ' de 8 copos. Refeicoes: ' + refeicoes + ' de 5. Atividade fisica: ' + atividades + ' sessao(oes). Sono: ' + sonoInfo + '. Humor: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos ativos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica para amanha. Seja direto e acolhedor.';
-        const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de ' + nome + ' e faca um resumo em portugues brasileiro. DADOS: Agua: ' + copos + ' copos (meta: ' + metaAgua + '). Sono: ' + sonoInfo + '. Humor: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica. Seja direto e acolhedor.';
 
         const resumo = await chamarGemini(prompt);
 
