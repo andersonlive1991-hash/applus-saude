@@ -890,6 +890,7 @@ function navegarPara(pagina) {
   if (pagina === 'checklist') carregarChecklist();
   if (pagina === 'escala') carregarEscala();
   if (pagina === 'historico') { carregarDoencas(); }
+  if (pagina === 'vacinas') carregarVacinas();
   if (pagina === 'meu-dia') iniciarMeuDia();
   if (pagina === 'mente-sa') iniciarMenteSa();
   if (pagina === 'cuidados') {
@@ -4450,5 +4451,72 @@ async function salvarExame() {
     carregarExames();
   } catch(e) {
     alerta('Erro ao salvar exame: ' + e.message);
+  }
+}
+
+// ── VACINAS ──
+async function carregarVacinas() {
+  const lista = document.getElementById('lista-vacinas');
+  if (!lista) return;
+  lista.innerHTML = '<p style="color:#999;text-align:center">Carregando...</p>';
+  try {
+    const vacinas = await api('GET', '/api/vacinas/' + APP.membroId);
+    if (!vacinas.length) {
+      lista.innerHTML = '<p style="color:#999;text-align:center">Nenhuma vacina cadastrada.</p>';
+      return;
+    }
+    lista.innerHTML = vacinas.map(v => {
+      const statusCor = v.status === 'Completo' ? '#059669' : v.status === 'Incompleto' ? '#d97706' : '#6b7280';
+      const doses = v.doses_total > 1 ? v.doses_tomadas + '/' + v.doses_total + ' doses' : '1 dose';
+      return `<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid ${statusCor};box-shadow:0 1px 4px rgba(0,0,0,0.08)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:600;font-size:15px">💉 ${v.nome}</div>
+            <div style="font-size:12px;color:#666;margin-top:2px">${v.data ? new Date(v.data).toLocaleDateString('pt-BR') : ''} · ${doses}</div>
+            ${v.observacoes ? '<div style="font-size:12px;color:#888;margin-top:2px">' + v.observacoes + '</div>' : ''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span style="background:${statusCor};color:#fff;font-size:11px;padding:3px 8px;border-radius:20px">${v.status}</span>
+            <button onclick="excluirVacina(${v.id})" style="background:none;border:none;color:#dc2626;font-size:12px;cursor:pointer">✕ Remover</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    lista.innerHTML = '<p style="color:#dc2626;text-align:center">Erro ao carregar vacinas.</p>';
+  }
+}
+
+async function salvarVacina() {
+  const nome = document.getElementById('vac-nome').value.trim();
+  const data = document.getElementById('vac-data').value;
+  const dosesTotal = document.getElementById('vac-doses-total').value;
+  const dosesTomadas = document.getElementById('vac-doses-tomadas').value;
+  const status = document.getElementById('vac-status').value;
+  if (!nome) { alerta('Informe o nome da vacina'); return; }
+  try {
+    await api('POST', '/api/vacinas', {
+      membro_id: APP.membroId,
+      nome, data, doses_total: dosesTotal, doses_tomadas: dosesTomadas, status
+    });
+    fecharModal('modal-add-vacina');
+    document.getElementById('vac-nome').value = '';
+    document.getElementById('vac-data').value = '';
+    document.getElementById('vac-doses-total').value = '1';
+    document.getElementById('vac-doses-tomadas').value = '1';
+    alerta('✅ Vacina salva!');
+    carregarVacinas();
+  } catch(e) {
+    alerta('Erro ao salvar vacina');
+  }
+}
+
+async function excluirVacina(id) {
+  if (!confirm('Remover esta vacina?')) return;
+  try {
+    await api('DELETE', '/api/vacinas/' + id);
+    carregarVacinas();
+  } catch(e) {
+    alerta('Erro ao remover vacina');
   }
 }
