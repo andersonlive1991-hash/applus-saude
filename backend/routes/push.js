@@ -27,12 +27,13 @@ router.post('/inscrever', async (req, res) => {
 router.post('/enviar-familia', async (req, res) => {
   const { familia_id, titulo, corpo, url } = req.body;
   try {
+    const { membro_id_origem } = req.body;
     const result = await db.query(
       'SELECT membro_id, subscription, fcm_token FROM push_subscriptions WHERE familia_id = $1',
       [familia_id]
     );
     const payload = JSON.stringify({ titulo, corpo, url: url || '/' });
-    const envios = result.rows.map(async row => {
+    const envios = result.rows.filter(row => !membro_id_origem || String(row.membro_id) !== String(membro_id_origem)).map(async row => {
       // FCM — para APK Capacitor (app fechado)
       if (row.fcm_token) {
         try {

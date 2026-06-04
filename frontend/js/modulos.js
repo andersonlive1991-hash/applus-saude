@@ -940,6 +940,7 @@ async function iniciarSOSCompleto() {
   try {
     await api('POST', '/api/push/enviar-familia', {
       familia_id: APP.familiaId,
+      membro_id_origem: APP.membroId,
       titulo: '🚨 EMERGÊNCIA!',
       corpo: (APP.membroNome || 'Familiar') + ' precisa de ajuda imediata!',
       url: '/#emergencia'
