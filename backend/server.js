@@ -1037,14 +1037,19 @@ app.post('/api/habitos/registrar', async (req, res) => {
       [membro_id, familia_id || null, categoria, cumprido === true || cumprido === 'true']
     );
 
-    // Se for água e cumprido, registra também na tabela hidratacao
+    // Se for água e cumprido, registra na tabela cuidados_hidratacao (usada pelo Meu Dia)
     if (categoria === 'agua' && (cumprido === true || cumprido === 'true')) {
-      await pool.query(
-        `INSERT INTO hidratacao (membro_id, familia_id, quantidade_ml, meta_ml, data)
-         VALUES ($1, $2, 250, 2000, CURRENT_DATE AT TIME ZONE 'America/Sao_Paulo')
-         ON CONFLICT DO NOTHING`,
-        [membro_id, familia_id || null]
-      ).catch(() => {});
+      const existe = await pool.query(
+        'SELECT id, copos FROM cuidados_hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE',
+        [membro_id]
+      );
+      if (existe.rows.length) {
+        await pool.query('UPDATE cuidados_hidratacao SET copos=$1 WHERE id=$2',
+          [existe.rows[0].copos + 1, existe.rows[0].id]);
+      } else {
+        await pool.query('INSERT INTO cuidados_hidratacao (familia_id, membro_id, copos) VALUES ($1,$2,$3)',
+          [familia_id || null, membro_id, 1]);
+      }
     }
 
     res.json({ ok: true });
