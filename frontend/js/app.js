@@ -437,7 +437,7 @@ async function criarFamilia() {
 
     
 
-    const temDados = dataNasc || tipoSangue || alergias || cpf || cartaoSus || convenio || contatoEmerg || telEmerg;
+    const temDados = dataNasc || tipoSangue || alergias || cpf || cartaoSus || convenio || contatoEmerg || telEmerg || sexoCadastro;
     if (temDados) {
       const membroId = resMem.id;
       const dadosPerfil = {
