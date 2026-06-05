@@ -8,6 +8,7 @@ db.query('ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS nome_completo VARCHA
   .catch(e => console.log('ALTER perfil_idoso nome_completo:', e.message));
 
 // Ampliar colunas para suportar dados criptografados
+db.query('ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS sexo VARCHAR(20)').catch(()=>{});
 db.query('ALTER TABLE perfil_idoso ALTER COLUMN tipo_sanguineo TYPE TEXT')
   .catch(e => console.log('ALTER tipo_sanguineo:', e.message));
 db.query('ALTER TABLE perfil_idoso ALTER COLUMN cpf TYPE TEXT')
@@ -39,7 +40,7 @@ router.post('/', async (req, res) => {
     membro_id, nome_completo, data_nascimento, tipo_sanguineo,
     alergias, cpf, cartao_sus, convenio,
     contato_emergencia, tel_emergencia
-  } = req.body;
+    contato_emergencia, tel_emergencia, sexo
 
   console.log('[perfil] membro_id:', membro_id, '| nome:', nome_completo);
 
@@ -50,16 +51,16 @@ router.post('/', async (req, res) => {
   try {
     const result = await db.query(
       `INSERT INTO perfil_idoso
-        (membro_id, nome_completo, data_nascimento, tipo_sanguineo, alergias, cpf, cartao_sus, convenio, contato_emergencia, tel_emergencia)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        (membro_id, nome_completo, data_nascimento, tipo_sanguineo, alergias, cpf, cartao_sus, convenio, contato_emergencia, tel_emergencia, sexo)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
         ON CONFLICT (membro_id) DO UPDATE SET
         nome_completo=$2, data_nascimento=$3, tipo_sanguineo=$4,
         alergias=$5, cpf=$6, cartao_sus=$7, convenio=$8,
         contato_emergencia=$9, tel_emergencia=$10,
-        atualizado_em=NOW()
+        sexo=$11, atualizado_em=NOW()
         RETURNING *`,
       [membro_id, nome_completo, dataNasc, encrypt(tipo_sanguineo),
-       encrypt(alergias), encrypt(cpf), cartao_sus, convenio, contato_emergencia, tel_emergencia]
+       encrypt(alergias), encrypt(cpf), cartao_sus, convenio, contato_emergencia, tel_emergencia, sexo || null]
     );
     console.log('[perfil] salvo id:', result.rows[0].id);
     const saved = result.rows[0];

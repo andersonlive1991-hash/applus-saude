@@ -293,6 +293,10 @@ function selecionarPerfil(id, nome, tipo, idPessoal) {
   APP.idPessoal = idPessoal;
   APP.membroAtivo = { id, nome, tipo, id_pessoal: idPessoal };
   salvarSessaoMembro();
+  // Carrega sexo do perfil para mostrar módulo saúde feminina
+  api('GET', '/api/perfil/' + idPessoal).then(p => {
+    if (p && p.sexo) APP.sexo = p.sexo;
+  }).catch(() => {});
   iniciarApp();
 }
 
@@ -717,6 +721,7 @@ async function carregarPerfil() {
           document.getElementById('pf-nasc-mes').value = String(d.getUTCMonth() + 1).padStart(2, '0');
           document.getElementById('pf-nasc-ano').value = String(d.getUTCFullYear());
         }
+        document.getElementById('pf-sexo').value = p.sexo || '';
         document.getElementById('pf-sangue').value = p.tipo_sanguineo || '';
         document.getElementById('pf-alergias').value = p.alergias || '';
         document.getElementById('pf-cpf').value = p.cpf || '';
@@ -743,6 +748,7 @@ async function salvarPerfil() {
       membro_id: mem.id,
       nome_completo: document.getElementById('pf-nome').value.trim() || mem.nome,
       data_nascimento: dataNasc,
+      sexo: document.getElementById('pf-sexo').value || null,
       tipo_sanguineo: document.getElementById('pf-sangue').value || null,
       alergias: document.getElementById('pf-alergias').value.trim() || null,
       cpf: document.getElementById('pf-cpf').value.trim() || null,
@@ -865,6 +871,177 @@ function preencherNomePerfil() {
   }
 }
 
+
+
+// ── SAÚDE FEMININA ──
+function trocarAbaSaudeFem(aba) {
+  ['ciclo','endometriose','sintomas','cuidados'].forEach(a => {
+    document.getElementById('sf-' + a).style.display = a === aba ? 'block' : 'none';
+    const btn = document.getElementById('aba-sf-' + a);
+    if (btn) btn.classList.toggle('ativa', a === aba);
+  });
+  if (aba === 'ciclo') calcularCiclo();
+  if (aba === 'sintomas') carregarHistoricoSintomas();
+}
+
+function calcularCiclo() {
+  const dataMens = document.getElementById('sf-data-mens')?.value;
+  const durCiclo = parseInt(document.getElementById('sf-dur-ciclo')?.value || 28);
+  const durMens = parseInt(document.getElementById('sf-dur-mens')?.value || 5);
+  if (!dataMens) return;
+
+  const hoje = new Date();
+  const ultMens = new Date(dataMens);
+  const diffDias = Math.floor((hoje - ultMens) / (1000 * 60 * 60 * 24));
+  const diaAtualCiclo = (diffDias % durCiclo) + 1;
+
+  // Fases
+  let fase, emoji, desc, cor;
+  if (diaAtualCiclo <= durMens) {
+    fase = 'Menstruação'; emoji = '🩸'; cor = '#fce4ec';
+    desc = 'Fase de renovação. Descanse mais, hidrate-se e evite esforços intensos.';
+  } else if (diaAtualCiclo <= 13) {
+    fase = 'Fase Folicular'; emoji = '🌱'; cor = '#e8f5e9';
+    desc = 'Energia crescente. Ótimo momento para exercícios e novos projetos.';
+  } else if (diaAtualCiclo <= 16) {
+    fase = 'Ovulação'; emoji = '✨'; cor = '#fff8e1';
+    desc = 'Pico de energia e libido. Período fértil — maior probabilidade de gravidez.';
+  } else {
+    fase = 'Fase Lútea / TPM'; emoji = '🌙'; cor = '#f3e5f5';
+    desc = 'Energia diminuindo. Cuide da alimentação e durma bem para amenizar a TPM.';
+  }
+
+  const faseEl = document.getElementById('sf-fase-atual');
+  const faseEmoji = document.getElementById('sf-fase-emoji');
+  const faseNome = document.getElementById('sf-fase-nome');
+  const faseDesc = document.getElementById('sf-fase-desc');
+  if (faseEl) faseEl.style.background = cor;
+  if (faseEmoji) faseEmoji.textContent = emoji;
+  if (faseNome) faseNome.textContent = fase + ' (dia ' + diaAtualCiclo + ' de ' + durCiclo + ')';
+  if (faseDesc) faseDesc.textContent = desc;
+
+  // Próximas datas
+  const proxMens = new Date(ultMens);
+  proxMens.setDate(proxMens.getDate() + durCiclo);
+  while (proxMens < hoje) proxMens.setDate(proxMens.getDate() + durCiclo);
+
+  const proxOvul = new Date(proxMens);
+  proxOvul.setDate(proxOvul.getDate() - (durCiclo - 14));
+
+  const proxTPM = new Date(proxMens);
+  proxTPM.setDate(proxTPM.getDate() - 7);
+
+  const fmt = d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+
+  const proximasEl = document.getElementById('sf-proximas');
+  if (proximasEl) {
+    proximasEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#fce4ec;border-radius:10px">
+          <span style="font-size:0.85rem;font-weight:600">🩸 Próxima menstruação</span>
+          <span style="font-size:0.85rem;color:#c2185b;font-weight:600">${fmt(proxMens)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#fff8e1;border-radius:10px">
+          <span style="font-size:0.85rem;font-weight:600">✨ Próxima ovulação</span>
+          <span style="font-size:0.85rem;color:#f57f17;font-weight:600">${fmt(proxOvul)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f3e5f5;border-radius:10px">
+          <span style="font-size:0.85rem;font-weight:600">🌙 Início da TPM</span>
+          <span style="font-size:0.85rem;color:#7b1fa2;font-weight:600">${fmt(proxTPM)}</span>
+        </div>
+      </div>`;
+  }
+
+  // Fases lista
+  const fasesEl = document.getElementById('sf-fases-lista');
+  if (fasesEl) {
+    fasesEl.innerHTML = [
+      {emoji:'🩸',nome:'Menstruação',dias:'Dias 1-' + durMens,desc:'Renovação e descanso',cor:'#fce4ec'},
+      {emoji:'🌱',nome:'Folicular',dias:'Dias ' + (durMens+1) + '-13',desc:'Energia e disposição crescentes',cor:'#e8f5e9'},
+      {emoji:'✨',nome:'Ovulação',dias:'Dias 14-16',desc:'Pico fértil e de energia',cor:'#fff8e1'},
+      {emoji:'🌙',nome:'Lútea / TPM',dias:'Dias 17-' + durCiclo,desc:'Descanso e autocuidado',cor:'#f3e5f5'},
+    ].map(f => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:${f.cor};border-radius:10px;margin-bottom:6px">
+        <span style="font-size:1.5rem">${f.emoji}</span>
+        <div><p style="font-weight:600;font-size:0.85rem">${f.nome} <span style="font-weight:400;color:#888;font-size:0.78rem">${f.dias}</span></p>
+        <p style="font-size:0.78rem;color:#666">${f.desc}</p></div>
+      </div>`).join('');
+  }
+}
+
+async function salvarCiclo() {
+  const dataMens = document.getElementById('sf-data-mens')?.value;
+  const durCiclo = document.getElementById('sf-dur-ciclo')?.value;
+  const durMens = document.getElementById('sf-dur-mens')?.value;
+  if (!dataMens) return alerta('Informe a data da última menstruação');
+  try {
+    await api('POST', '/api/ciclo/salvar', {
+      membro_id: APP.membroId,
+      ultima_mens: dataMens,
+      dur_ciclo: durCiclo || 28,
+      dur_mens: durMens || 5
+    });
+    alerta('✅ Ciclo salvo com sucesso!');
+  } catch(e) { alerta('Erro ao salvar ciclo'); }
+}
+
+async function salvarSintomasFem() {
+  const dor = document.getElementById('sf-dor')?.value;
+  const humor = document.getElementById('sf-humor')?.value;
+  const fluxo = document.getElementById('sf-fluxo')?.value;
+  const obs = document.getElementById('sf-obs')?.value;
+  try {
+    await api('POST', '/api/ciclo/sintomas', {
+      membro_id: APP.membroId,
+      dor: parseInt(dor),
+      humor,
+      fluxo: fluxo || null,
+      obs: obs || null
+    });
+    alerta('✅ Sintomas registrados!');
+    document.getElementById('sf-obs').value = '';
+    document.getElementById('sf-dor').value = 0;
+    document.getElementById('sf-dor-val').textContent = '0';
+    carregarHistoricoSintomas();
+  } catch(e) { alerta('Erro ao registrar'); }
+}
+
+async function carregarHistoricoSintomas() {
+  try {
+    const dados = await api('GET', '/api/ciclo/sintomas/' + APP.membroId);
+    const el = document.getElementById('sf-historico-sint');
+    if (!el) return;
+    if (!dados || !dados.length) {
+      el.innerHTML = '<p style="color:#aaa;text-align:center;font-size:0.85rem">Nenhum registro ainda</p>';
+      return;
+    }
+    el.innerHTML = dados.slice(0,7).map(s => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f8f8f8;border-radius:10px;margin-bottom:6px">
+        <div>
+          <p style="font-size:0.82rem;font-weight:600">${new Date(s.criado_em).toLocaleDateString('pt-BR')}</p>
+          <p style="font-size:0.78rem;color:#888">${s.obs || 'Sem observações'}</p>
+        </div>
+        <div style="text-align:right">
+          <p style="font-size:0.85rem;font-weight:600;color:#e91e63">Dor: ${s.dor}/10</p>
+          <p style="font-size:0.78rem;color:#888">${s.humor || ''}</p>
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+async function iniciarSaudeFeminina() {
+  trocarAbaSaudeFem('ciclo');
+  // Carregar ciclo salvo
+  try {
+    const dados = await api('GET', '/api/ciclo/' + APP.membroId);
+    if (dados && dados.ultima_mens) {
+      document.getElementById('sf-data-mens').value = dados.ultima_mens.split('T')[0];
+      document.getElementById('sf-dur-ciclo').value = dados.dur_ciclo || 28;
+      document.getElementById('sf-dur-mens').value = dados.dur_mens || 5;
+      calcularCiclo();
+    }
+  } catch(e) {}
+}
 
 // ── EXERCÍCIOS ──
 const EX_DB = {
@@ -1058,6 +1235,7 @@ function navegarPara(pagina) {
   if (pagina === 'vacinas') carregarVacinas();
   if (pagina === 'meu-dia') iniciarMeuDia();
   if (pagina === 'exercicios') iniciarAreaExercicios();
+  if (pagina === 'saude-feminina') iniciarSaudeFeminina();
   if (pagina === 'mente-sa') iniciarMenteSa();
   if (pagina === 'cuidados') {
     if (APP.membroTipo === 'cuidador') {
@@ -1142,6 +1320,20 @@ async function carregarHome() {
     const cardBaba = document.getElementById('card-baba');
     if (cardBaba) cardBaba.style.display = temBaba ? 'flex' : 'none';
   } catch(e) {}
+  // Card Saúde Feminina — só para mulheres
+  const cardSaudeFem = document.getElementById('card-saude-feminina');
+  if (cardSaudeFem) {
+    if (APP.sexo === 'feminino') {
+      cardSaudeFem.style.display = 'flex';
+    } else {
+      // Tenta buscar do perfil se ainda não carregou
+      api('GET', '/api/perfil/' + APP.idPessoal).then(p => {
+        if (p && p.sexo) APP.sexo = p.sexo;
+        if (cardSaudeFem) cardSaudeFem.style.display = p && p.sexo === 'feminino' ? 'flex' : 'none';
+      }).catch(() => {});
+    }
+  }
+
   document.getElementById('home-data').textContent = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
