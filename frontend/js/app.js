@@ -286,17 +286,18 @@ async function carregarPerfisDisponiveis() {
   }
 }
 
-function selecionarPerfil(id, nome, tipo, idPessoal) {
+async function selecionarPerfil(id, nome, tipo, idPessoal) {
   APP.membroId = id;
   APP.membroNome = nome;
   APP.membroTipo = tipo;
   APP.idPessoal = idPessoal;
   APP.membroAtivo = { id, nome, tipo, id_pessoal: idPessoal };
   salvarSessaoMembro();
-  // Carrega sexo do perfil para mostrar módulo saúde feminina
-  api('GET', '/api/perfil/' + idPessoal).then(p => {
+  // Carrega sexo ANTES de iniciarApp para o card aparecer corretamente
+  try {
+    const p = await api('GET', '/api/perfil/' + idPessoal);
     if (p && p.sexo) APP.sexo = p.sexo;
-  }).catch(() => {});
+  } catch(e) {}
   iniciarApp();
 }
 
