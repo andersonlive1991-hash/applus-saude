@@ -431,6 +431,7 @@ async function criarFamilia() {
     APP.familiaId = String(resFam.id);
     APP.codigoFamilia = resFam.codigo;
     APP.nomeFamilia = resFam.nome;
+    APP.sexo = sexoCadastro || '';
     salvarSessaoFamilia();
 
     
