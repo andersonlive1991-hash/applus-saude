@@ -1800,6 +1800,13 @@
       </div>
       <div class="campo"><label>Nome</label><input id="inp-nome-familia" type="text" placeholder="Ex: Anderson"></div>
       <div class="campo"><label>Sobrenome</label><input id="inp-nome-membro" type="text" placeholder="Ex: Barros"></div>
+      <div class="campo"><label>Sexo biológico</label>
+        <select id="inp-sexo-cadastro">
+          <option value="">Prefiro não informar</option>
+          <option value="masculino">Masculino</option>
+          <option value="feminino">Feminino</option>
+        </select>
+      </div>
       <div class="campo"><label>Seu papel</label>
         <select id="inp-tipo-membro" onchange="mostrarDescricaoPapel(this.value)" style="margin-bottom:6px">
           <option value="administrador">👤 Para mim — vou cuidar da minha saúde</option>
@@ -1919,7 +1926,14 @@
       <div id="form-entrar-familiar">
         <div class="campo"><label>Código da família</label><input id="inp-codigo-familia" type="text" placeholder="Ex: BARR9598" style="text-transform:uppercase"></div>
         <div class="campo"><label>Seu nome</label><input id="inp-nome-entrar" type="text" placeholder="Seu nome completo"></div>
-        <div class="campo"><label>Seu papel</label>
+        <div class="campo"><label>Sexo biológico</label>
+        <select id="inp-sexo-cadastro">
+          <option value="">Prefiro não informar</option>
+          <option value="masculino">Masculino</option>
+          <option value="feminino">Feminino</option>
+        </select>
+      </div>
+      <div class="campo"><label>Seu papel</label>
           <select id="inp-tipo-entrar">
             <option value="administrador">👤 Para mim</option>
             <option value="idoso">Idoso</option>

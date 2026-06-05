@@ -409,6 +409,7 @@ async function criarFamilia() {
   const mes = document.getElementById('inp-data-mes')?.value || '';
   const ano = document.getElementById('inp-data-ano')?.value || '';
   const dataNasc = (dia && mes && ano) ? ano + '-' + mes + '-' + dia : '';
+  const sexoCadastro = document.getElementById('inp-sexo-cadastro')?.value || '';
   const tipoSangue = document.getElementById('inp-tipo-sangue')?.value || '';
   const alergias = document.getElementById('inp-alergias')?.value.trim() || '';
   const cpf = document.getElementById('inp-cpf')?.value.trim() || '';
@@ -447,7 +448,8 @@ async function criarFamilia() {
         cartao_sus: cartaoSus !== '' ? cartaoSus : null,
         convenio: convenio !== '' ? convenio : null,
         contato_emergencia: contatoEmerg !== '' ? contatoEmerg : null,
-        tel_emergencia: telEmerg !== '' ? telEmerg : null
+        tel_emergencia: telEmerg !== '' ? telEmerg : null,
+        sexo: sexoCadastro !== '' ? sexoCadastro : null
       };
       try {
         
