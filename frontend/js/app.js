@@ -762,7 +762,6 @@ async function salvarPerfil() {
       tel_emergencia: document.getElementById('pf-tel').value.trim() || null
     };
     // Salvar foto se foi alterada
-    alerta('Foto: ' + (_fotoPerfil ? 'tem foto ' + _fotoPerfil.length + ' chars' : 'SEM FOTO') + ' | mem.id=' + mem.id);
     if (_fotoPerfil) {
       await api('PUT', '/api/membros/' + mem.id + '/foto', { foto: _fotoPerfil });
       _fotoPerfil = null;
@@ -779,6 +778,13 @@ async function salvarPerfil() {
       alerta('Erro: ' + json.erro);
     } else {
       alerta('Perfil salvo com sucesso!');
+      // Atualiza APP.sexo imediatamente
+      const sexoSalvo = document.getElementById('pf-sexo')?.value;
+      if (sexoSalvo) {
+        APP.sexo = sexoSalvo;
+        const cardSF = document.getElementById('card-saude-feminina');
+        if (cardSF) cardSF.style.display = sexoSalvo === 'feminino' ? 'flex' : 'none';
+      }
     }
   } catch(e) {
     alerta('Erro: ' + e.message);
