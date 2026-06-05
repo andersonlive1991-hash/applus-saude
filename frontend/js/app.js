@@ -1,6 +1,11 @@
 
 async function loginGoogle() {
   try {
+    // No Capacitor APK o SDK Google web não funciona
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      alerta('Login com Google não disponível no app. Use "Criar perfil" ou "Entrar em família".');
+      return;
+    }
     const client = google.accounts.oauth2.initTokenClient({
       client_id: '1028956812970-verjkuuuqnn6c8nhafh7kcvgphn1htkj.apps.googleusercontent.com',
       scope: 'openid email profile',
