@@ -147,6 +147,8 @@ function carregarSessao() {
     APP.membroTipo = dados.membroTipo;
     APP.idPessoal = dados.idPessoal;
     APP.membroAtivo = { id: dados.membroId, nome: dados.membroNome, tipo: dados.membroTipo, id_pessoal: dados.idPessoal };
+    // Carrega sexo do banco antes de iniciarApp para card feminino aparecer corretamente
+    try { const p = await api('GET', '/api/perfil/' + dados.membroId); if (p && p.sexo) APP.sexo = p.sexo; } catch(e) {}
     iniciarApp();
   } else if (familia) {
     const dados = JSON.parse(familia);
