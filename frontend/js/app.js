@@ -295,7 +295,7 @@ async function selecionarPerfil(id, nome, tipo, idPessoal) {
   salvarSessaoMembro();
   // Carrega sexo ANTES de iniciarApp para o card aparecer corretamente
   try {
-    const p = await api('GET', '/api/perfil/' + idPessoal);
+    const p = await api('GET', '/api/perfil/' + id);
     if (p && p.sexo) APP.sexo = p.sexo;
   } catch(e) {}
   iniciarApp();
