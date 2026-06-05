@@ -63,6 +63,8 @@ router.post('/', async (req, res) => {
        encrypt(alergias), encrypt(cpf), cartao_sus, convenio, contato_emergencia, tel_emergencia, sexo || null]
     );
     console.log('[perfil] salvo id:', result.rows[0].id);
+    // Sincroniza sexo na tabela membros para APP.sexo carregar corretamente
+    if (sexo) await db.query('UPDATE membros SET sexo=$1 WHERE id=$2', [sexo, membro_id]).catch(()=>{});
     const saved = result.rows[0];
     saved.cpf = decrypt(saved.cpf);
     saved.alergias = decrypt(saved.alergias);
