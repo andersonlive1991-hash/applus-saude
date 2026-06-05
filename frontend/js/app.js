@@ -133,7 +133,7 @@ function salvarSessaoMembro() {
   }));
 }
 
-function carregarSessao() {
+async function carregarSessao() {
   const sessao = localStorage.getItem('applus_sessao');
   const familia = localStorage.getItem('applus_familia');
 
