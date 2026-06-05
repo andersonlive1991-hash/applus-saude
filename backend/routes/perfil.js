@@ -39,8 +39,8 @@ router.post('/', async (req, res) => {
   const {
     membro_id, nome_completo, data_nascimento, tipo_sanguineo,
     alergias, cpf, cartao_sus, convenio,
-    contato_emergencia, tel_emergencia
     contato_emergencia, tel_emergencia, sexo
+  } = req.body;
 
   console.log('[perfil] membro_id:', membro_id, '| nome:', nome_completo);
 
