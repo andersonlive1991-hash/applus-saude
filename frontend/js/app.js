@@ -98,13 +98,13 @@ async function iniciarDeepLinkListener() {
       const url = data.url || '';
       if (!url.startsWith('applus://callback')) return;
       if (Browser) Browser.close().catch(()=>{});
-      const params = new URL(url.replace('applus://', 'https://applus'));
-      const erro = params.searchParams.get('erro');
+      const erro = url.includes('erro=');
       if (erro) { alerta('Erro ao entrar com Google'); return; }
-      const email = params.searchParams.get('email');
-      const nome = params.searchParams.get('nome');
-      const foto = params.searchParams.get('foto');
-      const google_id = params.searchParams.get('google_id');
+      // Ler dados do localStorage gravados pela página de callback
+      const pending = localStorage.getItem('google_oauth_pending');
+      if (!pending) { alerta('Erro ao receber dados do Google'); return; }
+      localStorage.removeItem('google_oauth_pending');
+      const { email, nome, foto, google_id } = JSON.parse(pending);
       try {
         const res = await api('POST', '/api/auth/google', {
           token: null,
