@@ -487,7 +487,7 @@ app.get("/ping", (req, res) => {
   res.json({ status: "ok", uptime: Math.floor(process.uptime()) + "s", hora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) });
 });
 
-app.get("/api/run-migrations", async (req, res) => {
+// ROTA REMOVIDA: app.get("/api/run-migrations", async (req, res) => {
   try {
     await pool.query("ALTER TABLE eventos ADD COLUMN IF NOT EXISTS nome_medico VARCHAR(200)");
     await pool.query("ALTER TABLE eventos ADD COLUMN IF NOT EXISTS especialidade VARCHAR(100)");

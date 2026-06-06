@@ -18,7 +18,6 @@ async function carregarVacinas() {
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhuma vacina cadastrada</p>';
   } catch (e) {
-    console.log('Erro vacinas:', e);
   }
 }
 
@@ -75,7 +74,6 @@ async function carregarFinanceiro() {
         : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhum gasto registrado</p>'
       }`;
   } catch (e) {
-    console.log('Erro financeiro:', e);
   }
 }
 
@@ -112,44 +110,9 @@ async function excluirGasto(id) {
 }
 
 // ── CHECKLIST ──
-async function carregarChecklist() {
-  try {
-    const hoje = new Date().toISOString().split('T')[0];
-    const res = await api('GET', `/api/checklist/${APP.familiaId}?data=${hoje}`);
-    const lista = document.getElementById('lista-checklist');
-    lista.innerHTML = res.length
-      ? res.map(t => `
-        <div class="item-lista" style="${t.concluida ? 'opacity:0.6' : ''}">
-          <input type="checkbox" ${t.concluida ? 'checked' : ''} onchange="toggleTarefa(${t.id}, this.checked)"
-            style="width:20px;height:20px;accent-color:var(--verde);cursor:pointer">
-          <div class="item-info">
-            <div class="item-nome" style="${t.concluida ? 'text-decoration:line-through' : ''}">${t.tarefa}</div>
-          </div>
-          <button onclick="excluirTarefa(${t.id})" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--cinza)">🗑️</button>
-        </div>`).join('')
-      : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhuma tarefa para hoje</p>';
-  } catch (e) {
-    console.log('Erro checklist:', e);
-  }
-}
+// carregarChecklist — definida em app.js
 
-async function salvarTarefa() {
-  const tarefa = document.getElementById('tar-nome').value.trim();
-  if (!tarefa) return alerta('Digite a tarefa');
-  try {
-    await api('POST', '/api/checklist', {
-      familia_id: APP.familiaId,
-      membro_id: APP.membroId,
-      tarefa,
-      data: new Date().toISOString().split("T")[0]
-    });
-    fecharModal('modal-add-tarefa');
-    document.getElementById('tar-nome').value = '';
-    carregarChecklist();
-  } catch (e) {
-    alerta('Erro ao salvar tarefa');
-  }
-}
+// salvarTarefa — definida em app.js
 
 async function toggleTarefa(id, concluida) {
   await api('PUT', `/api/checklist/${id}`, { concluida });
@@ -187,7 +150,6 @@ async function carregarEscala() {
         }).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhum turno cadastrado</p>';
   } catch (e) {
-    console.log('Erro escala:', e);
   }
 }
 
@@ -268,7 +230,6 @@ async function carregarSinais() {
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhum registro ainda</p>';
   } catch (e) {
-    console.log('Erro sinais:', e);
   }
 }
 
@@ -303,7 +264,6 @@ async function carregarPerfil() {
       document.getElementById('pf-tel').value = res.tel_emergencia || '';
     }
   } catch (e) {
-    console.log('Perfil ainda não cadastrado');
   }
 }
 
@@ -400,7 +360,7 @@ async function carregarDoencas() {
           </div>
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhuma doença registrada</p>';
-  } catch (e) { console.log('Erro doenças:', e); }
+  } catch (e) { }
 }
 
 async function salvarDoenca() {
@@ -445,7 +405,7 @@ async function carregarTratamentos() {
           </div>
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhum tratamento registrado</p>';
-  } catch (e) { console.log('Erro tratamentos:', e); }
+  } catch (e) { }
 }
 
 async function salvarTratamento() {
@@ -491,7 +451,7 @@ async function carregarInternacoes() {
           <button onclick="abrirProntuarios(${i.id})" style="background:#e8f7f1;border:none;border-radius:10px;padding:8px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:700;color:var(--verde-escuro);cursor:pointer;width:100%">📋 Ver/Anexar Prontuários</button>
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhuma internação registrada</p>';
-  } catch (e) { console.log('Erro internações:', e); }
+  } catch (e) { }
 }
 
 let fotosInternacaoPendentes = [];
@@ -697,7 +657,7 @@ async function carregarRotinaAdmin() {
           </div>
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhuma atividade cadastrada</p>';
-  } catch(e) { console.log('Erro rotina:', e); }
+  } catch(e) { }
 }
 
 async function salvarRotinaTEA() {
@@ -740,7 +700,7 @@ async function carregarHumorTEA() {
           </div>
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhum humor registrado</p>';
-  } catch(e) { console.log('Erro humor:', e); }
+  } catch(e) { }
 }
 
 async function carregarCrisesTEA() {
@@ -762,7 +722,7 @@ async function carregarCrisesTEA() {
           ${c.ajudou ? `<div style="font-size:12px;color:var(--verde);padding-left:36px">💡 ${c.ajudou}</div>` : ''}
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhuma crise registrada</p>';
-  } catch(e) { console.log('Erro crises:', e); }
+  } catch(e) { }
 }
 
 async function salvarCriseTEA() {
@@ -810,7 +770,7 @@ async function iniciarChamadaSOS() {
     _sosPC.ontrack = (e) => {
       const audio = document.getElementById('audio-remoto');
       audio.srcObject = e.streams[0];
-      audio.play().catch(err => console.log('audio play erro:', err));
+      audio.play().catch(err =>
     };
     const offer = await _sosPC.createOffer();
     await _sosPC.setLocalDescription(offer);
@@ -830,7 +790,7 @@ async function atenderChamadaSOS() {
       const audio = document.getElementById('audio-remoto');
       if (e.streams && e.streams[0]) {
         audio.srcObject = e.streams[0];
-        audio.play().catch(err => console.log('audio play erro:', err));
+        audio.play().catch(err =>
       }
     };
     const answer = await _sosPC.createAnswer();
@@ -898,7 +858,7 @@ function registrarEventosSOS() {
       const audio = document.getElementById('audio-remoto');
       if (e.streams && e.streams[0]) {
         audio.srcObject = e.streams[0];
-        audio.play().catch(err => console.log('audio play erro:', err));
+        audio.play().catch(err =>
       }
     };
     await _sosPC.setRemoteDescription(new RTCSessionDescription(data.offer));
@@ -945,7 +905,7 @@ async function iniciarSOSCompleto() {
       corpo: (APP.membroNome || 'Familiar') + ' precisa de ajuda imediata!',
       url: '/#emergencia'
     });
-  } catch(e) { console.log('Push erro:', e); }
+  } catch(e) { }
   // 2.5 Envia push para contatos SOS externos
   try {
     const contatos = await api("GET", "/api/sos/contatos/" + APP.membroId);
@@ -956,7 +916,7 @@ async function iniciarSOSCompleto() {
         membro_id: APP.membroId
       }).catch(() => {});
     }
-  } catch(e) { console.log("Erro push SOS externo:", e); }
+  } catch(e) { }
 
   // 3. Inicia chamada de voz automaticamente
   await iniciarChamadaSOS();
@@ -1189,7 +1149,6 @@ async function carregarPictosPersonalizados() {
       </div>
     `).join('');
   } catch(e) {
-    console.log('Erro carregar pictos:', e);
   }
 }
 
