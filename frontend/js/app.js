@@ -190,8 +190,8 @@ function salvarSessaoMembro() {
 async function carregarSessao() {
   // Detectar retorno do OAuth Google (APK)
   const urlParams = new URLSearchParams(window.location.search);
-  const googleToken = urlParams.get('google_token');
-  const googleErro = urlParams.get('google_erro');
+  const googleToken = urlParams.get('token');
+  const googleErro = urlParams.get('erro') || urlParams.get('google_erro');
   if (googleErro) { alerta('Erro ao entrar com Google'); mostrarLogin(); return; }
   if (googleToken) {
     try {

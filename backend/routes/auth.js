@@ -63,9 +63,9 @@ router.get('/google/apk-callback', async (req, res) => {
       google_id: userInfo.id
     });
     setTimeout(() => pendingOAuthTokens.delete(token), 5 * 60 * 1000);
-    res.redirect(`https://applus-saude-production.up.railway.app/?google_token=${token}`);
+    res.redirect(`https://applus-saude-production.up.railway.app/apk-callback?token=${token}`);
   } catch(e) {
-    res.redirect('https://applus-saude-production.up.railway.app/?google_erro=1');
+    res.redirect('https://applus-saude-production.up.railway.app/apk-callback?erro=1');
   }
 });
 

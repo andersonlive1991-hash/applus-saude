@@ -1,10 +1,14 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.anderson.applusSaude2",
-      "sha256_cert_fingerprints": ["C3:7F:AC:91:15:CF:C7:52:7A:66:42:E4:1E:C9:89:5F:E7:6C:9D:C2:60:37:A1:35:B9:00:BD:EA:A3:46:DB:88"]
+      "sha256_cert_fingerprints": [
+        "0C:30:C5:B4:52:35:5F:77:91:1E:B4:D0:8F:95:CF:D0:D3:8B:DC:50:18:33:87:97:79:CE:A5:25:4B:4A:A7:59"
+      ]
     }
   }
 ]
