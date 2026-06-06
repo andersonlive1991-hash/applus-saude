@@ -1,9 +1,14 @@
 
 async function loginGoogle() {
   try {
-    // No Capacitor APK o SDK Google web não funciona
+    // No Capacitor APK usa fluxo redirect via browser nativo
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-      alerta('Login com Google não disponível no app. Use "Criar perfil" ou "Entrar em família".');
+      const { Browser } = window.Capacitor.Plugins;
+      if (Browser) {
+        await Browser.open({ url: 'https://applus-saude-production.up.railway.app/api/auth/google/apk-init' });
+      } else {
+        window.open('https://applus-saude-production.up.railway.app/api/auth/google/apk-init', '_blank');
+      }
       return;
     }
     const client = google.accounts.oauth2.initTokenClient({
@@ -82,7 +87,53 @@ function renderMarkdown(txt) {
 }
 
 // ── INICIALIZAR ──
+
+// Capturar deep link OAuth Google no APK
+async function iniciarDeepLinkListener() {
+  try {
+    if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+    const { App, Browser } = window.Capacitor.Plugins;
+    if (!App) return;
+    App.addListener('appUrlOpen', async (data) => {
+      const url = data.url || '';
+      if (!url.startsWith('applus://callback')) return;
+      if (Browser) Browser.close().catch(()=>{});
+      const params = new URL(url.replace('applus://', 'https://applus'));
+      const erro = params.searchParams.get('erro');
+      if (erro) { alerta('Erro ao entrar com Google'); return; }
+      const email = params.searchParams.get('email');
+      const nome = params.searchParams.get('nome');
+      const foto = params.searchParams.get('foto');
+      const google_id = params.searchParams.get('google_id');
+      try {
+        const res = await api('POST', '/api/auth/google', {
+          token: null,
+          userInfo: { email, name: nome, picture: foto, sub: google_id }
+        });
+        if (res && res.ok) {
+          APP.familiaId = String(res.familiaId);
+          APP.membroId = res.membroId;
+          APP.membroNome = res.membroNome;
+          APP.membroTipo = res.membroTipo;
+          APP.idPessoal = res.idPessoal;
+          APP.membroAtivo = { id: res.membroId, nome: res.membroNome, tipo: res.membroTipo, id_pessoal: res.idPessoal };
+          localStorage.setItem('applus_sessao', JSON.stringify({
+            familiaId: res.familiaId, membroId: res.membroId,
+            membroNome: res.membroNome, membroTipo: res.membroTipo,
+            idPessoal: res.idPessoal, codigoFamilia: res.codigoFamilia
+          }));
+          if (res.foto) localStorage.setItem('applus_foto', res.foto);
+          mostrarApp();
+        } else {
+          alerta(res?.erro || 'Erro ao entrar com Google');
+        }
+      } catch(e) { alerta('Erro ao processar login Google'); }
+    });
+  } catch(e) {}
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  iniciarDeepLinkListener();
   if (typeof verificarIdioma === 'function') verificarIdioma();
   verificarBoasVindas();
   carregarSessao();

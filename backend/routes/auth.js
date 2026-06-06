@@ -36,4 +36,48 @@ router.post('/google', async (req, res) => {
   }
 });
 
+
+// OAuth Google callback para APK Capacitor
+router.get('/google/apk-callback', async (req, res) => {
+  const { code, state } = req.query;
+  try {
+    const { google } = require('googleapis');
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      'https://applus-saude-production.up.railway.app/api/auth/google/apk-callback'
+    );
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+    const { data: userInfo } = await oauth2.userinfo.get();
+    
+    // Redireciona para o app com os dados
+    const params = new URLSearchParams({
+      email: userInfo.email,
+      nome: userInfo.name,
+      foto: userInfo.picture || '',
+      google_id: userInfo.id
+    });
+    res.redirect(`applus://callback?${params.toString()}`);
+  } catch(e) {
+    res.redirect('applus://callback?erro=auth_falhou');
+  }
+});
+
+// Inicia fluxo OAuth para APK
+router.get('/google/apk-init', (req, res) => {
+  const { google } = require('googleapis');
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    'https://applus-saude-production.up.railway.app/api/auth/google/apk-callback'
+  );
+  const url = oauth2Client.generateAuthUrl({
+    scope: ['openid', 'email', 'profile'],
+    prompt: 'select_account'
+  });
+  res.redirect(url);
+});
+
 module.exports = router;

@@ -1,9 +1,17 @@
 {
   "appId": "com.anderson.applusSaude2",
-  "appName": "AP+ Saúde",
+  "appName": "AP+ Sa\u00fade",
   "webDir": "frontend",
   "android": {
     "allowMixedContent": false,
     "backgroundColor": "#1a9e6e"
+  },
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "App": {
+      "appUrlOpen": true
+    }
   }
 }
