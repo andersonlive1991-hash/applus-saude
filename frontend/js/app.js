@@ -96,6 +96,8 @@ async function iniciarDeepLinkListener() {
     if (!App) return;
     App.addListener('appUrlOpen', async (data) => {
       const url = data.url || '';
+      // DEBUG — mostrar URL recebida
+      alerta('Deep link recebido: ' + url.substring(0, 80));
       if (!url.startsWith('applus://callback')) return;
       if (Browser) Browser.close().catch(()=>{});
       if (url.includes('erro=')) { alerta('Erro ao entrar com Google'); return; }
