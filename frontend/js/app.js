@@ -98,17 +98,18 @@ async function iniciarDeepLinkListener() {
       const url = data.url || '';
       if (!url.startsWith('applus://callback')) return;
       if (Browser) Browser.close().catch(()=>{});
-      const erro = url.includes('erro=');
-      if (erro) { alerta('Erro ao entrar com Google'); return; }
-      // Ler dados do localStorage gravados pela página de callback
-      const pending = localStorage.getItem('google_oauth_pending');
-      if (!pending) { alerta('Erro ao receber dados do Google'); return; }
-      localStorage.removeItem('google_oauth_pending');
-      const { email, nome, foto, google_id } = JSON.parse(pending);
+      if (url.includes('erro=')) { alerta('Erro ao entrar com Google'); return; }
+      // Extrair token do URL
+      const urlParams = new URLSearchParams(url.split('?')[1] || '');
+      const token = urlParams.get('token');
+      if (!token) { alerta('Token não recebido'); return; }
       try {
+        // Buscar dados do token no servidor
+        const dados = await api('GET', '/api/auth/google/oauth-token/' + token);
+        if (!dados || !dados.ok) { alerta(dados?.erro || 'Erro ao buscar dados'); return; }
         const res = await api('POST', '/api/auth/google', {
           token: null,
-          userInfo: { email, name: nome, picture: foto, sub: google_id }
+          userInfo: { email: dados.email, name: dados.nome, picture: dados.foto, sub: dados.google_id }
         });
         if (res && res.ok) {
           APP.familiaId = String(res.familiaId);
@@ -123,7 +124,7 @@ async function iniciarDeepLinkListener() {
             idPessoal: res.idPessoal, codigoFamilia: res.codigoFamilia
           }));
           if (res.foto) localStorage.setItem('applus_foto', res.foto);
-          mostrarApp();
+          iniciarApp();
         } else {
           alerta(res?.erro || 'Erro ao entrar com Google');
         }

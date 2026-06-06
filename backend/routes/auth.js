@@ -1,3 +1,5 @@
+const pendingOAuthTokens = new Map();
+
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -52,30 +54,18 @@ router.get('/google/apk-callback', async (req, res) => {
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: userInfo } = await oauth2.userinfo.get();
     
-    // Salva dados temporários e redireciona para página de callback web
-    const params = new URLSearchParams({
+    // Salva dados com token temporário e redireciona via deep link
+    const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    pendingOAuthTokens.set(token, {
       email: userInfo.email,
       nome: userInfo.name,
       foto: userInfo.picture || '',
       google_id: userInfo.id
     });
-    res.send(`<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Entrando...</title></head>
-<body style="background:#1a9e6e;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
-<div style="text-align:center;color:white;font-family:sans-serif">
-  <div style="font-size:48px">🌿</div>
-  <p style="font-size:18px;font-weight:bold">AP+ Saúde</p>
-  <p>Entrando com Google...</p>
-</div>
-<script>
-  const data = ${JSON.stringify({email: userInfo.email, nome: userInfo.name, foto: userInfo.picture || '', google_id: userInfo.id})};
-  localStorage.setItem('google_oauth_pending', JSON.stringify(data));
-  setTimeout(() => { window.location.href = 'applus://callback'; }, 500);
-</script>
-</body></html>`);
+    setTimeout(() => pendingOAuthTokens.delete(token), 5 * 60 * 1000);
+    res.redirect(`applus://callback?token=${token}`);
   } catch(e) {
-    res.send('<script>window.location.href="applus://callback?erro=auth_falhou"</script>');
+    res.redirect('applus://callback?erro=auth_falhou');
   }
 });
 
@@ -92,6 +82,15 @@ router.get('/google/apk-init', (req, res) => {
     prompt: 'select_account'
   });
   res.redirect(url);
+});
+
+// Buscar dados do OAuth pelo token temporário
+router.get('/google/oauth-token/:token', (req, res) => {
+  const token = req.params.token;
+  const data = pendingOAuthTokens.get(token);
+  if (!data) return res.json({ ok: false, erro: 'Token inválido ou expirado' });
+  pendingOAuthTokens.delete(token);
+  res.json({ ok: true, ...data });
 });
 
 module.exports = router;
