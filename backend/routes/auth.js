@@ -54,7 +54,7 @@ router.get('/google/apk-callback', async (req, res) => {
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: userInfo } = await oauth2.userinfo.get();
     
-    // Salva dados com token temporário e redireciona via deep link
+    // Salva dados com token temporário e redireciona para página web do app
     const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
     pendingOAuthTokens.set(token, {
       email: userInfo.email,
@@ -63,9 +63,9 @@ router.get('/google/apk-callback', async (req, res) => {
       google_id: userInfo.id
     });
     setTimeout(() => pendingOAuthTokens.delete(token), 5 * 60 * 1000);
-    res.redirect(`applus://callback?token=${token}`);
+    res.redirect(`https://applus-saude-production.up.railway.app/?google_token=${token}`);
   } catch(e) {
-    res.redirect('applus://callback?erro=auth_falhou');
+    res.redirect('https://applus-saude-production.up.railway.app/?google_erro=1');
   }
 });
 
