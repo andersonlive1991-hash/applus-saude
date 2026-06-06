@@ -487,20 +487,7 @@ app.get("/ping", (req, res) => {
   res.json({ status: "ok", uptime: Math.floor(process.uptime()) + "s", hora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) });
 });
 
-// ROTA REMOVIDA: app.get("/api/run-migrations", async (req, res) => {
-  try {
-    await pool.query("ALTER TABLE eventos ADD COLUMN IF NOT EXISTS nome_medico VARCHAR(200)");
-    await pool.query("ALTER TABLE eventos ADD COLUMN IF NOT EXISTS especialidade VARCHAR(100)");
-    await pool.query("ALTER TABLE eventos ADD COLUMN IF NOT EXISTS pediu_exame BOOLEAN DEFAULT FALSE");
-    await pool.query("ALTER TABLE eventos ADD COLUMN IF NOT EXISTS foto_exame TEXT");
-    await pool.query("ALTER TABLE eventos ADD COLUMN IF NOT EXISTS gerou_receita BOOLEAN DEFAULT FALSE");
-    await pool.query("ALTER TABLE eventos ADD COLUMN IF NOT EXISTS data_retorno DATE");
-    await pool.query("ALTER TABLE eventos ADD COLUMN IF NOT EXISTS resumo_gemini TEXT");
-    res.json({ ok: true, msg: "Migracoes executadas com sucesso" });
-  } catch(e) {
-    res.json({ ok: false, erro: e.message });
-  }
-});
+// ROTA run-migrations REMOVIDA
 
 
 // Autoping — mantém o servidor acordado (ping local + externo)
