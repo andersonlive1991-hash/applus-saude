@@ -710,6 +710,7 @@ async function entrarKids() {
     }
 
     KIDS.membroId = mem.id;
+    registrarFCMKids();
     KIDS.membroNome = mem.nome;
     KIDS.familiaId = String(mem.familia_id);
     KIDS.idPessoal = mem.id_pessoal;
@@ -798,6 +799,25 @@ function adicionarMsgKids(msg, propria) {
     <div class="msg-kids-hora">${new Date(msg.criado_em || new Date()).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div>`;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
+}
+
+
+async function registrarFCMKids() {
+  try {
+    if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+    const { PushNotifications } = window.Capacitor.Plugins;
+    if (!PushNotifications) return;
+    const perm = await PushNotifications.requestPermissions();
+    if (perm.receive !== 'granted') return;
+    await PushNotifications.register();
+    PushNotifications.addListener('registration', async (t) => {
+      if (!KIDS.membroId) return;
+      await fetch('/api/push/salvar-fcm-token', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ membro_id: KIDS.membroId, fcm_token: t.value, familia_id: KIDS.familiaId })
+      });
+    });
+  } catch(e) {}
 }
 
 async function enviarSOS() {

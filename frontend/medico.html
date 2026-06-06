@@ -550,6 +550,25 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+
+async function registrarFCMMedico() {
+  try {
+    if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+    const { PushNotifications } = window.Capacitor.Plugins;
+    if (!PushNotifications) return;
+    const perm = await PushNotifications.requestPermissions();
+    if (perm.receive !== 'granted') return;
+    await PushNotifications.register();
+    PushNotifications.addListener('registration', async (t) => {
+      if (!MEDICO.crm) return;
+      await fetch('/api/push/salvar-fcm-token', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ membro_id: 'medico-' + MEDICO.crm, fcm_token: t.value, familia_id: MEDICO.familiaId || 0 })
+      });
+    });
+  } catch(e) {}
+}
+
 async function acessarPortal() {
   const nome = document.getElementById('med-nome').value.trim();
   const crm = document.getElementById('med-crm').value.trim();
@@ -569,6 +588,7 @@ async function acessarPortal() {
     MEDICO.familiaId = membro.familia_id;
     MEDICO.pacienteNome = membro.nome;
 
+    registrarFCMMedico();
     sessionStorage.setItem('medico_sessao', JSON.stringify({
       nome, crm, pacienteId: idPaciente,
       pacienteMembroId: membro.id,

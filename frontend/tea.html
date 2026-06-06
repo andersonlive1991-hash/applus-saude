@@ -731,6 +731,7 @@ async function entrarTEA() {
     }
 
     TEA.membroId = mem.id;
+    registrarFCMTEA();
     TEA.membroNome = mem.nome;
     TEA.familiaId = mem.familia_id;
     TEA.idPessoal = mem.id_pessoal;
@@ -1156,6 +1157,25 @@ async function selecionarHumor(nivel, emoji, texto) {
   } catch(e) {}
 }
 
+
+async function registrarFCMTEA() {
+  try {
+    if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+    const { PushNotifications } = window.Capacitor.Plugins;
+    if (!PushNotifications) return;
+    const perm = await PushNotifications.requestPermissions();
+    if (perm.receive !== 'granted') return;
+    await PushNotifications.register();
+    PushNotifications.addListener('registration', async (t) => {
+      if (!TEA.membroId) return;
+      await fetch('/api/push/salvar-fcm-token', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ membro_id: TEA.membroId, fcm_token: t.value, familia_id: TEA.familiaId })
+      });
+    });
+  } catch(e) {}
+}
+
 async function enviarSOSTea() {
   try {
     await fetch('/api/push/enviar-familia', {
@@ -1358,3 +1378,23 @@ document.addEventListener('keydown', e => {
 </script>
 </body>
 </html>
+<script>
+async function registrarFCM_TEA() {
+  try {
+    if (!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) return;
+    const { PushNotifications } = window.Capacitor.Plugins;
+    if (!PushNotifications) return;
+    const perm = await PushNotifications.requestPermissions();
+    if (perm.receive !== 'granted') return;
+    await PushNotifications.register();
+    PushNotifications.addListener('registration', async (tokenData) => {
+      if (!TEA.membroId) return;
+      await fetch('/api/push/salvar-fcm-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ membro_id: TEA.membroId, fcm_token: tokenData.value, familia_id: TEA.familiaId })
+      });
+    });
+  } catch(e) {}
+}
+</script>

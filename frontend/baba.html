@@ -316,6 +316,7 @@ async function fazerLogin() {
     BABA = m;
     FAMILIA_ID = m.familia_id;
     localStorage.setItem('baba_id', id);
+  registrarFCMBaba();
     iniciarApp();
   } catch(e) {
     document.getElementById('login-erro').textContent = e.message;
@@ -469,6 +470,25 @@ function atualizarStats(dados) {
   document.getElementById('s-sono').textContent = dados.filter(d=>d.tipo==='sono').length;
 }
 
+
+async function registrarFCMBaba() {
+  try {
+    if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+    const { PushNotifications } = window.Capacitor.Plugins;
+    if (!PushNotifications) return;
+    const perm = await PushNotifications.requestPermissions();
+    if (perm.receive !== 'granted') return;
+    await PushNotifications.register();
+    PushNotifications.addListener('registration', async (t) => {
+      if (!BABA.id) return;
+      await fetch('/api/push/salvar-fcm-token', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ membro_id: BABA.id, fcm_token: t.value, familia_id: FAMILIA_ID })
+      });
+    });
+  } catch(e) {}
+}
+
 async function salvarRegistro(tipo, detalhe, quantidade, humor, foto) {
   try {
     const r = await fetch('/api/baba/registros', {
@@ -477,6 +497,16 @@ async function salvarRegistro(tipo, detalhe, quantidade, humor, foto) {
     });
     const d = await r.json();
     socket.emit('baba-registro', { familiaId: FAMILIA_ID, registro: d, babaNome: BABA.nome });
+    // Push FCM para os pais
+    fetch('/api/push/enviar-familia', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        familia_id: FAMILIA_ID,
+        titulo: '👶 ' + BABA.nome + ' registrou',
+        corpo: (nomesTipo[tipo] || tipo) + (detalhe ? ': ' + detalhe : ''),
+        url: '/'
+      })
+    }).catch(()=>{});
     await carregarRegistros();
     buscarPrevisaoIA();
     fecharModal();
