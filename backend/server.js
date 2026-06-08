@@ -29,7 +29,7 @@ try {
 }
 
 // ── Helper: enviar push via FCM + VAPID em paralelo ──
-async function enviarPushCompleto(membro_id, titulo, corpo, url, urgente) {
+async function enviarPushCompleto(membro_id, titulo, corpo, url, urgente, medId, medNome) {
   try {
     const subRes = await pool.query(
       'SELECT subscription, fcm_token FROM push_subscriptions WHERE membro_id=$1',
@@ -37,7 +37,7 @@ async function enviarPushCompleto(membro_id, titulo, corpo, url, urgente) {
     );
     if (!subRes.rows.length) return;
     const { subscription, fcm_token } = subRes.rows[0];
-    const payload = JSON.stringify({ titulo, corpo, url: url || '/', urgente: urgente || false });
+    const payload = JSON.stringify({ titulo, corpo, url: url || '/', urgente: urgente || false, medId: medId || null, medNome: medNome || null });
 
     // VAPID (web-push) — funciona com app aberto/minimizado
     if (subscription) {
@@ -56,12 +56,14 @@ async function enviarPushCompleto(membro_id, titulo, corpo, url, urgente) {
       try {
         await admin.messaging().send({
           token: fcm_token,
-          notification: { title: titulo, body: corpo },
-          data: { url: url || '/', urgente: String(urgente || false) },
-          android: {
-            priority: 'high',
-            notification: { sound: 'default', channelId: 'applus_alarmes' }
-          }
+          data: {
+            tipo: 'alarme-medicamento',
+            titulo: titulo,
+            corpo: corpo,
+            url: url || '/',
+            urgente: String(urgente || false)
+          },
+          android: { priority: 'high', ttl: 60000 }
         });
       } catch(e) {
         console.log('[FCM] Erro envio:', e.message);
@@ -666,19 +668,10 @@ setInterval(async () => {
       console.log('[Agendador] Med:', med.nome, '| horarios:', JSON.stringify(horarios), '| horaAtual:', horaAtual, '| match:', horarios.includes(horaAtual));
       if (!Array.isArray(horarios) || !horarios.includes(horaAtual)) continue;
 
-      const subRes = await pool.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [med.membro_id]);
-      if (!subRes.rows.length) continue;
-
-      const sub = typeof subRes.rows[0].subscription === 'string' ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
-      const payload = JSON.stringify({
-        titulo: '💊 Hora do medicamento!',
-        corpo: `${med.nome}${med.dosagem ? ' — ' + med.dosagem : ''} · ${horaAtual}`,
-        url: '/#remedios',
-        medicamento: true,
-        medId: med.id,
-        medNome: med.nome
-      });
-      webpush.sendNotification(sub, payload).then(() => console.log('[Push OK] membro', med.membro_id)).catch(e => { console.log('[Push ERRO]', e.statusCode, e.message); if(e.statusCode===410||e.statusCode===404){pool.query('DELETE FROM push_subscriptions WHERE membro_id=$1',[med.membro_id]).catch(()=>{}); } });
+      const titulo = '💊 Hora do medicamento!';
+      const corpo = `${med.nome}${med.dosagem ? ' — ' + med.dosagem : ''} · ${horaAtual}`;
+      await enviarPushCompleto(med.membro_id, titulo, corpo, '/#remedios', true, med.id, med.nome);
+      console.log('[Push OK] membro', med.membro_id);
     }
   } catch(e) {
     console.log('Erro agendador:', e.message);
