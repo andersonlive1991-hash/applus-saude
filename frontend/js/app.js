@@ -185,42 +185,6 @@ function salvarSessaoMembro() {
 }
 
 async function carregarSessao() {
-  // Detectar retorno do OAuth Google (APK)
-  const urlParams = new URLSearchParams(window.location.search);
-  const googleToken = urlParams.get('token');
-  const googleErro = urlParams.get('erro') || urlParams.get('google_erro');
-  if (googleErro) { alerta('Erro ao entrar com Google'); mostrarLogin(); return; }
-  if (googleToken) {
-    try {
-      const dados = await api('GET', '/api/auth/google/oauth-token/' + googleToken);
-      if (dados && dados.ok) {
-        const res = await api('POST', '/api/auth/google', {
-          token: null,
-          userInfo: { email: dados.email, name: dados.nome, picture: dados.foto, sub: dados.google_id }
-        });
-        if (res && res.ok) {
-          APP.familiaId = String(res.familiaId);
-          APP.membroId = res.membroId;
-          APP.membroNome = res.membroNome;
-          APP.membroTipo = res.membroTipo;
-          APP.idPessoal = res.idPessoal;
-          APP.membroAtivo = { id: res.membroId, nome: res.membroNome, tipo: res.membroTipo, id_pessoal: res.idPessoal };
-          localStorage.setItem('applus_sessao', JSON.stringify({
-            familiaId: res.familiaId, membroId: res.membroId,
-            membroNome: res.membroNome, membroTipo: res.membroTipo,
-            idPessoal: res.idPessoal, codigoFamilia: res.codigoFamilia
-          }));
-          if (res.foto) localStorage.setItem('applus_foto', res.foto);
-          // Limpar URL e iniciar app
-          window.history.replaceState({}, '', '/');
-          iniciarApp();
-          return;
-        }
-      }
-    } catch(e) {}
-    mostrarLogin();
-    return;
-  }
   const sessao = localStorage.getItem('applus_sessao');
   const familia = localStorage.getItem('applus_familia');
 
