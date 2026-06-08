@@ -61,7 +61,9 @@ async function enviarPushCompleto(membro_id, titulo, corpo, url, urgente, medId,
             titulo: titulo,
             corpo: corpo,
             url: url || '/',
-            urgente: String(urgente || false)
+            urgente: String(urgente || false),
+            medNome: medNome ? String(medNome) : '',
+            medDose: ''
           },
           android: { priority: 'high', ttl: 60000 }
         });
