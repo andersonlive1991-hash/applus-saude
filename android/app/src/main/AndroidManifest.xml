@@ -26,59 +26,15 @@
             android:name=".AlarmActivity"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:exported="false"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true"
             android:launchMode="singleInstance" />
 
-        <activity
-            android:name=".SOSActivity"
-            android:theme="@style/AppTheme.NoActionBarLaunch"
-            android:exported="false"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true"
-            android:launchMode="singleInstance" />
-
-        <!--
-            foregroundServiceType="mediaPlayback" é OBRIGATÓRIO no Android 14+ (API 34+) para
-            ForegroundServices iniciados a partir de um BroadcastReceiver disparado pelo AlarmManager.
-            O tipo mediaPlayback é o mais permissivo e não exige declaração adicional de uso.
-        -->
         <service
             android:name=".AlarmService"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
-
-        <receiver
-            android:name=".AlarmReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="PARAR_ALARME" />
-            </intent-filter>
-        </receiver>
-
-        <!-- BootReceiver: reagenda alarmes após reinício do celular -->
-        <receiver
-            android:name=".HabitoReceiver"
             android:exported="false" />
 
         <receiver
-            android:name=".BootReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <!-- Samsung e HTC -->
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
-            </intent-filter>
-        </receiver>
-
-        <service
-            android:name=".ApplusFirebaseService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
+            android:name=".AlarmReceiver"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -92,16 +48,10 @@
     </application>
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- Obrigatório para foregroundServiceType="mediaPlayback" no Android 14+ -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />

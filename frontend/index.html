@@ -310,16 +310,6 @@
         <div class="card-titulo" data-i18n="card.meu_dia">Meu Dia</div>
         <div class="card-sub">Autocuidado pessoal</div>
       </div>
-      <div class="card" onclick="navegarPara('exercicios')">
-        <div class="card-icone">🏋️</div>
-        <div class="card-titulo">Exercícios</div>
-        <div class="card-sub">Treinos em vídeo</div>
-      </div>
-      <div class="card" id="card-saude-feminina" style="display:none" onclick="navegarPara('saude-feminina')">
-        <div class="card-icone">🌸</div>
-        <div class="card-titulo">Saúde Feminina</div>
-        <div class="card-sub">Ciclo e bem-estar</div>
-      </div>
       <div class="card" onclick="navegarPara('mente-sa')">
         <div class="card-icone">🌱</div>
         <div class="card-titulo" data-i18n="card.mente_sa">Mente Sã</div>
@@ -857,14 +847,6 @@
           <select id="pf-nasc-ano" style="flex:1.5"><option value="">Ano</option></select>
         </div>
       </div>
-      <div class="campo"><label>Sexo biológico</label>
-        <select id="pf-sexo">
-          <option value="">Selecione</option>
-          <option value="masculino">Masculino</option>
-          <option value="feminino">Feminino</option>
-          <option value="outro">Prefiro não informar</option>
-        </select>
-      </div>
       <div class="campo"><label data-i18n="meu_perfil.sangue">Tipo sanguíneo</label>
         <select id="pf-sangue">
           <option value="">Selecione</option>
@@ -1348,246 +1330,6 @@
   </div>
 
   <!-- ── MENTE SÃ ── -->
-  <div id="pag-exercicios" class="pagina">
-    <div class="header-verde">
-      <h1>🏋️ Exercícios</h1>
-      <p>Vídeos com instrução profissional</p>
-    </div>
-    <div class="curva"></div>
-    <div class="conteudo">
-
-      <!-- Categorias -->
-      <div style="display:flex;gap:0.4rem;overflow-x:auto;margin-bottom:1rem;padding-bottom:0.5rem">
-        <button class="btn-aba ativa" id="aba-ex-peito" onclick="trocarCatExercicio('peito')">💪 Peito</button>
-        <button class="btn-aba" id="aba-ex-perna" onclick="trocarCatExercicio('perna')">🦵 Pernas</button>
-        <button class="btn-aba" id="aba-ex-core" onclick="trocarCatExercicio('core')">🔥 Core</button>
-        <button class="btn-aba" id="aba-ex-cardio" onclick="trocarCatExercicio('cardio')">❤️ Cardio</button>
-        <button class="btn-aba" id="aba-ex-costas" onclick="trocarCatExercicio('costas')">🏊 Costas</button>
-        <button class="btn-aba" id="aba-ex-relaxa" onclick="trocarCatExercicio('relaxa')">🧘 Relaxamento</button>
-      </div>
-
-      <!-- Lista de exercícios -->
-      <div id="ex-lista"></div>
-
-      <!-- Disclaimer IA -->
-      <div style="background:#fff8e1;border-radius:12px;padding:1rem;margin-top:1rem;border-left:4px solid #f59e0b">
-        <p style="font-size:0.8rem;color:#92400e">⚠️ Os exercícios são informativos. Consulte um profissional de educação física antes de iniciar qualquer atividade física.</p>
-      </div>
-
-    </div>
-  </div>
-
-  <div id="pag-saude-feminina" class="pagina">
-    <div class="header-verde" style="background:linear-gradient(145deg,#c2185b,#e91e63,#f06292)">
-      <h1>🌸 Saúde Feminina</h1>
-      <p>Ciclo, bem-estar e autocuidado</p>
-    </div>
-    <div class="curva"></div>
-    <div class="conteudo">
-
-      <!-- Abas -->
-      <div style="display:flex;gap:0.4rem;overflow-x:auto;margin-bottom:1rem;padding-bottom:0.5rem">
-        <button class="btn-aba ativa" id="aba-sf-ciclo" onclick="trocarAbaSaudeFem('ciclo')">🩸 Ciclo</button>
-        <button class="btn-aba" id="aba-sf-endometriose" onclick="trocarAbaSaudeFem('endometriose')">🔴 Endometriose</button>
-        <button class="btn-aba" id="aba-sf-sintomas" onclick="trocarAbaSaudeFem('sintomas')">📋 Sintomas</button>
-        <button class="btn-aba" id="aba-sf-cuidados" onclick="trocarAbaSaudeFem('cuidados')">💊 Cuidados</button>
-      </div>
-
-      <!-- ABA CICLO -->
-      <div id="sf-ciclo">
-        <div style="background:white;border-radius:16px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <p style="font-weight:600;font-size:1rem;margin-bottom:1rem">📅 Meu Ciclo</p>
-
-          <!-- Fase atual -->
-          <div id="sf-fase-atual" style="background:#fce4ec;border-radius:12px;padding:1rem;margin-bottom:1rem;text-align:center">
-            <div style="font-size:2rem" id="sf-fase-emoji">🌸</div>
-            <p style="font-weight:600;color:#c2185b" id="sf-fase-nome">Calculando...</p>
-            <p style="font-size:0.8rem;color:#888" id="sf-fase-desc">Informe a data da última menstruação</p>
-          </div>
-
-          <!-- Registrar menstruação -->
-          <div class="campo">
-            <label>Data da última menstruação</label>
-            <input type="date" id="sf-data-mens" onchange="calcularCiclo()">
-          </div>
-          <div class="campo">
-            <label>Duração média do ciclo (dias)</label>
-            <input type="number" id="sf-dur-ciclo" value="28" min="21" max="40" onchange="calcularCiclo()">
-          </div>
-          <div class="campo">
-            <label>Duração da menstruação (dias)</label>
-            <input type="number" id="sf-dur-mens" value="5" min="2" max="10" onchange="calcularCiclo()">
-          </div>
-          <button class="btn btn-verde btn-block" onclick="salvarCiclo()">💾 Salvar ciclo</button>
-        </div>
-
-        <!-- Fases do ciclo -->
-        <div style="background:white;border-radius:16px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <p style="font-weight:600;font-size:0.95rem;margin-bottom:0.8rem">🔄 Fases do ciclo</p>
-          <div id="sf-fases-lista"></div>
-        </div>
-
-        <!-- Próximas datas -->
-        <div style="background:white;border-radius:16px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <p style="font-weight:600;font-size:0.95rem;margin-bottom:0.8rem">📆 Próximas datas</p>
-          <div id="sf-proximas"></div>
-        </div>
-      </div>
-
-      <!-- ABA ENDOMETRIOSE -->
-      <div id="sf-endometriose" style="display:none">
-        <div style="background:#fce4ec;border-radius:16px;padding:1.2rem;margin-bottom:1rem;border-left:4px solid #e91e63">
-          <p style="font-weight:600;color:#c2185b;margin-bottom:0.5rem">🔴 O que é Endometriose?</p>
-          <p style="font-size:0.85rem;color:#555;line-height:1.6">A endometriose afeta cerca de 190 milhões de mulheres no mundo. É uma condição inflamatória crônica onde tecido similar ao endométrio cresce fora do útero, causando dor intensa e outros sintomas.</p>
-        </div>
-
-        <!-- Alimentação -->
-        <div style="background:white;border-radius:16px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <p style="font-weight:600;font-size:0.95rem;margin-bottom:0.8rem">🥗 Alimentação anti-inflamatória</p>
-          <p style="font-size:0.8rem;font-weight:600;color:#1a9e6e;margin-bottom:0.5rem">✅ Consumir mais:</p>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:0.8rem">
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🐟 Peixe (ômega-3)</span>
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🫐 Frutas vermelhas</span>
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🥦 Brócolis</span>
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🫚 Azeite</span>
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🫚 Cúrcuma</span>
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🌰 Nozes</span>
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🥬 Folhas verdes</span>
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🫚 Linhaça</span>
-          </div>
-          <p style="font-size:0.8rem;font-weight:600;color:#e53935;margin-bottom:0.5rem">❌ Evitar:</p>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            <span style="background:#ffebee;color:#b71c1c;padding:4px 10px;border-radius:20px;font-size:12px">🥩 Carne vermelha</span>
-            <span style="background:#ffebee;color:#b71c1c;padding:4px 10px;border-radius:20px;font-size:12px">🍺 Álcool</span>
-            <span style="background:#ffebee;color:#b71c1c;padding:4px 10px;border-radius:20px;font-size:12px">☕ Cafeína em excesso</span>
-            <span style="background:#ffebee;color:#b71c1c;padding:4px 10px;border-radius:20px;font-size:12px">🍬 Açúcar refinado</span>
-            <span style="background:#ffebee;color:#b71c1c;padding:4px 10px;border-radius:20px;font-size:12px">🍟 Alimentos fritos</span>
-            <span style="background:#ffebee;color:#b71c1c;padding:4px 10px;border-radius:20px;font-size:12px">🥛 Laticínios em excesso</span>
-          </div>
-        </div>
-
-        <!-- Suplementos -->
-        <div style="background:white;border-radius:16px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <p style="font-weight:600;font-size:0.95rem;margin-bottom:0.8rem">💊 Suplementos com evidência científica (2024)</p>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="background:#f8f8f8;border-radius:10px;padding:10px">
-              <p style="font-weight:600;font-size:0.85rem">Vitamina D</p>
-              <p style="font-size:0.78rem;color:#666">Reduz inflamação e modula o sistema imune. Deficiência comum em mulheres com endometriose.</p>
-            </div>
-            <div style="background:#f8f8f8;border-radius:10px;padding:10px">
-              <p style="font-weight:600;font-size:0.85rem">Ômega-3</p>
-              <p style="font-size:0.78rem;color:#666">Ácidos graxos poli-insaturados reduzem prostaglandinas inflamatórias associadas à dor.</p>
-            </div>
-            <div style="background:#f8f8f8;border-radius:10px;padding:10px">
-              <p style="font-weight:600;font-size:0.85rem">Vitaminas C + E</p>
-              <p style="font-size:0.78rem;color:#666">Meta-análise 2024 demonstrou redução significativa da dor pélvica e dismenorreia.</p>
-            </div>
-            <div style="background:#f8f8f8;border-radius:10px;padding:10px">
-              <p style="font-weight:600;font-size:0.85rem">Magnésio</p>
-              <p style="font-size:0.78rem;color:#666">Relaxa a musculatura uterina e reduz cólicas. Eficaz especialmente na fase menstrual.</p>
-            </div>
-            <div style="background:#f8f8f8;border-radius:10px;padding:10px">
-              <p style="font-weight:600;font-size:0.85rem">Cúrcuma (curcumina)</p>
-              <p style="font-size:0.78rem;color:#666">Potente anti-inflamatório natural. Inibe vias inflamatórias relevantes na endometriose.</p>
-            </div>
-          </div>
-          <div style="background:#fff8e1;border-radius:10px;padding:10px;margin-top:10px;border-left:3px solid #f59e0b">
-            <p style="font-size:0.78rem;color:#92400e">⚠️ Consulte seu ginecologista antes de iniciar qualquer suplementação.</p>
-          </div>
-        </div>
-
-        <!-- Exercícios recomendados -->
-        <div style="background:white;border-radius:16px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <p style="font-weight:600;font-size:0.95rem;margin-bottom:0.8rem">🧘 Exercícios recomendados</p>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:0.8rem">
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🧘 Yoga</span>
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🚶 Caminhada</span>
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🏊 Natação</span>
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🚲 Ciclismo leve</span>
-            <span style="background:#e1f5ee;color:#085041;padding:4px 10px;border-radius:20px;font-size:12px">🤸 Pilates</span>
-          </div>
-          <p style="font-size:0.78rem;color:#e53935;font-weight:500">❌ Evitar exercícios de alto impacto durante crise de dor.</p>
-        </div>
-      </div>
-
-      <!-- ABA SINTOMAS -->
-      <div id="sf-sintomas" style="display:none">
-        <div style="background:white;border-radius:16px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <p style="font-weight:600;font-size:0.95rem;margin-bottom:1rem">📋 Registrar sintomas de hoje</p>
-          <div class="campo">
-            <label>Intensidade da dor (0-10)</label>
-            <input type="range" id="sf-dor" min="0" max="10" value="0" oninput="document.getElementById('sf-dor-val').textContent=this.value">
-            <p style="text-align:center;font-weight:600;color:#e91e63" id="sf-dor-val">0</p>
-          </div>
-          <div class="campo">
-            <label>Humor</label>
-            <select id="sf-humor">
-              <option value="otimo">😄 Ótimo</option>
-              <option value="bem" selected>🙂 Bem</option>
-              <option value="regular">😐 Regular</option>
-              <option value="mal">😔 Mal</option>
-              <option value="pessimo">😢 Péssimo</option>
-            </select>
-          </div>
-          <div class="campo">
-            <label>Fluxo (se em menstruação)</label>
-            <select id="sf-fluxo">
-              <option value="">Não se aplica</option>
-              <option value="leve">Leve</option>
-              <option value="moderado">Moderado</option>
-              <option value="intenso">Intenso</option>
-              <option value="muito_intenso">Muito intenso</option>
-            </select>
-          </div>
-          <div class="campo">
-            <label>Observações</label>
-            <textarea id="sf-obs" placeholder="Cólicas, inchaço, sensibilidade..." rows="3"></textarea>
-          </div>
-          <button class="btn btn-verde btn-block" onclick="salvarSintomasFem()">💾 Registrar</button>
-        </div>
-        <div style="background:white;border-radius:16px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <p style="font-weight:600;font-size:0.95rem;margin-bottom:0.8rem">📊 Histórico recente</p>
-          <div id="sf-historico-sint">
-            <p style="color:#aaa;text-align:center;font-size:0.85rem">Nenhum registro ainda</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ABA CUIDADOS -->
-      <div id="sf-cuidados" style="display:none">
-        <div style="background:white;border-radius:16px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <p style="font-weight:600;font-size:0.95rem;margin-bottom:0.8rem">💡 Cuidados diários</p>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="background:#fce4ec;border-radius:10px;padding:10px;display:flex;gap:10px;align-items:flex-start">
-              <span style="font-size:1.5rem">😴</span>
-              <div><p style="font-weight:600;font-size:0.85rem">Sono regulado</p><p style="font-size:0.78rem;color:#666">7-9 horas por noite. A privação de sono eleva o cortisol e agrava a inflamação.</p></div>
-            </div>
-            <div style="background:#e8f5e9;border-radius:10px;padding:10px;display:flex;gap:10px;align-items:flex-start">
-              <span style="font-size:1.5rem">💧</span>
-              <div><p style="font-weight:600;font-size:0.85rem">Hidratação</p><p style="font-size:0.78rem;color:#666">Mínimo 2 litros de água por dia. Reduz retenção e inchaço.</p></div>
-            </div>
-            <div style="background:#e3f2fd;border-radius:10px;padding:10px;display:flex;gap:10px;align-items:flex-start">
-              <span style="font-size:1.5rem">🧘</span>
-              <div><p style="font-weight:600;font-size:0.85rem">Gestão do estresse</p><p style="font-size:0.78rem;color:#666">Meditação, mindfulness e respiração reduzem cortisol e amenizam crises.</p></div>
-            </div>
-            <div style="background:#fff8e1;border-radius:10px;padding:10px;display:flex;gap:10px;align-items:flex-start">
-              <span style="font-size:1.5rem">🚫</span>
-              <div><p style="font-weight:600;font-size:0.85rem">Evitar disruptores endócrinos</p><p style="font-size:0.78rem;color:#666">Plásticos BPA, pesticidas e produtos com parabenos interferem nos hormônios.</p></div>
-            </div>
-            <div style="background:#fce4ec;border-radius:10px;padding:10px;display:flex;gap:10px;align-items:flex-start">
-              <span style="font-size:1.5rem">🩺</span>
-              <div><p style="font-weight:600;font-size:0.85rem">Consultas regulares</p><p style="font-size:0.78rem;color:#666">Acompanhamento ginecológico anual e ultrassonografia pélvica.</p></div>
-            </div>
-          </div>
-        </div>
-        <div style="background:#fce4ec;border-radius:12px;padding:1rem;margin-bottom:1rem;border-left:4px solid #e91e63">
-          <p style="font-size:0.82rem;color:#880e4f;line-height:1.6">⚠️ As informações são baseadas em evidências científicas (NIH, NICE 2024) e têm caráter educativo. Não substituem consulta médica. Em caso de dor intensa ou sintomas novos, procure um ginecologista.</p>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
   <div id="pag-mente-sa" class="pagina">
     <div class="header-verde" style="background:linear-gradient(145deg,#1a1a2e,#16213e,#0f3460)">
       <h1>🌱 Mente Sã</h1>
@@ -1800,13 +1542,6 @@
       </div>
       <div class="campo"><label>Nome</label><input id="inp-nome-familia" type="text" placeholder="Ex: Anderson"></div>
       <div class="campo"><label>Sobrenome</label><input id="inp-nome-membro" type="text" placeholder="Ex: Barros"></div>
-      <div class="campo"><label>Sexo biológico</label>
-        <select id="inp-sexo-cadastro">
-          <option value="">Prefiro não informar</option>
-          <option value="masculino">Masculino</option>
-          <option value="feminino">Feminino</option>
-        </select>
-      </div>
       <div class="campo"><label>Seu papel</label>
         <select id="inp-tipo-membro" onchange="mostrarDescricaoPapel(this.value)" style="margin-bottom:6px">
           <option value="administrador">👤 Para mim — vou cuidar da minha saúde</option>
@@ -1926,14 +1661,7 @@
       <div id="form-entrar-familiar">
         <div class="campo"><label>Código da família</label><input id="inp-codigo-familia" type="text" placeholder="Ex: BARR9598" style="text-transform:uppercase"></div>
         <div class="campo"><label>Seu nome</label><input id="inp-nome-entrar" type="text" placeholder="Seu nome completo"></div>
-        <div class="campo"><label>Sexo biológico</label>
-        <select id="inp-sexo-cadastro">
-          <option value="">Prefiro não informar</option>
-          <option value="masculino">Masculino</option>
-          <option value="feminino">Feminino</option>
-        </select>
-      </div>
-      <div class="campo"><label>Seu papel</label>
+        <div class="campo"><label>Seu papel</label>
           <select id="inp-tipo-entrar">
             <option value="administrador">👤 Para mim</option>
             <option value="idoso">Idoso</option>

@@ -27,55 +27,20 @@ router.post('/inscrever', async (req, res) => {
 router.post('/enviar-familia', async (req, res) => {
   const { familia_id, titulo, corpo, url } = req.body;
   try {
-    const { membro_id_origem } = req.body;
     const result = await db.query(
-      'SELECT membro_id, subscription, fcm_token FROM push_subscriptions WHERE familia_id = $1',
+      'SELECT membro_id, subscription FROM push_subscriptions WHERE familia_id = $1',
       [familia_id]
     );
     const payload = JSON.stringify({ titulo, corpo, url: url || '/' });
-    const envios = result.rows.filter(row => !membro_id_origem || String(row.membro_id) !== String(membro_id_origem)).map(async row => {
-      // FCM — para APK Capacitor (app fechado)
-      if (row.fcm_token) {
-        try {
-          const admin = require('../server').admin;
-          if (admin && admin.apps && admin.apps.length) {
-            const isSOS = titulo && titulo.includes('EMERGÊNCIA');
-            const fcmPayload = {
-              token: row.fcm_token,
-              data: {
-                tipo: isSOS ? 'sos-chamada' : 'notificacao',
-                nome: corpo ? corpo.split(' ')[0] : 'Familiar',
-                url: url || '/',
-                titulo: titulo || '',
-                corpo: corpo || ''
-              },
-              android: { priority: 'high' }
-            };
-            if (!isSOS) {
-              fcmPayload.notification = { title: titulo, body: corpo };
-              fcmPayload.android.notification = { sound: 'default', channelId: 'applus_alarmes' };
-            }
-            await admin.messaging().send(fcmPayload);
-            console.log('[FCM familia] Enviado tipo', isSOS ? 'SOS' : 'notificacao', 'para membro', row.membro_id);
-          }
-        } catch(e) {
-          console.log('[FCM familia] Erro membro', row.membro_id, e.message);
-          if (e.code === 'messaging/registration-token-not-registered') {
-            await db.query('UPDATE push_subscriptions SET fcm_token=NULL WHERE membro_id=$1', [row.membro_id]).catch(()=>{});
-          }
-        }
-      }
-      // VAPID — para PWA (navegador)
+    const envios = result.rows.map(row => {
       const sub = typeof row.subscription === 'string' ? JSON.parse(row.subscription) : row.subscription;
-      if (sub && sub.endpoint) {
-        return webpush.sendNotification(sub, payload).catch(async (err) => {
-          if (err.statusCode === 404 || err.statusCode === 410 || (err.message && err.message.includes('unexpected'))) {
-            await db.query('DELETE FROM push_subscriptions WHERE membro_id = $1', [row.membro_id]);
-            console.log('[Push] Inscricao invalida removida para membro', row.membro_id);
-          }
-          return null;
-        });
-      }
+      return webpush.sendNotification(sub, payload).catch(async (err) => {
+        if (err.statusCode === 404 || err.statusCode === 410 || (err.message && err.message.includes('unexpected'))) {
+          await db.query('DELETE FROM push_subscriptions WHERE membro_id = $1', [row.membro_id]);
+          console.log('[Push] Inscricao invalida removida para membro', row.membro_id);
+        }
+        return null;
+      });
     });
     await Promise.all(envios);
     res.json({ ok: true, enviados: envios.length });
@@ -189,19 +154,15 @@ router.post('/enviar-medico-crm', async (req, res) => {
 });
 
 router.post('/salvar-fcm-token', async (req, res) => {
-  const { membro_id, fcm_token, familia_id } = req.body;
+  const { membro_id, fcm_token } = req.body;
   if (!membro_id || !fcm_token) return res.status(400).json({ erro: 'Campos obrigatorios' });
   try {
     await db.query(
-      `INSERT INTO push_subscriptions (membro_id, familia_id, fcm_token, subscription)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (membro_id) DO UPDATE SET fcm_token = $3`,
-      [membro_id, familia_id || null, fcm_token, JSON.stringify({})]
+      'UPDATE push_subscriptions SET fcm_token=$1 WHERE membro_id=$2',
+      [fcm_token, membro_id]
     );
-    console.log('[FCM] Token salvo para membro', membro_id);
     res.json({ ok: true });
   } catch(e) {
-    console.log('[FCM] Erro salvar token:', e.message);
     res.status(500).json({ erro: e.message });
   }
 });

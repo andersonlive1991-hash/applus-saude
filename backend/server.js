@@ -666,10 +666,10 @@ setInterval(async () => {
       console.log('[Agendador] Med:', med.nome, '| horarios:', JSON.stringify(horarios), '| horaAtual:', horaAtual, '| match:', horarios.includes(horaAtual));
       if (!Array.isArray(horarios) || !horarios.includes(horaAtual)) continue;
 
-      const subRes = await pool.query('SELECT subscription, fcm_token FROM push_subscriptions WHERE membro_id = $1', [med.membro_id]);
+      const subRes = await pool.query('SELECT subscription FROM push_subscriptions WHERE membro_id = $1', [med.membro_id]);
       if (!subRes.rows.length) continue;
 
-      const { subscription, fcm_token } = subRes.rows[0];
+      const sub = typeof subRes.rows[0].subscription === 'string' ? JSON.parse(subRes.rows[0].subscription) : subRes.rows[0].subscription;
       const payload = JSON.stringify({
         titulo: '💊 Hora do medicamento!',
         corpo: `${med.nome}${med.dosagem ? ' — ' + med.dosagem : ''} · ${horaAtual}`,
@@ -678,44 +678,7 @@ setInterval(async () => {
         medId: med.id,
         medNome: med.nome
       });
-
-      // VAPID (web-push)
-      if (subscription) {
-        const sub = typeof subscription === 'string' ? JSON.parse(subscription) : subscription;
-        webpush.sendNotification(sub, payload)
-          .then(() => console.log('[VAPID OK] membro', med.membro_id))
-          .catch(e => {
-            console.log('[VAPID ERRO]', e.statusCode, e.message);
-            if (e.statusCode===410||e.statusCode===404) {
-              pool.query('DELETE FROM push_subscriptions WHERE membro_id=$1', [med.membro_id]).catch(()=>{});
-            }
-          });
-      }
-
-      // FCM — funciona com app fechado
-      if (fcm_token && admin.apps.length) {
-        admin.messaging().send({
-          token: fcm_token,
-          data: {
-            tipo: 'alarme-medicamento',
-            medId: String(med.id),
-            medNome: med.nome,
-            medDose: med.dosagem || '',
-            url: '/#remedios'
-          },
-          android: {
-            priority: 'high',
-            ttl: 60000
-          }
-        })
-        .then(() => console.log('[FCM OK] membro', med.membro_id))
-        .catch(e => {
-          console.log('[FCM ERRO]', e.message);
-          if (e.code === 'messaging/registration-token-not-registered') {
-            pool.query('UPDATE push_subscriptions SET fcm_token=NULL WHERE membro_id=$1', [med.membro_id]).catch(()=>{});
-          }
-        });
-      }
+      webpush.sendNotification(sub, payload).then(() => console.log('[Push OK] membro', med.membro_id)).catch(e => { console.log('[Push ERRO]', e.statusCode, e.message); if(e.statusCode===410||e.statusCode===404){pool.query('DELETE FROM push_subscriptions WHERE membro_id=$1',[med.membro_id]).catch(()=>{}); } });
     }
   } catch(e) {
     console.log('Erro agendador:', e.message);
@@ -840,9 +803,9 @@ setInterval(async () => {
 
         // Buscar dados do dia
         const hoje = new Date().toISOString().split('T')[0];
-        const hidRes = await pool.query('SELECT COALESCE(SUM(copos),0) as copos FROM cuidados_hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE', [membro_id]);
+        const hidRes = await pool.query('SELECT COALESCE(SUM(quantidade_ml)/250,0) as copos, MAX(meta_ml)/250 as meta FROM hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE', [membro_id]);
         const copos = Math.round(hidRes.rows[0].copos || 0);
-        const metaAgua = 8;
+        const metaAgua = Math.round(hidRes.rows[0].meta || 8);
 
         const sonoRes = await pool.query('SELECT * FROM cuidados_sono WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1', [membro_id]);
         const sonoInfo = sonoRes.rows.length ? (sonoRes.rows[0].qualidade || 'registrado') : 'nao registrado';
@@ -850,19 +813,13 @@ setInterval(async () => {
         const humorRes = await pool.query('SELECT humor FROM cuidados_humor WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1', [membro_id]);
         const humorTexto = humorRes.rows.length ? humorRes.rows[0].humor : 'nao registrado';
 
-        const refRes = await pool.query('SELECT COUNT(*) as total FROM cuidados_refeicoes WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE', [membro_id]);
-        const refeicoes = parseInt(refRes.rows[0].total || 0);
-
-        const atRes = await pool.query('SELECT COUNT(*) as total FROM cuidados_atividades WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE', [membro_id]);
-        const atividades = parseInt(atRes.rows[0].total || 0);
-
         const sinaisRes = await pool.query('SELECT tipo, valor FROM sinais_vitais WHERE membro_id=$1 ORDER BY criado_em DESC LIMIT 3', [membro_id]);
         const sinaisTexto = sinaisRes.rows.length ? sinaisRes.rows.map(s => s.tipo+': '+s.valor).join(', ') : 'nenhum';
 
         const medsRes = await pool.query('SELECT nome FROM medicamentos WHERE membro_id=$1 AND ativo=true', [membro_id]);
         const medsTexto = medsRes.rows.length ? medsRes.rows.map(m => m.nome).join(', ') : 'nenhum';
 
-        const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de hoje de ' + nome + ' e faca um resumo em portugues brasileiro. DADOS: Agua: ' + copos + ' de 8 copos. Refeicoes: ' + refeicoes + ' de 5. Atividade fisica: ' + atividades + ' sessao(oes). Sono: ' + sonoInfo + '. Humor: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos ativos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica para amanha. Seja direto e acolhedor.';
+        const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de ' + nome + ' e faca um resumo em portugues brasileiro. DADOS: Agua: ' + copos + ' copos (meta: ' + metaAgua + '). Sono: ' + sonoInfo + '. Humor: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica. Seja direto e acolhedor.';
 
         const resumo = await chamarGemini(prompt);
 
@@ -871,19 +828,6 @@ setInterval(async () => {
           [membro_id, resumo, JSON.stringify({ copos, metaAgua, sonoInfo, humorTexto })]
         );
         console.log('[Resumo Diário] Gerado para membro', membro_id);
-
-        // Envia FCM silencioso para atualizar o card na home
-        const fcmRes = await pool.query('SELECT fcm_token FROM push_subscriptions WHERE membro_id=$1 AND fcm_token IS NOT NULL', [membro_id]);
-        if (fcmRes.rows.length && admin.apps.length) {
-          admin.messaging().send({
-            token: fcmRes.rows[0].fcm_token,
-            data: {
-              tipo: 'resumo-pronto',
-              membro_id: String(membro_id)
-            },
-            android: { priority: 'high' }
-          }).catch(e => console.log('[Resumo FCM] Erro:', e.message));
-        }
       } catch (e) {
         console.log('[Resumo Diário] Erro membro', membro_id, e.message);
       }
@@ -969,345 +913,4 @@ setInterval(async () => {
     console.log('[Push Medico Doses] Erro:', e.message);
   }
 }, 3600000);
-
-
-
-// ── AGENDADOR DE HÁBITOS DIÁRIOS ──
-const HABITOS_HORARIOS = {
-  'agua':        ['07:00','09:00','11:00','13:00','15:00','17:00','19:00','21:00'],
-  'alimentacao': ['07:30','12:00','15:00','19:30'],
-  'exercicio':   ['07:00'],
-  'sono':        ['22:00'],
-  'pausa':       ['10:00','14:00','17:00']
-};
-const HABITOS_MSG = {
-  'agua':        { emoji: '💧', titulo: 'Hora de beber água!', corpo: 'Mantenha-se hidratado. Beba um copo agora!' },
-  'alimentacao': { emoji: '🍽️', titulo: 'Hora de se alimentar!', corpo: 'Uma refeição saudável agora faz bem ao corpo.' },
-  'exercicio':   { emoji: '🏃', titulo: 'Hora de se exercitar!', corpo: 'Que tal uma caminhada ou alongamento hoje?' },
-  'sono':        { emoji: '😴', titulo: 'Hora de dormir!', corpo: 'Um bom sono é essencial para sua saúde.' },
-  'pausa':       { emoji: '🧘', titulo: 'Pausa mental!', corpo: 'Respire fundo. Um minuto de pausa faz diferença.' }
-};
-
-setInterval(async () => {
-  try {
-    const agora = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-    const horaAtual = String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0');
-
-    // Verifica se algum hábito deve ser disparado agora
-    for (const [tipo, horarios] of Object.entries(HABITOS_HORARIOS)) {
-      if (!horarios.includes(horaAtual)) continue;
-
-      const msg = HABITOS_MSG[tipo];
-      console.log('[Habitos] Disparando:', tipo, 'às', horaAtual);
-
-      // Busca todos os membros ativos com FCM token
-      const membros = await pool.query(
-        'SELECT ps.membro_id, ps.fcm_token, ps.familia_id FROM push_subscriptions ps WHERE ps.fcm_token IS NOT NULL'
-      );
-
-      for (const row of membros.rows) {
-        if (!row.fcm_token || !admin.apps.length) continue;
-        try {
-          await admin.messaging().send({
-            token: row.fcm_token,
-            data: {
-              tipo: 'habito',
-              categoria: tipo,
-              membro_id: String(row.membro_id),
-              familia_id: String(row.familia_id || ''),
-              titulo: msg.titulo,
-              corpo: msg.corpo
-            },
-            android: { priority: 'high' }
-          });
-          console.log('[Habitos] FCM enviado para membro', row.membro_id, tipo);
-        } catch(e) {
-          console.log('[Habitos] Erro FCM membro', row.membro_id, e.message);
-          if (e.code === 'messaging/registration-token-not-registered') {
-            pool.query('UPDATE push_subscriptions SET fcm_token=NULL WHERE membro_id=$1', [row.membro_id]).catch(()=>{});
-          }
-        }
-      }
-    }
-  } catch(e) { console.log('[Habitos] Erro cron:', e.message); }
-}, 60000); // a cada 1 minuto
-
-
-// ── CRIAR TABELA HÁBITOS SE NÃO EXISTIR ──
-pool.query(`
-  CREATE TABLE IF NOT EXISTS habitos_registro (
-    id SERIAL PRIMARY KEY,
-    membro_id INTEGER NOT NULL,
-    familia_id INTEGER,
-    categoria VARCHAR(50) NOT NULL,
-    cumprido BOOLEAN DEFAULT false,
-    criado_em TIMESTAMP DEFAULT NOW()
-  )
-`).then(() => console.log('[Habitos] Tabela ok')).catch(e => console.log('[Habitos] Tabela erro:', e.message));
-
-// ── MIGRAÇÃO: adicionar coluna sexo em membros ──
-pool.query('ALTER TABLE membros ADD COLUMN IF NOT EXISTS sexo VARCHAR(20)').catch(()=>{});
-
-// ── REGISTRAR HÁBITO ──
-app.post('/api/habitos/registrar', async (req, res) => {
-  const { membro_id, familia_id, categoria, cumprido } = req.body;
-  if (!membro_id || !categoria) return res.status(400).json({ erro: 'Campos obrigatorios' });
-  try {
-    await pool.query(
-      `INSERT INTO habitos_registro (membro_id, familia_id, categoria, cumprido, criado_em)
-       VALUES ($1, $2, $3, $4, NOW() AT TIME ZONE 'America/Sao_Paulo')`,
-      [membro_id, familia_id || null, categoria, cumprido === true || cumprido === 'true']
-    );
-
-    // Registra na tabela correta do Meu Dia conforme categoria
-    if (cumprido === true || cumprido === 'true') {
-      if (categoria === 'agua') {
-        // Água → cuidados_hidratacao
-        const existe = await pool.query(
-          'SELECT id, copos FROM cuidados_hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE',
-          [membro_id]
-        );
-        if (existe.rows.length) {
-          await pool.query('UPDATE cuidados_hidratacao SET copos=$1 WHERE id=$2',
-            [existe.rows[0].copos + 1, existe.rows[0].id]);
-        } else {
-          await pool.query('INSERT INTO cuidados_hidratacao (familia_id, membro_id, copos) VALUES ($1,$2,$3)',
-            [familia_id || null, membro_id, 1]);
-        }
-      } else if (categoria === 'alimentacao') {
-        // Alimentação → cuidados_refeicoes
-        await pool.query(
-          'INSERT INTO cuidados_refeicoes (familia_id, membro_id, tipo, quantidade, obs) VALUES ($1,$2,$3,$4,$5)',
-          [familia_id || null, membro_id, 'lanche', 1, 'Confirmado via notificação']
-        ).catch(() => {});
-      } else if (categoria === 'exercicio') {
-        // Exercício → cuidados_atividades
-        await pool.query(
-          'INSERT INTO cuidados_atividades (familia_id, membro_id, tipo, hora, obs) VALUES ($1,$2,$3,$4,$5)',
-          [familia_id || null, membro_id, 'exercicio', new Date().toTimeString().slice(0,5), 'Confirmado via notificação']
-        ).catch(() => {});
-      } else if (categoria === 'humor' || categoria === 'pausa') {
-        // Pausa mental → humor positivo
-        await pool.query(
-          'INSERT INTO cuidados_humor (familia_id, membro_id, humor, obs) VALUES ($1,$2,$3,$4)',
-          [familia_id || null, membro_id, 'bem', 'Pausa mental realizada via notificação']
-        ).catch(() => {});
-      } else if (categoria === 'sono') {
-        // Sono → cuidados_sono
-        await pool.query(
-          'INSERT INTO cuidados_sono (familia_id, membro_id, inicio, fim, qualidade, obs) VALUES ($1,$2,$3,$4,$5,$6)',
-          [familia_id || null, membro_id, '22:00', null, 'bom', 'Lembrete de sono confirmado']
-        ).catch(() => {});
-      }
-    }
-
-    res.json({ ok: true });
-  } catch(e) {
-    res.status(500).json({ erro: e.message });
-  }
-});
-
-// ── BUSCAR HÁBITOS DO DIA ──
-app.get('/api/habitos/hoje/:membro_id', async (req, res) => {
-  try {
-    const hoje = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })).toISOString().split('T')[0];
-    const result = await pool.query(
-      `SELECT categoria, cumprido, criado_em FROM habitos_registro
-       WHERE membro_id=$1 AND DATE(criado_em)=$2 ORDER BY criado_em DESC`,
-      [req.params.membro_id, hoje]
-    );
-    res.json(result.rows);
-  } catch(e) {
-    res.status(500).json({ erro: e.message });
-  }
-});
-
-
-// ── TESTE HÁBITO MANUAL ──
-app.post('/api/habitos/testar', async (req, res) => {
-  const { categoria, membro_id } = req.body;
-  try {
-    const msgs = {
-      agua:        { titulo: 'Hora de beber água!', corpo: 'Mantenha-se hidratado. Beba um copo agora!' },
-      alimentacao: { titulo: 'Hora de se alimentar!', corpo: 'Uma refeição saudável agora faz bem ao corpo.' },
-      exercicio:   { titulo: 'Hora de se exercitar!', corpo: 'Que tal uma caminhada ou alongamento hoje?' },
-      sono:        { titulo: 'Hora de dormir!', corpo: 'Um bom sono é essencial para sua saúde.' },
-      pausa:       { titulo: 'Pausa mental!', corpo: 'Respire fundo. Um minuto de pausa faz diferença.' }
-    };
-    const msg = msgs[categoria || 'agua'];
-    const query = membro_id
-      ? 'SELECT membro_id, fcm_token, familia_id FROM push_subscriptions WHERE membro_id=$1 AND fcm_token IS NOT NULL'
-      : 'SELECT membro_id, fcm_token, familia_id FROM push_subscriptions WHERE fcm_token IS NOT NULL';
-    const params = membro_id ? [membro_id] : [];
-    const membros = await pool.query(query, params);
-    let enviados = 0;
-    for (const row of membros.rows) {
-      if (!row.fcm_token || !admin.apps.length) continue;
-      await admin.messaging().send({
-        token: row.fcm_token,
-        data: {
-          tipo: 'habito',
-          categoria: categoria || 'agua',
-          membro_id: String(row.membro_id),
-          familia_id: String(row.familia_id || ''),
-          titulo: msg.titulo,
-          corpo: msg.corpo
-        },
-        android: { priority: 'high' }
-      }).then(() => enviados++).catch(e => console.log('[Teste habito] Erro:', e.message));
-    }
-    res.json({ ok: true, enviados });
-  } catch(e) {
-    res.status(500).json({ erro: e.message });
-  }
-});
-
-
-// ── RESUMO IA — BUSCAR SALVO ──
-app.get('/api/ia/resumo-salvo/:membro_id', async (req, res) => {
-  try {
-    const r = await pool.query(
-      'SELECT resumo, dados FROM resumo_diario WHERE membro_id=$1 AND data=CURRENT_DATE ORDER BY id DESC LIMIT 1',
-      [req.params.membro_id]
-    );
-    if (r.rows.length) {
-      res.json({ resumo: r.rows[0].resumo, dados: r.rows[0].dados });
-    } else {
-      res.json({ resumo: null });
-    }
-  } catch(e) {
-    res.status(500).json({ erro: e.message });
-  }
-});
-
-// ── RESUMO IA — GERAR SOB DEMANDA ──
-app.post('/api/ia/resumo-dia', async (req, res) => {
-  const { membro_id, familia_id } = req.body;
-  if (!membro_id) return res.status(400).json({ erro: 'membro_id obrigatorio' });
-  try {
-    const memRes = await pool.query('SELECT nome FROM membros WHERE id=$1', [membro_id]);
-    if (!memRes.rows.length) return res.status(404).json({ erro: 'Membro nao encontrado' });
-    const nome = memRes.rows[0].nome;
-
-    const hidRes = await pool.query('SELECT COALESCE(SUM(copos),0) as copos FROM cuidados_hidratacao WHERE membro_id=$1 AND data=CURRENT_DATE', [membro_id]);
-    const copos = Math.round(hidRes.rows[0].copos || 0);
-
-    const refRes = await pool.query('SELECT COUNT(*) as total FROM cuidados_refeicoes WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE', [membro_id]);
-    const refeicoes = parseInt(refRes.rows[0].total || 0);
-
-    const atRes = await pool.query('SELECT COUNT(*) as total FROM cuidados_atividades WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE', [membro_id]);
-    const atividades = parseInt(atRes.rows[0].total || 0);
-
-    const sonoRes = await pool.query('SELECT qualidade, inicio, fim FROM cuidados_sono WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1', [membro_id]);
-    const sonoInfo = sonoRes.rows.length ? (sonoRes.rows[0].qualidade || 'registrado') : 'nao registrado';
-    let horasSono = null;
-    if (sonoRes.rows.length && sonoRes.rows[0].inicio && sonoRes.rows[0].fim) {
-      const ini = new Date('1970-01-01T' + sonoRes.rows[0].inicio);
-      const fim = new Date('1970-01-01T' + sonoRes.rows[0].fim);
-      horasSono = Math.round((fim - ini) / 3600000 * 10) / 10;
-    }
-
-    const humorRes = await pool.query('SELECT humor FROM cuidados_humor WHERE membro_id=$1 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1', [membro_id]);
-    const humorTexto = humorRes.rows.length ? humorRes.rows[0].humor : 'nao registrado';
-
-    const sinaisRes = await pool.query('SELECT tipo, valor FROM sinais_vitais WHERE membro_id=$1 ORDER BY criado_em DESC LIMIT 3', [membro_id]);
-    const sinaisTexto = sinaisRes.rows.length ? sinaisRes.rows.map(s => s.tipo+': '+s.valor).join(', ') : 'nenhum';
-
-    const medsRes = await pool.query('SELECT nome FROM medicamentos WHERE membro_id=$1 AND ativo=true', [membro_id]);
-    const medsTexto = medsRes.rows.length ? medsRes.rows.map(m => m.nome).join(', ') : 'nenhum';
-
-    const prompt = 'Voce e um assistente de saude do app AP+ Saude. Analise os dados de hoje de ' + nome + ' e faca um resumo em portugues brasileiro. DADOS: Agua: ' + copos + ' de 8 copos. Refeicoes: ' + refeicoes + ' de 5. Atividade fisica: ' + atividades + ' sessao(oes). Sono: ' + sonoInfo + '. Humor: ' + humorTexto + '. Sinais vitais: ' + sinaisTexto + '. Medicamentos ativos: ' + medsTexto + '. Responda em 3 blocos curtos: 1. O que esta bem 2. O que precisa de atencao 3. Uma dica pratica para amanha. Seja direto e acolhedor.';
-
-    const resumo = await chamarGemini(prompt);
-
-    // Salva para não precisar gerar de novo
-    await pool.query(
-      'INSERT INTO resumo_diario (membro_id, data, resumo, dados) VALUES ($1, CURRENT_DATE, $2, $3) ON CONFLICT (membro_id, data) DO UPDATE SET resumo=$2, dados=$3',
-      [membro_id, resumo, JSON.stringify({ copos, metaAgua: 8, sonoInfo, horasSono, humorTexto, refeicoes, atividades })]
-    ).catch(() => {
-      pool.query('INSERT INTO resumo_diario (membro_id, data, resumo, dados) VALUES ($1, CURRENT_DATE, $2, $3)',
-        [membro_id, resumo, JSON.stringify({ copos, metaAgua: 8, sonoInfo, horasSono, humorTexto, refeicoes, atividades })]
-      ).catch(()=>{});
-    });
-
-    res.json({ resumo, dados: { copos, metaAgua: 8, sonoInfo, horasSono, humorTexto, refeicoes, atividades } });
-  } catch(e) {
-    res.status(500).json({ erro: e.message });
-  }
-});
-
-
-// ── CICLO MENSTRUAL ──
-pool.query(`
-  CREATE TABLE IF NOT EXISTS ciclo_menstrual (
-    id SERIAL PRIMARY KEY,
-    membro_id INTEGER NOT NULL UNIQUE,
-    ultima_mens DATE,
-    dur_ciclo INTEGER DEFAULT 28,
-    dur_mens INTEGER DEFAULT 5,
-    atualizado_em TIMESTAMP DEFAULT NOW()
-  )
-`).catch(()=>{});
-
-pool.query(`
-  CREATE TABLE IF NOT EXISTS ciclo_sintomas (
-    id SERIAL PRIMARY KEY,
-    membro_id INTEGER NOT NULL,
-    dor INTEGER DEFAULT 0,
-    humor VARCHAR(20),
-    fluxo VARCHAR(30),
-    obs TEXT,
-    criado_em TIMESTAMP DEFAULT NOW()
-  )
-`).catch(()=>{});
-
-app.post('/api/ciclo/salvar', async (req, res) => {
-  const { membro_id, ultima_mens, dur_ciclo, dur_mens } = req.body;
-  if (!membro_id) return res.status(400).json({ erro: 'membro_id obrigatorio' });
-  try {
-    await pool.query(
-      `INSERT INTO ciclo_menstrual (membro_id, ultima_mens, dur_ciclo, dur_mens, atualizado_em)
-       VALUES ($1,$2,$3,$4,NOW())
-       ON CONFLICT (membro_id) DO UPDATE SET
-       ultima_mens=$2, dur_ciclo=$3, dur_mens=$4, atualizado_em=NOW()`,
-      [membro_id, ultima_mens, dur_ciclo || 28, dur_mens || 5]
-    );
-    res.json({ ok: true });
-  } catch(e) { res.status(500).json({ erro: e.message }); }
-});
-
-app.get('/api/ciclo/:membro_id', async (req, res) => {
-  try {
-    const r = await pool.query('SELECT * FROM ciclo_menstrual WHERE membro_id=$1', [req.params.membro_id]);
-    res.json(r.rows[0] || null);
-  } catch(e) { res.status(500).json({ erro: e.message }); }
-});
-
-app.post('/api/ciclo/sintomas', async (req, res) => {
-  const { membro_id, dor, humor, fluxo, obs } = req.body;
-  if (!membro_id) return res.status(400).json({ erro: 'membro_id obrigatorio' });
-  try {
-    await pool.query(
-      'INSERT INTO ciclo_sintomas (membro_id, dor, humor, fluxo, obs) VALUES ($1,$2,$3,$4,$5)',
-      [membro_id, dor || 0, humor || null, fluxo || null, obs || null]
-    );
-    res.json({ ok: true });
-  } catch(e) { res.status(500).json({ erro: e.message }); }
-});
-
-app.get('/api/ciclo/sintomas/:membro_id', async (req, res) => {
-  try {
-    const r = await pool.query(
-      'SELECT * FROM ciclo_sintomas WHERE membro_id=$1 ORDER BY criado_em DESC LIMIT 30',
-      [req.params.membro_id]
-    );
-    res.json(r.rows);
-  } catch(e) { res.status(500).json({ erro: e.message }); }
-});
-
-module.exports = { admin };
-
-
-
-
 

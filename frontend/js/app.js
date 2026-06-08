@@ -1,11 +1,6 @@
 
 async function loginGoogle() {
   try {
-    // No Capacitor APK o SDK Google web não funciona
-    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-      alerta('Login com Google não disponível no app. Use "Criar perfil" ou "Entrar em família".');
-      return;
-    }
     const client = google.accounts.oauth2.initTokenClient({
       client_id: '1028956812970-verjkuuuqnn6c8nhafh7kcvgphn1htkj.apps.googleusercontent.com',
       scope: 'openid email profile',
@@ -260,7 +255,6 @@ function mostrarApp() {
   document.getElementById('login-page').style.display = 'none';
   document.getElementById('perfil-page').style.display = 'none';
   document.getElementById('app-page').style.display = 'flex';
-
 }
 
 async function carregarPerfisDisponiveis() {
@@ -286,18 +280,13 @@ async function carregarPerfisDisponiveis() {
   }
 }
 
-async function selecionarPerfil(id, nome, tipo, idPessoal) {
+function selecionarPerfil(id, nome, tipo, idPessoal) {
   APP.membroId = id;
   APP.membroNome = nome;
   APP.membroTipo = tipo;
   APP.idPessoal = idPessoal;
   APP.membroAtivo = { id, nome, tipo, id_pessoal: idPessoal };
   salvarSessaoMembro();
-  // Carrega sexo ANTES de iniciarApp para o card aparecer corretamente
-  try {
-    const p = await api('GET', '/api/perfil/' + id);
-    if (p && p.sexo) APP.sexo = p.sexo;
-  } catch(e) {}
   iniciarApp();
 }
 
@@ -410,7 +399,6 @@ async function criarFamilia() {
   const mes = document.getElementById('inp-data-mes')?.value || '';
   const ano = document.getElementById('inp-data-ano')?.value || '';
   const dataNasc = (dia && mes && ano) ? ano + '-' + mes + '-' + dia : '';
-  const sexoCadastro = document.getElementById('inp-sexo-cadastro')?.value || '';
   const tipoSangue = document.getElementById('inp-tipo-sangue')?.value || '';
   const alergias = document.getElementById('inp-alergias')?.value.trim() || '';
   const cpf = document.getElementById('inp-cpf')?.value.trim() || '';
@@ -432,12 +420,11 @@ async function criarFamilia() {
     APP.familiaId = String(resFam.id);
     APP.codigoFamilia = resFam.codigo;
     APP.nomeFamilia = resFam.nome;
-    APP.sexo = sexoCadastro || '';
     salvarSessaoFamilia();
 
     
 
-    const temDados = dataNasc || tipoSangue || alergias || cpf || cartaoSus || convenio || contatoEmerg || telEmerg || sexoCadastro;
+    const temDados = dataNasc || tipoSangue || alergias || cpf || cartaoSus || convenio || contatoEmerg || telEmerg;
     if (temDados) {
       const membroId = resMem.id;
       const dadosPerfil = {
@@ -450,12 +437,11 @@ async function criarFamilia() {
         cartao_sus: cartaoSus !== '' ? cartaoSus : null,
         convenio: convenio !== '' ? convenio : null,
         contato_emergencia: contatoEmerg !== '' ? contatoEmerg : null,
-        tel_emergencia: telEmerg !== '' ? telEmerg : null,
-        sexo: sexoCadastro !== '' ? sexoCadastro : null
+        tel_emergencia: telEmerg !== '' ? telEmerg : null
       };
       try {
         
-      const respPerfil = await fetch(getBase() + '/api/perfil', {
+      const respPerfil = await fetch('/api/perfil', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(dadosPerfil)
@@ -655,42 +641,20 @@ function _continuarIniciarApp() {
   iniciarAlarmes();
   if (APP.membroId) api('PUT', '/api/membros/' + APP.membroId + '/acesso', {}).catch(()=>{});
   registrarTokenFCM();
+  if (Notification.permission === 'granted') {
+    inscreverPush();
+  } else if (Notification.permission === 'default') {
+    // Pede permissão apenas uma vez por sessão
+    if (!sessionStorage.getItem('push_permission_asked')) {
+      sessionStorage.setItem('push_permission_asked', '1');
+      Notification.requestPermission().then(perm => {
+        if (perm === 'granted') inscreverPush();
+      });
+    }
+  }
   atualizarDropdown();
   navegarPara('home');
   if (typeof carregarStatusPin === 'function') carregarStatusPin();
-
-  // Escuta FCM silencioso de resumo pronto — atualiza card na home automaticamente
-  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-    try {
-      const { PushNotifications } = Capacitor.Plugins;
-      if (PushNotifications) {
-        PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          const data = notification.data || {};
-          if (data.tipo === 'resumo-pronto') {
-            console.log('[Home] Resumo pronto — atualizando card...');
-            if (typeof buscarResumoSalvo === 'function') buscarResumoSalvo();
-          }
-          if (data.tipo === 'habito') {
-            // Já tratado pelo Java nativo
-          }
-        });
-      }
-    } catch(e) { console.log('PushNotifications listener erro:', e); }
-  }
-
-  // Pede permissão de notificação APÓS navegar para home
-  setTimeout(() => {
-    if (Notification.permission === 'granted') {
-      inscreverPush();
-    } else if (Notification.permission === 'default') {
-      if (!sessionStorage.getItem('push_permission_asked')) {
-        sessionStorage.setItem('push_permission_asked', '1');
-        Notification.requestPermission().then(perm => {
-          if (perm === 'granted') inscreverPush();
-        });
-      }
-    }
-  }, 1000);
 }
 
 // ── NAVEGAÇÃO ──
@@ -714,7 +678,7 @@ async function carregarPerfil() {
     if (!mem || !mem.id) return;
     APP.membroAtivo = mem;
     document.getElementById('pf-nome').value = mem.nome || '';
-    const res = await fetch(getBase() + '/api/perfil/' + mem.id);
+    const res = await fetch('/api/perfil/' + mem.id);
     if (res.ok) {
       const p = await res.json();
       if (p && !p.erro) {
@@ -725,7 +689,6 @@ async function carregarPerfil() {
           document.getElementById('pf-nasc-mes').value = String(d.getUTCMonth() + 1).padStart(2, '0');
           document.getElementById('pf-nasc-ano').value = String(d.getUTCFullYear());
         }
-        document.getElementById('pf-sexo').value = p.sexo || '';
         document.getElementById('pf-sangue').value = p.tipo_sanguineo || '';
         document.getElementById('pf-alergias').value = p.alergias || '';
         document.getElementById('pf-cpf').value = p.cpf || '';
@@ -752,7 +715,6 @@ async function salvarPerfil() {
       membro_id: mem.id,
       nome_completo: document.getElementById('pf-nome').value.trim() || mem.nome,
       data_nascimento: dataNasc,
-      sexo: document.getElementById('pf-sexo').value || null,
       tipo_sanguineo: document.getElementById('pf-sangue').value || null,
       alergias: document.getElementById('pf-alergias').value.trim() || null,
       cpf: document.getElementById('pf-cpf').value.trim() || null,
@@ -762,13 +724,14 @@ async function salvarPerfil() {
       tel_emergencia: document.getElementById('pf-tel').value.trim() || null
     };
     // Salvar foto se foi alterada
+    alerta('Foto: ' + (_fotoPerfil ? 'tem foto ' + _fotoPerfil.length + ' chars' : 'SEM FOTO') + ' | mem.id=' + mem.id);
     if (_fotoPerfil) {
       await api('PUT', '/api/membros/' + mem.id + '/foto', { foto: _fotoPerfil });
       _fotoPerfil = null;
       atualizarDropdown();
     }
 
-    const resp = await fetch(getBase() + '/api/perfil', {
+    const resp = await fetch('/api/perfil', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dados)
@@ -778,13 +741,6 @@ async function salvarPerfil() {
       alerta('Erro: ' + json.erro);
     } else {
       alerta('Perfil salvo com sucesso!');
-      // Atualiza APP.sexo imediatamente
-      const sexoSalvo = document.getElementById('pf-sexo')?.value;
-      if (sexoSalvo) {
-        APP.sexo = sexoSalvo;
-        const cardSF = document.getElementById('card-saude-feminina');
-        if (cardSF) cardSF.style.display = sexoSalvo === 'feminino' ? 'flex' : 'none';
-      }
     }
   } catch(e) {
     alerta('Erro: ' + e.message);
@@ -881,337 +837,6 @@ function preencherNomePerfil() {
   }
 }
 
-
-
-// ── SAÚDE FEMININA ──
-function trocarAbaSaudeFem(aba) {
-  ['ciclo','endometriose','sintomas','cuidados'].forEach(a => {
-    document.getElementById('sf-' + a).style.display = a === aba ? 'block' : 'none';
-    const btn = document.getElementById('aba-sf-' + a);
-    if (btn) btn.classList.toggle('ativa', a === aba);
-  });
-  if (aba === 'ciclo') calcularCiclo();
-  if (aba === 'sintomas') carregarHistoricoSintomas();
-}
-
-function calcularCiclo() {
-  const dataMens = document.getElementById('sf-data-mens')?.value;
-  const durCiclo = parseInt(document.getElementById('sf-dur-ciclo')?.value || 28);
-  const durMens = parseInt(document.getElementById('sf-dur-mens')?.value || 5);
-  if (!dataMens) return;
-
-  const hoje = new Date();
-  const ultMens = new Date(dataMens);
-  const diffDias = Math.floor((hoje - ultMens) / (1000 * 60 * 60 * 24));
-  const diaAtualCiclo = (diffDias % durCiclo) + 1;
-
-  // Fases
-  let fase, emoji, desc, cor;
-  if (diaAtualCiclo <= durMens) {
-    fase = 'Menstruação'; emoji = '🩸'; cor = '#fce4ec';
-    desc = 'Fase de renovação. Descanse mais, hidrate-se e evite esforços intensos.';
-  } else if (diaAtualCiclo <= 13) {
-    fase = 'Fase Folicular'; emoji = '🌱'; cor = '#e8f5e9';
-    desc = 'Energia crescente. Ótimo momento para exercícios e novos projetos.';
-  } else if (diaAtualCiclo <= 16) {
-    fase = 'Ovulação'; emoji = '✨'; cor = '#fff8e1';
-    desc = 'Pico de energia e libido. Período fértil — maior probabilidade de gravidez.';
-  } else {
-    fase = 'Fase Lútea / TPM'; emoji = '🌙'; cor = '#f3e5f5';
-    desc = 'Energia diminuindo. Cuide da alimentação e durma bem para amenizar a TPM.';
-  }
-
-  const faseEl = document.getElementById('sf-fase-atual');
-  const faseEmoji = document.getElementById('sf-fase-emoji');
-  const faseNome = document.getElementById('sf-fase-nome');
-  const faseDesc = document.getElementById('sf-fase-desc');
-  if (faseEl) faseEl.style.background = cor;
-  if (faseEmoji) faseEmoji.textContent = emoji;
-  if (faseNome) faseNome.textContent = fase + ' (dia ' + diaAtualCiclo + ' de ' + durCiclo + ')';
-  if (faseDesc) faseDesc.textContent = desc;
-
-  // Próximas datas
-  const proxMens = new Date(ultMens);
-  proxMens.setDate(proxMens.getDate() + durCiclo);
-  while (proxMens < hoje) proxMens.setDate(proxMens.getDate() + durCiclo);
-
-  const proxOvul = new Date(proxMens);
-  proxOvul.setDate(proxOvul.getDate() - (durCiclo - 14));
-
-  const proxTPM = new Date(proxMens);
-  proxTPM.setDate(proxTPM.getDate() - 7);
-
-  const fmt = d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-
-  const proximasEl = document.getElementById('sf-proximas');
-  if (proximasEl) {
-    proximasEl.innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#fce4ec;border-radius:10px">
-          <span style="font-size:0.85rem;font-weight:600">🩸 Próxima menstruação</span>
-          <span style="font-size:0.85rem;color:#c2185b;font-weight:600">${fmt(proxMens)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#fff8e1;border-radius:10px">
-          <span style="font-size:0.85rem;font-weight:600">✨ Próxima ovulação</span>
-          <span style="font-size:0.85rem;color:#f57f17;font-weight:600">${fmt(proxOvul)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f3e5f5;border-radius:10px">
-          <span style="font-size:0.85rem;font-weight:600">🌙 Início da TPM</span>
-          <span style="font-size:0.85rem;color:#7b1fa2;font-weight:600">${fmt(proxTPM)}</span>
-        </div>
-      </div>`;
-  }
-
-  // Fases lista
-  const fasesEl = document.getElementById('sf-fases-lista');
-  if (fasesEl) {
-    fasesEl.innerHTML = [
-      {emoji:'🩸',nome:'Menstruação',dias:'Dias 1-' + durMens,desc:'Renovação e descanso',cor:'#fce4ec'},
-      {emoji:'🌱',nome:'Folicular',dias:'Dias ' + (durMens+1) + '-13',desc:'Energia e disposição crescentes',cor:'#e8f5e9'},
-      {emoji:'✨',nome:'Ovulação',dias:'Dias 14-16',desc:'Pico fértil e de energia',cor:'#fff8e1'},
-      {emoji:'🌙',nome:'Lútea / TPM',dias:'Dias 17-' + durCiclo,desc:'Descanso e autocuidado',cor:'#f3e5f5'},
-    ].map(f => `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:${f.cor};border-radius:10px;margin-bottom:6px">
-        <span style="font-size:1.5rem">${f.emoji}</span>
-        <div><p style="font-weight:600;font-size:0.85rem">${f.nome} <span style="font-weight:400;color:#888;font-size:0.78rem">${f.dias}</span></p>
-        <p style="font-size:0.78rem;color:#666">${f.desc}</p></div>
-      </div>`).join('');
-  }
-}
-
-async function salvarCiclo() {
-  const dataMens = document.getElementById('sf-data-mens')?.value;
-  const durCiclo = document.getElementById('sf-dur-ciclo')?.value;
-  const durMens = document.getElementById('sf-dur-mens')?.value;
-  if (!dataMens) return alerta('Informe a data da última menstruação');
-  try {
-    await api('POST', '/api/ciclo/salvar', {
-      membro_id: APP.membroId,
-      ultima_mens: dataMens,
-      dur_ciclo: durCiclo || 28,
-      dur_mens: durMens || 5
-    });
-    alerta('✅ Ciclo salvo com sucesso!');
-  } catch(e) { alerta('Erro ao salvar ciclo'); }
-}
-
-async function salvarSintomasFem() {
-  const dor = document.getElementById('sf-dor')?.value;
-  const humor = document.getElementById('sf-humor')?.value;
-  const fluxo = document.getElementById('sf-fluxo')?.value;
-  const obs = document.getElementById('sf-obs')?.value;
-  try {
-    await api('POST', '/api/ciclo/sintomas', {
-      membro_id: APP.membroId,
-      dor: parseInt(dor),
-      humor,
-      fluxo: fluxo || null,
-      obs: obs || null
-    });
-    alerta('✅ Sintomas registrados!');
-    document.getElementById('sf-obs').value = '';
-    document.getElementById('sf-dor').value = 0;
-    document.getElementById('sf-dor-val').textContent = '0';
-    carregarHistoricoSintomas();
-  } catch(e) { alerta('Erro ao registrar'); }
-}
-
-async function carregarHistoricoSintomas() {
-  try {
-    const dados = await api('GET', '/api/ciclo/sintomas/' + APP.membroId);
-    const el = document.getElementById('sf-historico-sint');
-    if (!el) return;
-    if (!dados || !dados.length) {
-      el.innerHTML = '<p style="color:#aaa;text-align:center;font-size:0.85rem">Nenhum registro ainda</p>';
-      return;
-    }
-    el.innerHTML = dados.slice(0,7).map(s => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f8f8f8;border-radius:10px;margin-bottom:6px">
-        <div>
-          <p style="font-size:0.82rem;font-weight:600">${new Date(s.criado_em).toLocaleDateString('pt-BR')}</p>
-          <p style="font-size:0.78rem;color:#888">${s.obs || 'Sem observações'}</p>
-        </div>
-        <div style="text-align:right">
-          <p style="font-size:0.85rem;font-weight:600;color:#e91e63">Dor: ${s.dor}/10</p>
-          <p style="font-size:0.78rem;color:#888">${s.humor || ''}</p>
-        </div>
-      </div>`).join('');
-  } catch(e) {}
-}
-
-async function iniciarSaudeFeminina() {
-  trocarAbaSaudeFem('ciclo');
-  // Carregar ciclo salvo
-  try {
-    const dados = await api('GET', '/api/ciclo/' + APP.membroId);
-    if (dados && dados.ultima_mens) {
-      document.getElementById('sf-data-mens').value = dados.ultima_mens.split('T')[0];
-      document.getElementById('sf-dur-ciclo').value = dados.dur_ciclo || 28;
-      document.getElementById('sf-dur-mens').value = dados.dur_mens || 5;
-      calcularCiclo();
-    }
-  } catch(e) {}
-}
-
-// ── EXERCÍCIOS ──
-const EX_DB = {
-  peito:[
-    {nome:'Flexão de braços',desc:'Exercício clássico para peito, ombros e tríceps. Corpo reto do calcanhar à cabeça durante todo o movimento.',muscles:['Peitoral','Tríceps'],sec:['Deltóide'],dur:30,yt:'NZM9dui2MZo'},
-    {nome:'Flexão inclinada',desc:'Mãos elevadas — ativa o peitoral inferior. Ótimo para iniciantes que ainda não conseguem a flexão completa.',muscles:['Peitoral inferior'],sec:['Tríceps'],dur:30,yt:'gvoTIZGmcFY'},
-    {nome:'Flexão declinada',desc:'Pés elevados numa cadeira — ênfase no peitoral superior e deltóide anterior.',muscles:['Peitoral superior','Deltóide'],sec:['Tríceps'],dur:30,yt:'EwuP99VG4ao'},
-    {nome:'Flexão diamante',desc:'Mãos em triângulo abaixo do peito — máxima ativação do tríceps e peitoral interno.',muscles:['Tríceps','Peitoral'],sec:['Deltóide'],dur:30,yt:'Ei7Tzagz1do'},
-  ],
-  perna:[
-    {nome:'Agachamento livre',desc:'Movimento base para pernas e glúteos. Pés na largura dos ombros, joelhos seguem a direção dos pés, desça até 90°.',muscles:['Quadríceps','Glúteos'],sec:['Isquiotibiais','Panturrilha'],dur:45,yt:'DKg6dkbPoWI'},
-    {nome:'Afundo',desc:'Passo à frente com joelho dobrado a 90°. Alterna as pernas a cada repetição. Mantenha o tronco ereto.',muscles:['Quadríceps','Glúteos'],sec:['Isquiotibiais'],dur:40,yt:'DKg6dkbPoWI'},
-    {nome:'Ponte glútea',desc:'Deitado de costas, pés apoiados no chão, eleve o quadril contraindo os glúteos. Segure 2 segundos no topo.',muscles:['Glúteos','Isquiotibiais'],sec:['Core'],dur:40,yt:'DKg6dkbPoWI'},
-    {nome:'Elevação de panturrilha',desc:'Em pé, eleve os calcanhares usando somente a panturrilha. Desça lentamente controlando a resistência.',muscles:['Gastrocnêmio','Sóleo'],sec:[],dur:45,yt:'DKg6dkbPoWI'},
-  ],
-  core:[
-    {nome:'Prancha abdominal',desc:'Antebraços apoiados no chão, corpo em linha reta. Abdômen contraído o tempo todo. Respire normalmente.',muscles:['Reto abdominal','Transverso'],sec:['Oblíquos','Glúteos'],dur:30,yt:'NZM9dui2MZo'},
-    {nome:'Abdominal supra',desc:'Deitado, mãos atrás da cabeça, eleve o tronco até os omoplatas saírem do chão. Não puxe o pescoço.',muscles:['Reto abdominal'],sec:['Oblíquos'],dur:30,yt:'NZM9dui2MZo'},
-    {nome:'Bicicleta abdominal',desc:'Alternando cotovelo e joelho opostos em rotação. Excelente ativação dos oblíquos e reto abdominal.',muscles:['Oblíquos','Reto abdominal'],sec:[],dur:40,yt:'NZM9dui2MZo'},
-    {nome:'Elevação de pernas',desc:'Deitado, eleve as pernas até 90° e desça lentamente sem tocar o chão. Lombar pressionada no chão.',muscles:['Reto abdominal inferior','Flexor do quadril'],sec:[],dur:30,yt:'NZM9dui2MZo'},
-  ],
-  cardio:[
-    {nome:'Polichinelo',desc:'Clássico exercício aeróbico. Salte abrindo pernas e elevando braços simultaneamente. Mantenha ritmo constante.',muscles:['Full body'],sec:['Cardio'],dur:45,yt:'NZM9dui2MZo'},
-    {nome:'Burpee',desc:'Agachamento + flexão + salto. Exercício completo que eleva muito a frequência cardíaca e queima calorias.',muscles:['Full body'],sec:['Cardio'],dur:30,yt:'NZM9dui2MZo'},
-    {nome:'Mountain climber',desc:'Posição de flexão, alterne joelhos em direção ao peito rapidamente. Excelente para core e cardio.',muscles:['Core','Quadríceps'],sec:['Cardio'],dur:40,yt:'NZM9dui2MZo'},
-  ],
-  costas:[
-    {nome:'Superman',desc:'Deitado de bruços, eleve braços e pernas simultaneamente. Fortalece toda a cadeia posterior do corpo.',muscles:['Eretores da espinha','Glúteos'],sec:['Rombóide','Isquiotibiais'],dur:30,yt:'NZM9dui2MZo'},
-    {nome:'Prancha lateral',desc:'Antebraço lateral apoiado, corpo em linha reta. Isola oblíquos e quadrado lombar. Alterne os lados.',muscles:['Oblíquos','Quadrado lombar'],sec:['Core'],dur:30,yt:'NZM9dui2MZo'},
-    {nome:'Remada com toalha',desc:'Envolva uma toalha numa porta fechada, incline o corpo e puxe. Substituto eficaz da remada.',muscles:['Latíssimo','Rombóide'],sec:['Bíceps','Deltóide posterior'],dur:40,yt:'NZM9dui2MZo'},
-  ],
-  relaxa:[
-    {nome:'Respiração 4-7-8',desc:'Inspire 4s, segure 7s, expire 8s. Ativa o sistema parassimpático, reduz cortisol e melhora o sono.',muscles:['Diafragma'],sec:[],dur:120,yt:'NZM9dui2MZo'},
-    {nome:'Alongamento cervical',desc:'Incline a cabeça para cada lado segurando 20 segundos. Alivia tensão acumulada no pescoço e ombros.',muscles:['Esternocleidomastoídeo','Escalenos'],sec:[],dur:60,yt:'NZM9dui2MZo'},
-    {nome:'Postura da criança',desc:'Ajoelhado, estique os braços à frente e apoie a testa no chão. Descomprime a coluna e relaxa o corpo.',muscles:['Eretores da espinha','Latíssimo'],sec:[],dur:60,yt:'NZM9dui2MZo'},
-  ]
-};
-
-let _exTimers = {};
-let _exCatAtual = 'peito';
-
-function trocarCatExercicio(cat) {
-  _exCatAtual = cat;
-  Object.keys(_exTimers).forEach(k => clearInterval(_exTimers[k]));
-  _exTimers = {};
-  document.querySelectorAll('[id^="aba-ex-"]').forEach(b => b.classList.remove('ativa'));
-  const btn = document.getElementById('aba-ex-' + cat);
-  if (btn) btn.classList.add('ativa');
-  renderExercicios(cat);
-}
-
-function renderExercicios(cat) {
-  const lista = document.getElementById('ex-lista');
-  if (!lista) return;
-  const exs = EX_DB[cat] || [];
-  lista.innerHTML = exs.map((ex, i) => `
-    <div style="background:white;border-radius:16px;margin-bottom:0.75rem;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-      <div onclick="toggleExercicio('${cat}${i}')" style="display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer">
-        <div style="width:80px;height:54px;border-radius:10px;background:#000;flex-shrink:0;overflow:hidden;position:relative">
-          <img src="https://img.youtube.com/vi/${ex.yt}/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover" loading="lazy" alt="${ex.nome}">
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3)">
-            <span style="color:white;font-size:20px">▶</span>
-          </div>
-        </div>
-        <div style="flex:1;min-width:0">
-          <p style="font-weight:600;font-size:0.9rem;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ex.nome}</p>
-          <p style="font-size:0.75rem;color:#666;line-height:1.3">${ex.desc.slice(0,60)}...</p>
-          <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
-            ${ex.muscles.slice(0,2).map(m=>`<span style="font-size:10px;padding:2px 6px;border-radius:8px;background:#E1F5EE;color:#085041;font-weight:500">${m}</span>`).join('')}
-          </div>
-        </div>
-        <span style="color:#aaa;font-size:14px" id="chev-ex-${cat}${i}">▼</span>
-      </div>
-      <div id="det-ex-${cat}${i}" style="display:none;border-top:1px solid #f0f0f0">
-        <div style="position:relative;padding-bottom:56.25%;height:0;background:#000">
-          <iframe id="yt-ex-${cat}${i}" src="" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen title="${ex.nome}"></iframe>
-        </div>
-        <div style="padding:14px 16px">
-          <p style="font-weight:600;font-size:0.95rem;margin-bottom:6px">${ex.nome}</p>
-          <p style="font-size:0.82rem;color:#555;line-height:1.6;margin-bottom:12px">${ex.desc}</p>
-          <p style="font-size:0.75rem;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Músculos</p>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px">
-            ${ex.muscles.map(m=>`<span style="font-size:11px;padding:3px 8px;border-radius:8px;background:#E1F5EE;color:#085041;font-weight:500">${m}</span>`).join('')}
-            ${ex.sec.map(m=>`<span style="font-size:11px;padding:3px 8px;border-radius:8px;background:#FAEEDA;color:#633806;font-weight:500">${m} (sec.)</span>`).join('')}
-          </div>
-          <div style="background:#f8f8f8;border-radius:12px;padding:12px;text-align:center;margin-bottom:12px">
-            <div style="font-size:48px;font-weight:600;color:#1a9e6e;line-height:1" id="tv-ex-${cat}${i}">${ex.dur}</div>
-            <div style="font-size:11px;color:#888;margin-top:2px">segundos</div>
-            <div style="height:4px;background:#e0e0e0;border-radius:2px;margin-top:8px;overflow:hidden">
-              <div style="height:100%;background:#1a9e6e;border-radius:2px;transition:width .9s linear;width:100%" id="pf-ex-${cat}${i}"></div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button onclick="iniciarExercicio('${cat}${i}',${ex.dur})" style="flex:2;padding:11px;background:#1a9e6e;color:white;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer">▶ Iniciar</button>
-            <button onclick="resetarExercicio('${cat}${i}',${ex.dur})" style="flex:1;padding:11px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:13px;cursor:pointer">↺ Reset</button>
-          </div>
-          <div id="done-ex-${cat}${i}"></div>
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-function toggleExercicio(id) {
-  const det = document.getElementById('det-ex-' + id);
-  const chev = document.getElementById('chev-ex-' + id);
-  const yt = document.getElementById('yt-ex-' + id);
-  if (!det) return;
-  const open = det.style.display === 'none';
-  det.style.display = open ? 'block' : 'none';
-  if (chev) chev.textContent = open ? '▲' : '▼';
-  if (yt && open && !yt.src.includes('youtube')) {
-    const ytId = yt.closest('[style*="background:white"]').querySelector('img').src.split('/vi/')[1].split('/')[0];
-    yt.src = 'https://www.youtube.com/embed/' + ytId + '?rel=0&modestbranding=1';
-  }
-  if (!open && yt) yt.src = '';
-}
-
-async function iniciarExercicio(id, dur) {
-  if (_exTimers[id]) clearInterval(_exTimers[id]);
-  const doneEl = document.getElementById('done-ex-' + id);
-  if (doneEl) doneEl.innerHTML = '';
-  let r = dur;
-  _exTimers[id] = setInterval(async () => {
-    r--;
-    const tv = document.getElementById('tv-ex-' + id);
-    const pf = document.getElementById('pf-ex-' + id);
-    if (tv) tv.textContent = Math.max(0, r);
-    if (pf) pf.style.width = Math.round(r / dur * 100) + '%';
-    if (r <= 0) {
-      clearInterval(_exTimers[id]);
-      if (tv) { tv.style.fontSize = '18px'; tv.textContent = 'Concluído!'; }
-      // Registra no Meu Dia
-      try {
-        await api('POST', '/api/cuidados/atividade', {
-          familia_id: APP.familiaId,
-          membro_id: APP.membroId,
-          tipo: 'exercicio',
-          hora: new Date().toTimeString().slice(0, 5),
-          obs: 'Exercício concluído pelo app'
-        });
-      } catch(e) {}
-      if (doneEl) doneEl.innerHTML = '<div style="text-align:center;margin-top:10px;font-size:12px;color:#085041;background:#E1F5EE;padding:8px;border-radius:10px">✅ Registrado no Meu Dia!</div>';
-    }
-  }, 1000);
-}
-
-function resetarExercicio(id, dur) {
-  if (_exTimers[id]) clearInterval(_exTimers[id]);
-  const tv = document.getElementById('tv-ex-' + id);
-  const pf = document.getElementById('pf-ex-' + id);
-  const done = document.getElementById('done-ex-' + id);
-  if (tv) { tv.style.fontSize = '48px'; tv.textContent = dur; }
-  if (pf) pf.style.width = '100%';
-  if (done) done.innerHTML = '';
-}
-
-function iniciarAreaExercicios() {
-  trocarCatExercicio('peito');
-}
-
 function navegarPara(pagina) {
   // Empurrar estado no histórico do navegador para o botão voltar do Android funcionar
   if (history.state?.pagina !== pagina) {
@@ -1228,7 +853,6 @@ function navegarPara(pagina) {
 
   // Carregar dados da página
   if (pagina === 'home') carregarHome();
-
   if (pagina === 'painel-baba') carregarPainelBaba();
   if (pagina === 'remedios') carregarMedicamentos();
   if (pagina === 'agenda') carregarAgenda();
@@ -1242,10 +866,7 @@ function navegarPara(pagina) {
   if (pagina === 'checklist') carregarChecklist();
   if (pagina === 'escala') carregarEscala();
   if (pagina === 'historico') { carregarDoencas(); }
-  if (pagina === 'vacinas') carregarVacinas();
   if (pagina === 'meu-dia') iniciarMeuDia();
-  if (pagina === 'exercicios') iniciarAreaExercicios();
-  if (pagina === 'saude-feminina') iniciarSaudeFeminina();
   if (pagina === 'mente-sa') iniciarMenteSa();
   if (pagina === 'cuidados') {
     if (APP.membroTipo === 'cuidador') {
@@ -1278,10 +899,6 @@ function navegarPara(pagina) {
   }
 }
 
-function getBase() {
-  return (window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost')
-    ? 'https://applus-saude-production.up.railway.app' : '';
-}
 // ── API ──
 async function api(metodo, url, corpo) {
   const BASE = window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost'
@@ -1302,7 +919,7 @@ async function api(metodo, url, corpo) {
 
 // ── HOME ──
 async function carregarHome() {
-  document.getElementById('home-nome').textContent = `Olá, ${(APP.membroNome||'você').split(' ')[0]} 👋`;
+  document.getElementById('home-nome').textContent = `Olá, ${APP.membroNome.split(' ')[0]} 👋`;
 
   // Mostrar card TEA se família tem membro TEA
   try {
@@ -1330,20 +947,6 @@ async function carregarHome() {
     const cardBaba = document.getElementById('card-baba');
     if (cardBaba) cardBaba.style.display = temBaba ? 'flex' : 'none';
   } catch(e) {}
-  // Card Saúde Feminina — só para mulheres
-  const cardSaudeFem = document.getElementById('card-saude-feminina');
-  if (cardSaudeFem) {
-    if (APP.sexo === 'feminino') {
-      cardSaudeFem.style.display = 'flex';
-    } else {
-      // Tenta buscar do perfil se ainda não carregou
-      api('GET', '/api/perfil/' + APP.idPessoal).then(p => {
-        if (p && p.sexo) APP.sexo = p.sexo;
-        if (cardSaudeFem) cardSaudeFem.style.display = p && p.sexo === 'feminino' ? 'flex' : 'none';
-      }).catch(() => {});
-    }
-  }
-
   document.getElementById('home-data').textContent = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
@@ -1484,7 +1087,7 @@ function pararCamera() {
 async function buscarMedicamentoANVISA(codigo) {
   try {
     alerta('🔍 Buscando medicamento...');
-    const r = await fetch(getBase() + '/api/anvisa/buscar/' + codigo);
+    const r = await fetch('/api/anvisa/buscar/' + codigo);
     const data = await r.json();
     if (data && data.encontrado) {
       document.getElementById('med-nome').value = data.nome || '';
@@ -2464,59 +2067,6 @@ function sair() {
 // ── PUSH ──
 async function registrarTokenFCM() {
   try {
-    // Capacitor nativo — usa plugin @capacitor/push-notifications
-    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-      const { PushNotifications } = window.Capacitor.Plugins;
-      if (!PushNotifications) return;
-
-      // Pede permissao
-      const perm = await PushNotifications.requestPermissions();
-      if (perm.receive !== 'granted') return;
-
-      // Registra e pega token
-      await PushNotifications.register();
-
-      PushNotifications.addListener('registration', async (tokenData) => {
-        const token = tokenData.value;
-        mostrarToast('FCM token: ' + token.substring(0, 15) + '...', 5000);
-        if (token && APP.membroId) {
-          await api('POST', '/api/push/salvar-fcm-token', {
-            membro_id: APP.membroId,
-            fcm_token: token,
-            familia_id: APP.familiaId
-          });
-          mostrarToast('✅ FCM salvo no servidor!', 4000);
-          console.log('[FCM Nativo] Token registrado:', token.substring(0, 20) + '...');
-        }
-      });
-
-      PushNotifications.addListener('registrationError', (err) => {
-        console.log('[FCM Nativo] Erro registro:', err.error);
-      });
-
-      // Recebe push com app fechado/background
-      PushNotifications.addListener('pushNotificationReceived', (notification) => {
-        console.log('[FCM Nativo] Push recebido:', notification.title);
-        const data = notification.data || {};
-        if (data.tipo === 'alarme-medicamento') {
-          dispararAlarme({
-            id: data.medId,
-            nome: data.medNome || notification.title,
-            dosagem: data.medDose || '',
-            _horarioAtivo: data.horario || ''
-          });
-        }
-      });
-
-      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-        const data = action.notification.data || {};
-        navegarPara('remedios');
-      });
-
-      return;
-    }
-
-    // Web fallback — Firebase JS SDK
     if (!('serviceWorker' in navigator)) return;
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
     const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js');
@@ -2535,8 +2085,8 @@ async function registrarTokenFCM() {
       serviceWorkerRegistration: reg
     });
     if (token && APP.membroId) {
-      await api('POST', '/api/push/salvar-fcm-token', { membro_id: APP.membroId, fcm_token: token, familia_id: APP.familiaId });
-      console.log('[FCM Web] Token registrado:', token.substring(0, 20) + '...');
+      await api('POST', '/api/push/salvar-fcm-token', { membro_id: APP.membroId, fcm_token: token });
+      console.log('[FCM] Token registrado:', token.substring(0, 20) + '...');
     }
   } catch(e) {
     console.log('[FCM] Erro ao registrar token:', e.message);
@@ -2851,7 +2401,6 @@ document.addEventListener('keydown', e => {
 // ── DROPDOWN TROCA DE PERFIL ──
 async function atualizarDropdown() {
   try {
-    mostrarToast('DEBUG dropdown: familiaId=' + APP.familiaId, 4000);
     const membros = await api("GET", `/api/membros/familia/${APP.familiaId}`);
     // Verificar tipo original para nao prender admin que trocou para cuidador
     const perfilOriginal = JSON.parse(localStorage.getItem('applus_perfil_original') || 'null');
@@ -2933,11 +2482,11 @@ async function carregarPainelBaba() {
   try {
     const fid = APP.familiaId;
     const registros = await api('GET', '/api/baba/registros/' + fid);
-    const ckRes = await fetch(getBase() + '/api/baba/checkin-ativo/' + fid + '/' + APP.membroId);
+    const ckRes = await fetch('/api/baba/checkin-ativo/' + fid + '/' + APP.membroId);
     const checkin = ckRes.ok ? await ckRes.json() : null;
     const estoque = await api('GET', '/api/baba/estoque/' + fid);
     const marcos = await api('GET', '/api/baba/marcos/' + fid);
-    const instrRes = await fetch(getBase() + '/api/baba/instrucoes/' + fid);
+    const instrRes = await fetch('/api/baba/instrucoes/' + fid);
     const instrucoes = instrRes.ok ? await instrRes.json() : { texto: '' };
     const mamadas = registros.filter(r=>r.tipo==='mamada').length;
     const fraldas = registros.filter(r=>r.tipo==='fralda').length;
@@ -4348,11 +3897,7 @@ async function processarPin() {
       const r = await api('POST', '/api/membros/pin/verificar', { membro_id: APP.membroId, pin: _pinAtual });
       if (r.ok) {
         document.getElementById('tela-pin').style.display = 'none';
-        if (window._pinResolve) {
-          const res = window._pinResolve;
-          window._pinResolve = null;
-          setTimeout(() => res(true), 50);
-        }
+        if (window._pinResolve) { window._pinResolve(true); window._pinResolve = null; }
       } else {
         document.getElementById('pin-erro').textContent = 'PIN incorreto. Tente novamente.';
         _pinAtual = '';
@@ -4378,11 +3923,7 @@ async function processarPin() {
         fecharModal('modal-config-pin');
         carregarStatusPin();
         alerta('✅ PIN ativado com sucesso!');
-        if (window._pinResolve) {
-          const res = window._pinResolve;
-          window._pinResolve = null;
-          setTimeout(() => res(true), 50);
-        }
+        if (window._pinResolve) { window._pinResolve(true); window._pinResolve = null; }
       } catch(e) {
         document.getElementById('pin-erro').textContent = 'Erro ao salvar PIN.';
         _pinAtual = ''; _pinTemp = '';
@@ -4536,7 +4077,6 @@ window.addEventListener('popstate', function(e) {
     const nav = document.querySelector('[data-nav="' + pagina + '"]');
     if (nav) nav.classList.add('ativo');
     if (pagina === 'home') carregarHome();
-
   if (pagina === 'painel-baba') carregarPainelBaba();
     if (pagina === 'remedios') carregarMedicamentos();
     if (pagina === 'agenda') carregarAgenda();
@@ -4638,7 +4178,7 @@ async function carregarBabasSalvas() {
 async function carregarFeedCuidadorFamilia() {
   try {
     if (!window._cuidadorId) return;
-    const r = await fetch(getBase() + '/api/cuidados/atividades/' + APP.familiaId + '/cuidador/' + window._cuidadorId);
+    const r = await fetch('/api/cuidados/atividades/' + APP.familiaId + '/cuidador/' + window._cuidadorId);
     const lista = await r.json();
     const feed = document.getElementById('cuidador-feed');
     if (!lista || !lista.length) {
@@ -4819,72 +4359,5 @@ async function salvarExame() {
     carregarExames();
   } catch(e) {
     alerta('Erro ao salvar exame: ' + e.message);
-  }
-}
-
-// ── VACINAS ──
-async function carregarVacinas() {
-  const lista = document.getElementById('lista-vacinas');
-  if (!lista) return;
-  lista.innerHTML = '<p style="color:#999;text-align:center">Carregando...</p>';
-  try {
-    const vacinas = await api('GET', '/api/vacinas/' + APP.membroId);
-    if (!vacinas.length) {
-      lista.innerHTML = '<p style="color:#999;text-align:center">Nenhuma vacina cadastrada.</p>';
-      return;
-    }
-    lista.innerHTML = vacinas.map(v => {
-      const statusCor = v.status === 'Completo' ? '#059669' : v.status === 'Incompleto' ? '#d97706' : '#6b7280';
-      const doses = v.doses_total > 1 ? v.doses_tomadas + '/' + v.doses_total + ' doses' : '1 dose';
-      return `<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid ${statusCor};box-shadow:0 1px 4px rgba(0,0,0,0.08)">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-weight:600;font-size:15px">💉 ${v.nome}</div>
-            <div style="font-size:12px;color:#666;margin-top:2px">${v.data ? new Date(v.data).toLocaleDateString('pt-BR') : ''} · ${doses}</div>
-            ${v.observacoes ? '<div style="font-size:12px;color:#888;margin-top:2px">' + v.observacoes + '</div>' : ''}
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-            <span style="background:${statusCor};color:#fff;font-size:11px;padding:3px 8px;border-radius:20px">${v.status}</span>
-            <button onclick="excluirVacina(${v.id})" style="background:none;border:none;color:#dc2626;font-size:12px;cursor:pointer">✕ Remover</button>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    lista.innerHTML = '<p style="color:#dc2626;text-align:center">Erro ao carregar vacinas.</p>';
-  }
-}
-
-async function salvarVacina() {
-  const nome = document.getElementById('vac-nome').value.trim();
-  const data = document.getElementById('vac-data').value;
-  const dosesTotal = document.getElementById('vac-doses-total').value;
-  const dosesTomadas = document.getElementById('vac-doses-tomadas').value;
-  const status = document.getElementById('vac-status').value;
-  if (!nome) { alerta('Informe o nome da vacina'); return; }
-  try {
-    await api('POST', '/api/vacinas', {
-      membro_id: APP.membroId,
-      nome, data, doses_total: dosesTotal, doses_tomadas: dosesTomadas, status
-    });
-    fecharModal('modal-add-vacina');
-    document.getElementById('vac-nome').value = '';
-    document.getElementById('vac-data').value = '';
-    document.getElementById('vac-doses-total').value = '1';
-    document.getElementById('vac-doses-tomadas').value = '1';
-    alerta('✅ Vacina salva!');
-    carregarVacinas();
-  } catch(e) {
-    alerta('Erro ao salvar vacina');
-  }
-}
-
-async function excluirVacina(id) {
-  if (!confirm('Remover esta vacina?')) return;
-  try {
-    await api('DELETE', '/api/vacinas/' + id);
-    carregarVacinas();
-  } catch(e) {
-    alerta('Erro ao remover vacina');
   }
 }
