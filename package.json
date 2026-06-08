@@ -14,7 +14,6 @@
   "dependencies": {
     "@capacitor-community/keep-awake": "^8.0.1",
     "@capacitor/android": "^8.3.4",
-    "@capacitor/browser": "^8.0.3",
     "@capacitor/cli": "^8.3.4",
     "@capacitor/core": "^8.3.4",
     "@capacitor/local-notifications": "^8.2.0",
@@ -25,7 +24,6 @@
     "express-rate-limit": "^8.5.2",
     "firebase-admin": "^13.10.0",
     "google-auth-library": "^10.6.2",
-    "googleapis": "^173.0.0",
     "pdfkit": "^0.18.0",
     "pg": "^8.11.0",
     "qrcode": "^1.5.4",
