@@ -78,12 +78,14 @@ public class AlarmService extends Service {
     }
 
     private Notification construirNotificacao() {
-        Intent mainIntent = new Intent(this, MainActivity.class);
-        mainIntent.putExtra("pagina", "remedios");
-        mainIntent.putExtra("pararAlarme", true);
-        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        // FullScreenIntent aponta para AlarmActivity (acorda tela bloqueada)
+        Intent alarmIntent = new Intent(this, AlarmActivity.class);
+        alarmIntent.putExtra("medNome", medNome);
+        alarmIntent.putExtra("medDose", medDose);
+        alarmIntent.putExtra("medId", medId);
+        alarmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(
-            this, 0, mainIntent,
+            this, 0, alarmIntent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
