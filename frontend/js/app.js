@@ -1,13 +1,41 @@
 
 async function loginGoogle() {
   try {
-    // No Capacitor APK usa fluxo redirect via browser nativo
+    // No Capacitor APK usa Browser plugin com postMessage
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
       const { Browser } = window.Capacitor.Plugins;
+      // Listener para receber token via postMessage quando browser fechar
+      window.addEventListener('message', async function handler(e) {
+        if (!e.data || e.data.type !== 'google_oauth') return;
+        window.removeEventListener('message', handler);
+        if (Browser) Browser.close().catch(()=>{});
+        const token = e.data.token;
+        try {
+          const dados = await api('GET', '/api/auth/google/oauth-token/' + token);
+          if (!dados || !dados.ok) { alerta('Erro ao buscar dados'); return; }
+          const res = await api('POST', '/api/auth/google', {
+            token: null,
+            userInfo: { email: dados.email, name: dados.nome, picture: dados.foto, sub: dados.google_id }
+          });
+          if (res && res.ok) {
+            APP.familiaId = String(res.familiaId);
+            APP.membroId = res.membroId;
+            APP.membroNome = res.membroNome;
+            APP.membroTipo = res.membroTipo;
+            APP.idPessoal = res.idPessoal;
+            APP.membroAtivo = { id: res.membroId, nome: res.membroNome, tipo: res.membroTipo, id_pessoal: res.idPessoal };
+            localStorage.setItem('applus_sessao', JSON.stringify({
+              familiaId: res.familiaId, membroId: res.membroId,
+              membroNome: res.membroNome, membroTipo: res.membroTipo,
+              idPessoal: res.idPessoal, codigoFamilia: res.codigoFamilia
+            }));
+            if (res.foto) localStorage.setItem('applus_foto', res.foto);
+            iniciarApp();
+          } else { alerta(res?.erro || 'Erro ao entrar com Google'); }
+        } catch(e) { alerta('Erro ao processar login'); }
+      });
       if (Browser) {
         await Browser.open({ url: 'https://applus-saude-production.up.railway.app/api/auth/google/apk-init' });
-      } else {
-        window.open('https://applus-saude-production.up.railway.app/api/auth/google/apk-init', '_blank');
       }
       return;
     }

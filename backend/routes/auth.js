@@ -63,9 +63,30 @@ router.get('/google/apk-callback', async (req, res) => {
       google_id: userInfo.id
     });
     setTimeout(() => pendingOAuthTokens.delete(token), 5 * 60 * 1000);
-    res.redirect(`https://applus-saude-production.up.railway.app/apk-callback?token=${token}`);
+    res.send(`<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>AP+ Saúde</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="background:#1a9e6e;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif">
+<div style="text-align:center;color:white">
+  <div style="font-size:64px">🌿</div>
+  <h2>AP+ Saúde</h2>
+  <p>Login realizado! Voltando ao app...</p>
+</div>
+<script>
+  // Envia token para o app via postMessage e fecha browser
+  window.opener && window.opener.postMessage({type:'google_oauth',token:'${token}'},'*');
+  // Tenta fechar a janela
+  setTimeout(() => {
+    window.close();
+    // Fallback: redireciona para o app
+    window.location.href = 'applus://callback?token=${token}';
+  }, 1000);
+</script>
+</body></html>`);
   } catch(e) {
-    res.redirect('https://applus-saude-production.up.railway.app/apk-callback?erro=1');
+    res.redirect('https://applus-saude-production.up.railway.app/?google_erro=1');
   }
 });
 
