@@ -2075,8 +2075,6 @@ async function registrarTokenFCM() {
       const perm = await PushNotifications.requestPermissions();
       if (perm.receive !== 'granted') return;
 
-      await PushNotifications.register();
-
       PushNotifications.addListener('registration', async (tokenData) => {
         const token = tokenData.value;
         mostrarToast('FCM token: ' + token.substring(0, 15) + '...', 5000);
@@ -2090,6 +2088,8 @@ async function registrarTokenFCM() {
           console.log('[FCM] Token nativo registrado:', token.substring(0, 20) + '...');
         }
       });
+
+      await PushNotifications.register();
       return;
     }
     // Web fallback — apenas browser, não APK
