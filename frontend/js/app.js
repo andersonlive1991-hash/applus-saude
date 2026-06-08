@@ -133,7 +133,7 @@ function salvarSessaoMembro() {
   }));
 }
 
-async function carregarSessao() {
+function carregarSessao() {
   const sessao = localStorage.getItem('applus_sessao');
   const familia = localStorage.getItem('applus_familia');
 
@@ -177,6 +177,7 @@ async function registrarSW() {
   if ('serviceWorker' in navigator) {
     try {
       await navigator.serviceWorker.register('/sw.js');
+      console.log('SW registrado');
       navigator.serviceWorker.addEventListener('message', (e) => {
         if (e.data && e.data.tipo === 'tocar-alarme') iniciarSomAlarme();
         if (e.data && e.data.tipo === 'parar-alarme') pararSomAlarme();
@@ -208,7 +209,7 @@ async function registrarSW() {
           }
         }
       });
-    } catch (e) { }
+    } catch (e) { console.log('SW erro:', e); }
   }
 }
 
@@ -283,6 +284,7 @@ async function carregarPerfisDisponiveis() {
         <div class="perfil-tipo">novo membro</div>
       </div>`;
   } catch (e) {
+    console.log('Erro perfis:', e);
   }
 }
 
@@ -463,6 +465,7 @@ async function criarFamilia() {
         const jsonPerfil = await respPerfil.json();
         
       } catch(ep) {
+        console.log('Erro perfil:', ep.message);
       }
     }
 
@@ -513,6 +516,7 @@ async function mostrarQRCodeCuidador() {
     };
     img.src = res.qrcode;
   } catch (e) {
+    console.log('QR Code erro:', e);
   }
 }
 
@@ -665,6 +669,7 @@ function _continuarIniciarApp() {
         PushNotifications.addListener('pushNotificationReceived', (notification) => {
           const data = notification.data || {};
           if (data.tipo === 'resumo-pronto') {
+            console.log('[Home] Resumo pronto — atualizando card...');
             if (typeof buscarResumoSalvo === 'function') buscarResumoSalvo();
           }
           if (data.tipo === 'habito') {
@@ -672,7 +677,7 @@ function _continuarIniciarApp() {
           }
         });
       }
-    } catch(e) { }
+    } catch(e) { console.log('PushNotifications listener erro:', e); }
   }
 
   // Pede permissão de notificação APÓS navegar para home
@@ -706,7 +711,7 @@ async function carregarPerfil() {
     }
     carregarFotoPerfil();
     const idPessoal = APP.idPessoal || (APP.membroAtivo && APP.membroAtivo.id_pessoal);
-    if (!idPessoal) { return; }
+    if (!idPessoal) { console.log('sem idPessoal'); return; }
     const mem = await api('GET', '/api/membros/id/' + idPessoal);
     if (!mem || !mem.id) return;
     APP.membroAtivo = mem;
@@ -732,7 +737,7 @@ async function carregarPerfil() {
         document.getElementById('pf-tel').value = p.tel_emergencia || '';
       }
     }
-  } catch(e) { }
+  } catch(e) { console.log('carregarPerfil erro:', e.message); }
 }
 
 async function salvarPerfil() {
@@ -1368,6 +1373,7 @@ async function carregarHome() {
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:16px">Nenhum evento hoje</p>';
   } catch (e) {
+    console.log('Erro home:', e);
   }
   atualizarBadgeRemedios();
   buscarResumoSalvo();
@@ -1400,6 +1406,7 @@ async function carregarMedicamentos() {
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhum medicamento cadastrado</p>';
   } catch (e) {
+    console.log('Erro meds:', e);
   }
 }
 
@@ -1425,7 +1432,7 @@ async function carregarGraficoAderencia() {
         "<div style='font-size:11px;color:#6b7280;margin-top:3px'>" + tomadas + " de " + total + " doses confirmadas</div>" +
         "</div>";
     }).join("");
-  } catch(e) { }
+  } catch(e) { console.log("Erro aderencia:", e); }
 }
 
 function formatarHorarios(horarios) {
@@ -1621,7 +1628,7 @@ async function agendarAlarmesNativos(meds) {
         });
       }
     }
-  } catch(e) { }
+  } catch(e) { console.log('agendarAlarmesNativos erro:', e.message); }
 }
 
 async function verificarAlarmes() {
@@ -1651,6 +1658,7 @@ async function verificarAlarmes() {
       }
     }
   } catch (e) {
+    console.log('Erro alarmes:', e);
   }
 }
 
@@ -1690,7 +1698,7 @@ function dispararAlarme(med) {
         });
       }
     }
-  } catch(e) { }
+  } catch(e) { console.log('AlarmPlugin erro:', e.message); }
 
   // Voz
   falarAlarme(`Atenção! Está na hora de tomar ${med.nome}. A dose é ${med.dosagem || 'conforme prescrito'}. Por favor tome o seu medicamento agora.`);
@@ -1811,6 +1819,7 @@ async function carregarAgenda() {
         </div>`).join('')
       : '<p style="color:var(--cinza);font-size:14px;text-align:center;padding:24px">Nenhum evento cadastrado</p>';
   } catch (e) {
+    console.log('Erro agenda:', e);
   }
 }
 
@@ -1933,6 +1942,7 @@ async function carregarChat() {
     container.innerHTML = msgs.map(m => mensagemHTML(m)).join('');
     container.scrollTop = container.scrollHeight;
   } catch (e) {
+    console.log('Erro chat:', e);
   }
 }
 
@@ -2089,7 +2099,7 @@ async function carregarPassagens() {
         ${!p.medicamentos_ok ? `<div style="font-size:0.85rem;color:#f59e0b">⚠️ Medicamentos não administrados</div>` : `<div style="font-size:0.85rem;color:#16a34a">✅ Medicamentos ok</div>`}
       </div>`;
     }).join('') : '<p style="color:#999;font-size:0.9rem;text-align:center;padding:1rem">Nenhuma passagem registrada ainda</p>';
-  } catch(e) { }
+  } catch(e) { console.log('Erro passagens:', e); }
 }
 
 // ── ESCALA DE DOR ──
@@ -2237,7 +2247,7 @@ async function carregarSinais() {
       }
     });
 
-  } catch(e) { }
+  } catch(e) { console.log('Erro sinais:', e); }
 }
 
 // ── MAIS (perfil, sinais, vacinas, etc.) ──
@@ -2478,14 +2488,17 @@ async function registrarTokenFCM() {
             familia_id: APP.familiaId
           });
           mostrarToast('✅ FCM salvo no servidor!', 4000);
+          console.log('[FCM Nativo] Token registrado:', token.substring(0, 20) + '...');
         }
       });
 
       PushNotifications.addListener('registrationError', (err) => {
+        console.log('[FCM Nativo] Erro registro:', err.error);
       });
 
       // Recebe push com app fechado/background
       PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('[FCM Nativo] Push recebido:', notification.title);
         const data = notification.data || {};
         if (data.tipo === 'alarme-medicamento') {
           dispararAlarme({
@@ -2525,8 +2538,10 @@ async function registrarTokenFCM() {
     });
     if (token && APP.membroId) {
       await api('POST', '/api/push/salvar-fcm-token', { membro_id: APP.membroId, fcm_token: token, familia_id: APP.familiaId });
+      console.log('[FCM Web] Token registrado:', token.substring(0, 20) + '...');
     }
   } catch(e) {
+    console.log('[FCM] Erro ao registrar token:', e.message);
   }
 }
 
@@ -2545,12 +2560,14 @@ async function inscreverPush() {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
+    console.log('Push: inscricao ok');
     await api('POST', '/api/push/inscrever', {
       membro_id: APP.membroId,
       familia_id: APP.familiaId,
       subscription: sub
     });
-  } catch (e) { try { await api("POST", "/api/push/erro-log", { erro: e.message, membro_id: APP.membroId, familia_id: APP.familiaId }); } catch(_) {}
+  } catch (e) {
+    console.log('Push não disponível:', e); try { await api("POST", "/api/push/erro-log", { erro: e.message, membro_id: APP.membroId, familia_id: APP.familiaId }); } catch(_) {}
   }
 }
 
@@ -2571,7 +2588,7 @@ async function carregarIdSOS() {
     const el = document.getElementById("meu-id-sos");
     if (el) el.textContent = r.id_sos;
     carregarContatosSOS();
-  } catch(e) { }
+  } catch(e) { console.log("Erro ID SOS:", e); }
 }
 
 function copiarIdSOS() {
@@ -2602,7 +2619,7 @@ async function carregarContatosSOS() {
         <button onclick="removerContatoSOS(${c.id})" style="background:#fee2e2;border:none;border-radius:6px;padding:6px 10px;color:#dc2626;font-size:12px;cursor:pointer">Remover</button>
       </div>
     `).join("");
-  } catch(e) { }
+  } catch(e) { console.log("Erro contatos SOS:", e); }
 }
 
 async function adicionarContatoSOS() {
@@ -2654,7 +2671,7 @@ async function carregarChecklist() {
       return;
     }
     lista.innerHTML = tarefas.map(t => '<div class="item-lista" style="display:flex;align-items:center;gap:12px;opacity:' + (t.concluida ? 0.5 : 1) + '"><input type="checkbox" ' + (t.concluida ? 'checked' : '') + ' onchange="toggleTarefa(' + t.id + ', this.checked)" style="width:20px;height:20px;cursor:pointer"><div class="item-info" style="flex:1;text-decoration:' + (t.concluida ? 'line-through' : 'none') + '"><div class="item-nome">' + t.tarefa + '</div></div><button onclick="excluirTarefa(' + t.id + ')" style="background:none;border:none;font-size:18px;cursor:pointer;color:#ef4444">🗑</button></div>').join('');
-  } catch (e) { }
+  } catch (e) { console.log('Erro checklist:', e); }
 }
 
 async function salvarTarefa() {
@@ -2712,7 +2729,7 @@ async function carregarEscala() {
       });
     });
     lista.innerHTML = html;
-  } catch (e) { }
+  } catch (e) { console.log('Erro escala:', e); }
 }
 
 async function salvarEscala() {
@@ -2861,7 +2878,7 @@ async function atualizarDropdown() {
         <span style="font-size:9px;color:${ativo?'white':'rgba(255,255,255,0.7)'};font-weight:${ativo?700:400}">${m.nome.split(' ')[0]}</span>
       </div>`;
     }).join("") + (ehCuidador ? "" : `<div onclick="abrirModal(&quot;modal-add-membro&quot;)" style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer"><div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.2);color:white;font-size:18px">+</div><span style="font-size:9px;color:rgba(255,255,255,0.7)">Novo</span></div>`);
-  } catch(e) { }
+  } catch(e) { console.log("Erro dropdown:", e); }
 }
 function toggleDropdown() {
   const dropdown = document.getElementById('perfil-dropdown');
@@ -3105,7 +3122,7 @@ async function carregarAtividades() {
           ${a.foto ? `<img src="${a.foto}" style="width:100%;border-radius:8px;margin-top:6px;max-height:160px;object-fit:cover">` : ''}
         </div>
       </div>`).join('');
-  } catch(e) { }
+  } catch(e) { console.log('Erro atividades:', e); }
 }
 
 function iconeAtividade(tipo) {
@@ -3152,7 +3169,7 @@ async function carregarHumorIdoso() {
           <div style="font-size:0.75rem;color:#999">${new Date(h.criado_em).toLocaleString('pt-BR')}</div>
         </div>
       </div>`).join('');
-  } catch(e) { }
+  } catch(e) { console.log('Erro humor:', e); }
 }
 
 // ALIMENTAÇÃO
@@ -3182,7 +3199,7 @@ async function carregarRefeicoes() {
         <div style="font-size:0.85rem;color:#666">${r.obs || ''}</div>
         <div style="font-size:0.75rem;color:#999">${new Date(r.criado_em).toLocaleString('pt-BR')}</div>
       </div>`).join('');
-  } catch(e) { }
+  } catch(e) { console.log('Erro refeicoes:', e); }
 }
 
 // HIDRATAÇÃO
@@ -3200,7 +3217,7 @@ async function carregarHidratacao() {
   try {
     const dados = await api('GET', `/api/cuidados/hidratacao/${APP.familiaId}?membro_id=${APP.membroId}`);
     document.getElementById('total-hidratacao').textContent = dados.total || 0;
-  } catch(e) { }
+  } catch(e) { console.log('Erro hidratacao:', e); }
 }
 
 // SONO
@@ -3231,7 +3248,7 @@ async function carregarSono() {
         <div style="font-size:0.85rem;color:#666">Dormiu: ${s.inicio || '--'} | Acordou: ${s.fim || '--'}</div>
         <div style="font-size:0.85rem;color:#666">${s.obs || ''}</div>
       </div>`).join('');
-  } catch(e) { }
+  } catch(e) { console.log('Erro sono:', e); }
 }
 
 // INTERCORRÊNCIAS
@@ -3267,7 +3284,7 @@ async function carregarIntercorrencias() {
         <div style="font-size:0.85rem;color:#666">${i.hora || ''} — ${i.obs}</div>
         <div style="font-size:0.75rem;color:#999">${new Date(i.criado_em).toLocaleString('pt-BR')}</div>
       </div>`).join('');
-  } catch(e) { }
+  } catch(e) { console.log('Erro intercorrencias:', e); }
 }
 
 // ── FEED CUIDADOS — Visão da família ──
@@ -3898,7 +3915,7 @@ async function msCarregarHumor() {
         '<div style="font-size:0.8rem;color:#666">' + (h.obs || '') + '</div>' +
         '<div style="font-size:0.75rem;color:#999">' + new Date(h.criado_em).toLocaleDateString('pt-BR') + '</div></div></div>';
     }).join('');
-  } catch(e) { }
+  } catch(e) { console.log('Erro humor MS:', e); }
 }
 
 // ── DIÁRIO ──
@@ -3934,7 +3951,7 @@ async function msCarregarDiario() {
         (d.sentimento ? '<div><span style="font-size:0.75rem;color:#667eea;font-weight:600">💙 Sentimento:</span> <span style="font-size:0.9rem">' + d.sentimento + '</span></div>' : '') +
         '</div>';
     }).join('');
-  } catch(e) { }
+  } catch(e) { console.log('Erro diario MS:', e); }
 }
 
 // ── ROTINAS ──
@@ -4477,6 +4494,7 @@ async function carregarStreak() {
       card.style.display = 'none';
     }
   } catch(e) {
+    console.log('Erro streak:', e);
   }
 }
 
@@ -4566,7 +4584,7 @@ async function carregarFotoPerfil() {
       preview.innerHTML = '👤';
       preview.dataset.foto = '';
     }
-  } catch(e) { }
+  } catch(e) { console.log('Erro foto perfil:', e); }
 }
 
 async function carregarBabasSalvas() {
@@ -4613,6 +4631,7 @@ async function carregarBabasSalvas() {
     if (!html) html = '<p style="color:#999;font-size:13px;">Nenhuma babá ou cuidador cadastrado.</p>';
     el.innerHTML = html;
   } catch(e) {
+    console.log('Erro babas/cuidadores:', e);
     const el = document.getElementById('lista-babas-salvas');
     if (el) el.innerHTML = '<p style="color:#999;font-size:13px;">Nenhuma babá ou cuidador cadastrado.</p>';
   }
@@ -4643,7 +4662,7 @@ async function carregarFeedCuidadorFamilia() {
           ${r.foto ? `<img src="${r.foto}" style="width:100%;border-radius:8px;margin-top:6px;max-height:160px;object-fit:cover">` : ''}
         </div>
       </div>`).join('');
-  } catch(e) { }
+  } catch(e) { console.log('Erro feed cuidador:', e); }
 }
 
 async function carregarMedsCuidador() {
@@ -4674,7 +4693,7 @@ async function carregarMedsCuidador() {
         </div>`;
       }).join('');
     }).join('');
-  } catch(e) { }
+  } catch(e) { console.log('Erro meds cuidador:', e); }
 }
 
 async function carregarEventosCuidador() {
@@ -4696,7 +4715,7 @@ async function carregarEventosCuidador() {
         </div>
         <div style="font-size:13px;font-weight:700;color:#1a6eb5;">${e.hora||''}</div>
       </div>`).join('');
-  } catch(e) { }
+  } catch(e) { console.log('Erro eventos cuidador:', e); }
 }
 
 // ── EXAMES ──
@@ -4730,7 +4749,7 @@ async function carregarExames() {
         <div style="font-size:10px;color:#9ca3af;margin-top:6px">via ${e.fonte === 'ia' ? '🤖 IA' : '📝 manual'}</div>
       </div>`;
     }).join('');
-  } catch(err) { }
+  } catch(err) { console.log('Erro exames:', err); }
 }
 
 async function excluirExame(id) {
