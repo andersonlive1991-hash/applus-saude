@@ -2067,6 +2067,32 @@ function sair() {
 // ── PUSH ──
 async function registrarTokenFCM() {
   try {
+    // Capacitor nativo — usa plugin @capacitor/push-notifications
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      const { PushNotifications } = window.Capacitor.Plugins;
+      if (!PushNotifications) return;
+
+      const perm = await PushNotifications.requestPermissions();
+      if (perm.receive !== 'granted') return;
+
+      await PushNotifications.register();
+
+      PushNotifications.addListener('registration', async (tokenData) => {
+        const token = tokenData.value;
+        mostrarToast('FCM token: ' + token.substring(0, 15) + '...', 5000);
+        if (token && APP.membroId) {
+          await api('POST', '/api/push/salvar-fcm-token', {
+            membro_id: APP.membroId,
+            fcm_token: token,
+            familia_id: APP.familiaId
+          });
+          mostrarToast('✅ FCM salvo no servidor!', 4000);
+          console.log('[FCM] Token nativo registrado:', token.substring(0, 20) + '...');
+        }
+      });
+      return;
+    }
+    // Web fallback — apenas browser, não APK
     if (!('serviceWorker' in navigator)) return;
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
     const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js');
@@ -2085,8 +2111,8 @@ async function registrarTokenFCM() {
       serviceWorkerRegistration: reg
     });
     if (token && APP.membroId) {
-      await api('POST', '/api/push/salvar-fcm-token', { membro_id: APP.membroId, fcm_token: token });
-      console.log('[FCM] Token registrado:', token.substring(0, 20) + '...');
+      await api('POST', '/api/push/salvar-fcm-token', { membro_id: APP.membroId, fcm_token: token, familia_id: APP.familiaId });
+      console.log('[FCM] Token web registrado:', token.substring(0, 20) + '...');
     }
   } catch(e) {
     console.log('[FCM] Erro ao registrar token:', e.message);

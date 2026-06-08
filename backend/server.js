@@ -54,7 +54,7 @@ async function enviarPushCompleto(membro_id, titulo, corpo, url, urgente, medId,
     // FCM — funciona com tela desligada
     if (fcm_token && admin.apps.length) {
       try {
-        await admin.messaging().send({
+        const fcmResult = await admin.messaging().send({
           token: fcm_token,
           data: {
             tipo: 'alarme-medicamento',
@@ -67,8 +67,9 @@ async function enviarPushCompleto(membro_id, titulo, corpo, url, urgente, medId,
           },
           android: { priority: 'high', ttl: 60000 }
         });
+        console.log('[FCM] Enviado com sucesso:', fcmResult);
       } catch(e) {
-        console.log('[FCM] Erro envio:', e.message);
+        console.log('[FCM] Erro envio:', e.message, e.code);
         if (e.code === 'messaging/registration-token-not-registered') {
           pool.query('UPDATE push_subscriptions SET fcm_token=NULL WHERE membro_id=$1', [membro_id]).catch(()=>{});
         }
