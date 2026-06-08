@@ -1,8 +1,11 @@
 
 async function loginGoogle() {
   try {
-    // No APK o Google OAuth não está disponível
-    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) { return; }
+    // No Capacitor APK o SDK Google web não funciona
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      alerta('Login com Google não disponível no app. Use "Criar perfil" ou "Entrar em família".');
+      return;
+    }
     const client = google.accounts.oauth2.initTokenClient({
       client_id: '1028956812970-verjkuuuqnn6c8nhafh7kcvgphn1htkj.apps.googleusercontent.com',
       scope: 'openid email profile',
@@ -79,61 +82,7 @@ function renderMarkdown(txt) {
 }
 
 // ── INICIALIZAR ──
-
-// Capturar deep link OAuth Google no APK
-async function iniciarDeepLinkListener() {
-  try {
-    if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
-    const { App, Browser } = window.Capacitor.Plugins;
-    if (!App) return;
-    App.addListener('appUrlOpen', async (data) => {
-      const url = data.url || '';
-      // DEBUG — mostrar URL recebida
-      alerta('Deep link recebido: ' + url.substring(0, 80));
-      if (!url.startsWith('applus://callback')) return;
-      if (Browser) Browser.close().catch(()=>{});
-      if (url.includes('erro=')) { alerta('Erro ao entrar com Google'); return; }
-      // Extrair token do URL
-      const urlParams = new URLSearchParams(url.split('?')[1] || '');
-      const token = urlParams.get('token');
-      if (!token) { alerta('Token não recebido'); return; }
-      try {
-        // Buscar dados do token no servidor
-        const dados = await api('GET', '/api/auth/google/oauth-token/' + token);
-        if (!dados || !dados.ok) { alerta(dados?.erro || 'Erro ao buscar dados'); return; }
-        const res = await api('POST', '/api/auth/google', {
-          token: null,
-          userInfo: { email: dados.email, name: dados.nome, picture: dados.foto, sub: dados.google_id }
-        });
-        if (res && res.ok) {
-          APP.familiaId = String(res.familiaId);
-          APP.membroId = res.membroId;
-          APP.membroNome = res.membroNome;
-          APP.membroTipo = res.membroTipo;
-          APP.idPessoal = res.idPessoal;
-          APP.membroAtivo = { id: res.membroId, nome: res.membroNome, tipo: res.membroTipo, id_pessoal: res.idPessoal };
-          localStorage.setItem('applus_sessao', JSON.stringify({
-            familiaId: res.familiaId, membroId: res.membroId,
-            membroNome: res.membroNome, membroTipo: res.membroTipo,
-            idPessoal: res.idPessoal, codigoFamilia: res.codigoFamilia
-          }));
-          if (res.foto) localStorage.setItem('applus_foto', res.foto);
-          iniciarApp();
-        } else {
-          alerta(res?.erro || 'Erro ao entrar com Google');
-        }
-      } catch(e) { alerta('Erro ao processar login Google'); }
-    });
-  } catch(e) {}
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-  iniciarDeepLinkListener();
-  // Esconder botão Google no APK
-  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-    const btn = document.getElementById('btn-login-google');
-    if (btn) btn.style.display = 'none';
-  }
   if (typeof verificarIdioma === 'function') verificarIdioma();
   verificarBoasVindas();
   carregarSessao();

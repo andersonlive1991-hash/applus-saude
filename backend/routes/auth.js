@@ -1,5 +1,3 @@
-const pendingOAuthTokens = new Map();
-
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -36,82 +34,6 @@ router.post('/google', async (req, res) => {
     console.error('Google auth erro:', e.message);
     res.status(500).json({ erro: e.message });
   }
-});
-
-
-// OAuth Google callback para APK Capacitor
-router.get('/google/apk-callback', async (req, res) => {
-  const { code, state } = req.query;
-  try {
-    const { google } = require('googleapis');
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      'https://applus-saude-production.up.railway.app/api/auth/google/apk-callback'
-    );
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
-    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
-    const { data: userInfo } = await oauth2.userinfo.get();
-    
-    // Salva dados com token temporário e redireciona para página web do app
-    const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
-    pendingOAuthTokens.set(token, {
-      email: userInfo.email,
-      nome: userInfo.name,
-      foto: userInfo.picture || '',
-      google_id: userInfo.id
-    });
-    setTimeout(() => pendingOAuthTokens.delete(token), 5 * 60 * 1000);
-    res.send(`<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>AP+ Saúde</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-</head>
-<body style="background:#1a9e6e;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif">
-<div style="text-align:center;color:white">
-  <div style="font-size:64px">🌿</div>
-  <h2>AP+ Saúde</h2>
-  <p>Login realizado! Voltando ao app...</p>
-</div>
-<script>
-  // Envia token para o app via postMessage e fecha browser
-  window.opener && window.opener.postMessage({type:'google_oauth',token:'${token}'},'*');
-  // Tenta fechar a janela
-  setTimeout(() => {
-    window.close();
-    // Fallback: redireciona para o app
-    window.location.href = 'applus://callback?token=${token}';
-  }, 1000);
-</script>
-</body></html>`);
-  } catch(e) {
-    res.redirect('https://applus-saude-production.up.railway.app/?google_erro=1');
-  }
-});
-
-// Inicia fluxo OAuth para APK
-router.get('/google/apk-init', (req, res) => {
-  const { google } = require('googleapis');
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    'https://applus-saude-production.up.railway.app/api/auth/google/apk-callback'
-  );
-  const url = oauth2Client.generateAuthUrl({
-    scope: ['openid', 'email', 'profile'],
-    prompt: 'select_account'
-  });
-  res.redirect(url);
-});
-
-// Buscar dados do OAuth pelo token temporário
-router.get('/google/oauth-token/:token', (req, res) => {
-  const token = req.params.token;
-  const data = pendingOAuthTokens.get(token);
-  if (!data) return res.json({ ok: false, erro: 'Token inválido ou expirado' });
-  pendingOAuthTokens.delete(token);
-  res.json({ ok: true, ...data });
 });
 
 module.exports = router;
