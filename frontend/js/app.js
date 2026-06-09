@@ -3930,7 +3930,11 @@ async function processarPin() {
       const r = await api('POST', '/api/membros/pin/verificar', { membro_id: APP.membroId, pin: _pinAtual });
       if (r.ok) {
         document.getElementById('tela-pin').style.display = 'none';
-        if (window._pinResolve) { window._pinResolve(true); window._pinResolve = null; }
+        if (window._pinResolve) {
+          const res = window._pinResolve;
+          window._pinResolve = null;
+          setTimeout(() => res(true), 50);
+        }
       } else {
         document.getElementById('pin-erro').textContent = 'PIN incorreto. Tente novamente.';
         _pinAtual = '';
@@ -3956,7 +3960,11 @@ async function processarPin() {
         fecharModal('modal-config-pin');
         carregarStatusPin();
         alerta('✅ PIN ativado com sucesso!');
-        if (window._pinResolve) { window._pinResolve(true); window._pinResolve = null; }
+        if (window._pinResolve) {
+          const res = window._pinResolve;
+          window._pinResolve = null;
+          setTimeout(() => res(true), 50);
+        }
       } catch(e) {
         document.getElementById('pin-erro').textContent = 'Erro ao salvar PIN.';
         _pinAtual = ''; _pinTemp = '';
