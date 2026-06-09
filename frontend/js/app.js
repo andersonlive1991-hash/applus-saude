@@ -2089,7 +2089,7 @@ async function registrarTokenFCM() {
               });
               mostrarToast('FCM salvo!', 3000);
               console.log('[FCM] Token salvo:', token.substring(0, 20) + '...');
-            } catch(e) { console.log('[FCM] Erro ao salvar:', e.message); mostrarToast('FCM erro: ' + e.message, 5000); }
+            } catch(e) { console.log('[FCM] Erro ao salvar:', e.message); }
           }
         };
         await salvarToken();
