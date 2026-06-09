@@ -910,3 +910,44 @@ setInterval(async () => {
   }
 }, 3600000);
 
+
+// ── TESTE HÁBITO MANUAL ──
+app.post('/api/habitos/testar', async (req, res) => {
+  const { categoria, membro_id } = req.body;
+  try {
+    const msgs = {
+      agua:        { titulo: 'Hora de beber água!', corpo: 'Mantenha-se hidratado. Beba um copo agora!' },
+      alimentacao: { titulo: 'Hora de se alimentar!', corpo: 'Uma refeição saudável agora faz bem ao corpo.' },
+      exercicio:   { titulo: 'Hora de se exercitar!', corpo: 'Que tal uma caminhada ou alongamento hoje?' },
+      sono:        { titulo: 'Hora de dormir!', corpo: 'Um bom sono é essencial para sua saúde.' },
+      pausa:       { titulo: 'Pausa mental!', corpo: 'Respire fundo. Um minuto de pausa faz diferença.' }
+    };
+    const msg = msgs[categoria || 'agua'];
+    const query = membro_id
+      ? 'SELECT membro_id, fcm_token, familia_id FROM push_subscriptions WHERE membro_id=$1 AND fcm_token IS NOT NULL'
+      : 'SELECT membro_id, fcm_token, familia_id FROM push_subscriptions WHERE fcm_token IS NOT NULL';
+    const params = membro_id ? [membro_id] : [];
+    const membros = await pool.query(query, params);
+    let enviados = 0;
+    for (const row of membros.rows) {
+      if (!row.fcm_token || !admin.apps.length) continue;
+      await admin.messaging().send({
+        token: row.fcm_token,
+        data: {
+          tipo: 'habito',
+          categoria: categoria || 'agua',
+          membro_id: String(row.membro_id),
+          familia_id: String(row.familia_id || ''),
+          titulo: msg.titulo,
+          corpo: msg.corpo
+        },
+        android: { priority: 'high' }
+      }).then(() => enviados++).catch(e => console.log('[Teste habito] Erro:', e.message));
+    }
+    res.json({ ok: true, enviados });
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+module.exports = { admin };
