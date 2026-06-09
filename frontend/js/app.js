@@ -641,6 +641,7 @@ function iniciarApp() {
 function _continuarIniciarApp() {
   iniciarAlarmes();
   if (APP.membroId) api('PUT', '/api/membros/' + APP.membroId + '/acesso', {}).catch(()=>{});
+  registrarTokenFCM();
   if (Notification.permission === 'granted') {
     inscreverPush();
   } else if (Notification.permission === 'default') {
@@ -655,7 +656,6 @@ function _continuarIniciarApp() {
   atualizarDropdown();
   navegarPara('home');
   if (typeof carregarStatusPin === 'function') carregarStatusPin();
-  setTimeout(() => registrarTokenFCM(), 3000);
 }
 
 // ── NAVEGAÇÃO ──
