@@ -920,7 +920,7 @@ async function api(metodo, url, corpo) {
 
 // ── HOME ──
 async function carregarHome() {
-  document.getElementById('home-nome').textContent = `Olá, ${APP.membroNome.split(' ')[0]} 👋`;
+  document.getElementById('home-nome').textContent = `Olá, ${(APP.membroNome || 'você').split(' ')[0]} 👋`;
 
   // Mostrar card TEA se família tem membro TEA
   try {
