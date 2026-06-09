@@ -2078,15 +2078,22 @@ async function registrarTokenFCM() {
       PushNotifications.addListener('registration', async (tokenData) => {
         const token = tokenData.value;
         mostrarToast('FCM token: ' + token.substring(0, 15) + '...', 5000);
-        if (token && APP.membroId) {
-          await api('POST', '/api/push/salvar-fcm-token', {
-            membro_id: APP.membroId,
-            fcm_token: token,
-            familia_id: APP.familiaId
-          });
-          mostrarToast('✅ FCM salvo no servidor!', 4000);
-          console.log('[FCM] Token nativo registrado:', token.substring(0, 20) + '...');
-        }
+        // Salva imediatamente; se APP.membroId ainda nao estiver pronto, tenta apos 3s
+        const salvarToken = async () => {
+          if (token && APP.membroId) {
+            try {
+              await api('POST', '/api/push/salvar-fcm-token', {
+                membro_id: APP.membroId,
+                fcm_token: token,
+                familia_id: APP.familiaId
+              });
+              mostrarToast('FCM salvo!', 3000);
+              console.log('[FCM] Token salvo:', token.substring(0, 20) + '...');
+            } catch(e) { console.log('[FCM] Erro ao salvar:', e.message); }
+          }
+        };
+        await salvarToken();
+        if (!APP.membroId) setTimeout(salvarToken, 3000);
       });
 
       await PushNotifications.register();
