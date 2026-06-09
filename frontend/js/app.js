@@ -628,8 +628,7 @@ function iniciarApp() {
       if (!ok) return;
       mostrarApp();
       conectarSocket();
-      // Delay para garantir que o WebView renderize antes de navegar
-      setTimeout(() => _continuarIniciarApp(), 100);
+      _continuarIniciarApp();
     });
     return;
   }
