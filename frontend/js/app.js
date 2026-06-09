@@ -642,20 +642,22 @@ function _continuarIniciarApp() {
   iniciarAlarmes();
   if (APP.membroId) api('PUT', '/api/membros/' + APP.membroId + '/acesso', {}).catch(()=>{});
   registrarTokenFCM();
-  if (Notification.permission === 'granted') {
-    inscreverPush();
-  } else if (Notification.permission === 'default') {
-    // Pede permissão apenas uma vez por sessão
-    if (!sessionStorage.getItem('push_permission_asked')) {
-      sessionStorage.setItem('push_permission_asked', '1');
-      Notification.requestPermission().then(perm => {
-        if (perm === 'granted') inscreverPush();
-      });
-    }
-  }
   atualizarDropdown();
   navegarPara('home');
   if (typeof carregarStatusPin === 'function') carregarStatusPin();
+  // Pede permissão APÓS navegar para home (evita travar thread JS)
+  setTimeout(() => {
+    if (Notification.permission === 'granted') {
+      inscreverPush();
+    } else if (Notification.permission === 'default') {
+      if (!sessionStorage.getItem('push_permission_asked')) {
+        sessionStorage.setItem('push_permission_asked', '1');
+        Notification.requestPermission().then(perm => {
+          if (perm === 'granted') inscreverPush();
+        });
+      }
+    }
+  }, 1000);
 }
 
 // ── NAVEGAÇÃO ──
