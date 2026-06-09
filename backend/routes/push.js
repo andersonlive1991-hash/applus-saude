@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../db');
 
 // Tornar subscription nullable para suportar FCM sem VAPID
 db.query("ALTER TABLE push_subscriptions ALTER COLUMN subscription DROP NOT NULL").catch(()=>{});
-const db = require('../db');
 const webpush = require('web-push');
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
