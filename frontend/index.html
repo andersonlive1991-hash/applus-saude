@@ -315,6 +315,11 @@
         <div class="card-titulo">Exercícios</div>
         <div class="card-sub">Treinos em vídeo</div>
       </div>
+      <div class="card" id="card-saude-feminina" style="display:none" onclick="navegarPara('saude-feminina')">
+        <div class="card-icone">🌸</div>
+        <div class="card-titulo">Saúde Feminina</div>
+        <div class="card-sub">Ciclo e bem-estar</div>
+      </div>
       <div class="card" onclick="navegarPara('mente-sa')">
         <div class="card-icone">🌱</div>
         <div class="card-titulo" data-i18n="card.mente_sa">Mente Sã</div>
@@ -1569,6 +1574,13 @@
       </div>
       <div class="campo"><label>Nome</label><input id="inp-nome-familia" type="text" placeholder="Ex: Anderson"></div>
       <div class="campo"><label>Sobrenome</label><input id="inp-nome-membro" type="text" placeholder="Ex: Barros"></div>
+      <div class="campo"><label>Sexo biológico</label>
+        <select id="inp-sexo-cadastro">
+          <option value="">Prefiro não informar</option>
+          <option value="masculino">Masculino</option>
+          <option value="feminino">Feminino</option>
+        </select>
+      </div>
       <div class="campo"><label>Seu papel</label>
         <select id="inp-tipo-membro" onchange="mostrarDescricaoPapel(this.value)" style="margin-bottom:6px">
           <option value="administrador">👤 Para mim — vou cuidar da minha saúde</option>

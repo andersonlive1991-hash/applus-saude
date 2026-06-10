@@ -287,6 +287,10 @@ function selecionarPerfil(id, nome, tipo, idPessoal) {
   APP.idPessoal = idPessoal;
   APP.membroAtivo = { id, nome, tipo, id_pessoal: idPessoal };
   salvarSessaoMembro();
+  // Busca sexo em background — não bloqueia o iniciarApp
+  api('GET', '/api/perfil/' + id).then(p => {
+    if (p && p.sexo) APP.sexo = p.sexo;
+  }).catch(() => {});
   iniciarApp();
 }
 
@@ -406,6 +410,7 @@ async function criarFamilia() {
   const convenio = document.getElementById('inp-convenio')?.value.trim() || '';
   const contatoEmerg = document.getElementById('inp-contato-emerg')?.value.trim() || '';
   const telEmerg = document.getElementById('inp-tel-emerg')?.value.trim() || '';
+  const sexoCadastro = document.getElementById('inp-sexo-cadastro')?.value || '';
 
 
   try {
@@ -424,7 +429,7 @@ async function criarFamilia() {
 
     
 
-    const temDados = dataNasc || tipoSangue || alergias || cpf || cartaoSus || convenio || contatoEmerg || telEmerg;
+    const temDados = dataNasc || tipoSangue || alergias || cpf || cartaoSus || convenio || contatoEmerg || telEmerg || sexoCadastro;
     if (temDados) {
       const membroId = resMem.id;
       const dadosPerfil = {
@@ -437,7 +442,8 @@ async function criarFamilia() {
         cartao_sus: cartaoSus !== '' ? cartaoSus : null,
         convenio: convenio !== '' ? convenio : null,
         contato_emergencia: contatoEmerg !== '' ? contatoEmerg : null,
-        tel_emergencia: telEmerg !== '' ? telEmerg : null
+        tel_emergencia: telEmerg !== '' ? telEmerg : null,
+        sexo: sexoCadastro !== '' ? sexoCadastro : null
       };
       try {
         
@@ -1109,6 +1115,9 @@ async function carregarHome() {
     const cardBaba = document.getElementById('card-baba');
     if (cardBaba) cardBaba.style.display = temBaba ? 'flex' : 'none';
   } catch(e) {}
+  // Card Saúde Feminina — só para mulheres
+  const cardSF = document.getElementById('card-saude-feminina');
+  if (cardSF) cardSF.style.display = APP.sexo === 'feminino' ? 'flex' : 'none';
   document.getElementById('home-data').textContent = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
