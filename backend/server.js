@@ -950,4 +950,70 @@ app.post('/api/habitos/testar', async (req, res) => {
   }
 });
 
+
+// ── CICLO MENSTRUAL ──
+pool.query(`CREATE TABLE IF NOT EXISTS ciclo_menstrual (
+  id SERIAL PRIMARY KEY,
+  membro_id INTEGER NOT NULL UNIQUE,
+  ultima_mens DATE,
+  dur_ciclo INTEGER DEFAULT 28,
+  dur_mens INTEGER DEFAULT 5,
+  atualizado_em TIMESTAMP DEFAULT NOW()
+)`).catch(()=>{});
+
+pool.query(`CREATE TABLE IF NOT EXISTS ciclo_sintomas (
+  id SERIAL PRIMARY KEY,
+  membro_id INTEGER NOT NULL,
+  dor INTEGER DEFAULT 0,
+  humor VARCHAR(20),
+  fluxo VARCHAR(30),
+  obs TEXT,
+  criado_em TIMESTAMP DEFAULT NOW()
+)`).catch(()=>{});
+
+app.post('/api/ciclo/salvar', async (req, res) => {
+  const { membro_id, ultima_mens, dur_ciclo, dur_mens } = req.body;
+  if (!membro_id) return res.status(400).json({ erro: 'membro_id obrigatorio' });
+  try {
+    await pool.query(
+      `INSERT INTO ciclo_menstrual (membro_id, ultima_mens, dur_ciclo, dur_mens, atualizado_em)
+       VALUES ($1,$2,$3,$4,NOW())
+       ON CONFLICT (membro_id) DO UPDATE SET
+       ultima_mens=$2, dur_ciclo=$3, dur_mens=$4, atualizado_em=NOW()`,
+      [membro_id, ultima_mens, dur_ciclo || 28, dur_mens || 5]
+    );
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.get('/api/ciclo/:membro_id', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT * FROM ciclo_menstrual WHERE membro_id=$1', [req.params.membro_id]);
+    res.json(r.rows[0] || null);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.post('/api/ciclo/sintomas', async (req, res) => {
+  const { membro_id, dor, humor, fluxo, obs } = req.body;
+  if (!membro_id) return res.status(400).json({ erro: 'membro_id obrigatorio' });
+  try {
+    await pool.query(
+      'INSERT INTO ciclo_sintomas (membro_id, dor, humor, fluxo, obs) VALUES ($1,$2,$3,$4,$5)',
+      [membro_id, dor || 0, humor || null, fluxo || null, obs || null]
+    );
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.get('/api/ciclo/sintomas/:membro_id', async (req, res) => {
+  try {
+    const r = await pool.query(
+      'SELECT * FROM ciclo_sintomas WHERE membro_id=$1 ORDER BY criado_em DESC LIMIT 30',
+      [req.params.membro_id]
+    );
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 module.exports = { admin };
+
