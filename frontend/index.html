@@ -267,6 +267,52 @@
       </div>
       <div id="resumo-texto" style="font-size:13px;line-height:1.6;opacity:0.95">Analisando seus dados...</div>
     </div>
+    <!-- Card Metas do Dia -->
+    <div id="card-metas-dia" style="background:white;border-radius:20px;padding:16px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:15px;font-weight:700">🎯 Metas do dia</span>
+        <span id="metas-data" style="font-size:11px;color:#888"></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px" id="metas-lista">
+        <div class="meta-item">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:12px">💧 Água</span>
+            <span style="font-size:12px;font-weight:600" id="meta-agua-val">0/8 copos</span>
+          </div>
+          <div style="height:6px;background:#e0e0e0;border-radius:3px;overflow:hidden">
+            <div id="meta-agua-bar" style="height:100%;background:#2196f3;border-radius:3px;width:0%;transition:width .5s"></div>
+          </div>
+        </div>
+        <div class="meta-item">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:12px">🍽️ Refeições</span>
+            <span style="font-size:12px;font-weight:600" id="meta-ref-val">0/5</span>
+          </div>
+          <div style="height:6px;background:#e0e0e0;border-radius:3px;overflow:hidden">
+            <div id="meta-ref-bar" style="height:100%;background:#ff9800;border-radius:3px;width:0%;transition:width .5s"></div>
+          </div>
+        </div>
+        <div class="meta-item">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:12px">🏋️ Exercícios</span>
+            <span style="font-size:12px;font-weight:600" id="meta-ex-val">0/1</span>
+          </div>
+          <div style="height:6px;background:#e0e0e0;border-radius:3px;overflow:hidden">
+            <div id="meta-ex-bar" style="height:100%;background:#1a9e6e;border-radius:3px;width:0%;transition:width .5s"></div>
+          </div>
+        </div>
+        <div class="meta-item">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:12px">😴 Sono</span>
+            <span style="font-size:12px;font-weight:600" id="meta-sono-val">0/8h</span>
+          </div>
+          <div style="height:6px;background:#e0e0e0;border-radius:3px;overflow:hidden">
+            <div id="meta-sono-bar" style="height:100%;background:#9c27b0;border-radius:3px;width:0%;transition:width .5s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="cards-grid">
       <div class="card destaque" onclick="navegarPara('remedios')">
         <div class="card-icone">💊</div>

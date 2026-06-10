@@ -668,6 +668,65 @@ function _continuarIniciarApp() {
 
 
 
+
+// ── METAS DO DIA ──
+async function carregarMetasDia() {
+  try {
+    const hoje = new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'short'});
+    const dataEl = document.getElementById('metas-data');
+    if (dataEl) dataEl.textContent = hoje;
+
+    const [aguaRes, refRes, exRes, sonoRes] = await Promise.all([
+      api('GET', `/api/cuidados/agua/${APP.familiaId}/${APP.membroId}`).catch(()=>null),
+      api('GET', `/api/cuidados/refeicoes/${APP.familiaId}/${APP.membroId}`).catch(()=>null),
+      api('GET', `/api/cuidados/atividades/${APP.familiaId}/${APP.membroId}`).catch(()=>null),
+      api('GET', `/api/cuidados/sono/${APP.familiaId}/${APP.membroId}`).catch(()=>null)
+    ]);
+
+    // Água
+    const copos = aguaRes ? (aguaRes.copos || aguaRes.total || 0) : 0;
+    const metaAgua = 8;
+    const pctAgua = Math.min(100, Math.round(copos/metaAgua*100));
+    const aguaVal = document.getElementById('meta-agua-val');
+    const aguaBar = document.getElementById('meta-agua-bar');
+    if (aguaVal) aguaVal.textContent = copos + '/' + metaAgua + ' copos';
+    if (aguaBar) aguaBar.style.width = pctAgua + '%';
+
+    // Refeições
+    const refs = refRes ? (Array.isArray(refRes) ? refRes.length : refRes.total || 0) : 0;
+    const metaRef = 5;
+    const pctRef = Math.min(100, Math.round(refs/metaRef*100));
+    const refVal = document.getElementById('meta-ref-val');
+    const refBar = document.getElementById('meta-ref-bar');
+    if (refVal) refVal.textContent = refs + '/' + metaRef;
+    if (refBar) refBar.style.width = pctRef + '%';
+
+    // Exercícios
+    const exs = exRes ? (Array.isArray(exRes) ? exRes.length : exRes.total || 0) : 0;
+    const metaEx = 1;
+    const pctEx = Math.min(100, Math.round(exs/metaEx*100));
+    const exVal = document.getElementById('meta-ex-val');
+    const exBar = document.getElementById('meta-ex-bar');
+    if (exVal) exVal.textContent = exs + '/' + metaEx;
+    if (exBar) exBar.style.width = pctEx + '%';
+
+    // Sono
+    let horasSono = 0;
+    if (sonoRes) {
+      if (sonoRes.horas) horasSono = sonoRes.horas;
+      else if (sonoRes.duracao) horasSono = sonoRes.duracao;
+      else if (Array.isArray(sonoRes) && sonoRes.length) horasSono = sonoRes[0].horas || 0;
+    }
+    const metaSono = 8;
+    const pctSono = Math.min(100, Math.round(horasSono/metaSono*100));
+    const sonoVal = document.getElementById('meta-sono-val');
+    const sonoBar = document.getElementById('meta-sono-bar');
+    if (sonoVal) sonoVal.textContent = horasSono + '/' + metaSono + 'h';
+    if (sonoBar) sonoBar.style.width = pctSono + '%';
+
+  } catch(e) { console.log('[Metas] Erro:', e.message); }
+}
+
 // ── IMC ──
 function calcularIMCPerfil(altura, peso) {
   const el = document.getElementById('pf-imc-resultado');
@@ -1323,6 +1382,7 @@ async function carregarHome() {
   }
   atualizarBadgeRemedios();
   buscarResumoSalvo();
+  carregarMetasDia();
 }
 
 function iconeTipoEvento(tipo) {
