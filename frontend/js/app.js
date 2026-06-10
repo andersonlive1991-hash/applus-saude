@@ -128,7 +128,7 @@ function salvarSessaoMembro() {
   }));
 }
 
-function carregarSessao() {
+async function carregarSessao() {
   const sessao = localStorage.getItem('applus_sessao');
   const familia = localStorage.getItem('applus_familia');
 
@@ -142,6 +142,7 @@ function carregarSessao() {
     APP.membroTipo = dados.membroTipo;
     APP.idPessoal = dados.idPessoal;
     APP.membroAtivo = { id: dados.membroId, nome: dados.membroNome, tipo: dados.membroTipo, id_pessoal: dados.idPessoal };
+    try { const p = await api('GET', '/api/perfil/' + dados.membroId); if (p && p.sexo) APP.sexo = p.sexo; } catch(e) {}
     iniciarApp();
   } else if (familia) {
     const dados = JSON.parse(familia);
