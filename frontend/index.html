@@ -310,6 +310,11 @@
         <div class="card-titulo" data-i18n="card.meu_dia">Meu Dia</div>
         <div class="card-sub">Autocuidado pessoal</div>
       </div>
+      <div class="card" onclick="navegarPara('exercicios')">
+        <div class="card-icone">🏋️</div>
+        <div class="card-titulo">Exercícios</div>
+        <div class="card-sub">Treinos em vídeo</div>
+      </div>
       <div class="card" onclick="navegarPara('mente-sa')">
         <div class="card-icone">🌱</div>
         <div class="card-titulo" data-i18n="card.mente_sa">Mente Sã</div>
@@ -1330,6 +1335,28 @@
   </div>
 
   <!-- ── MENTE SÃ ── -->
+  <div id="pag-exercicios" class="pagina">
+    <div class="header-verde">
+      <h1>🏋️ Exercícios</h1>
+      <p>Vídeos com instrução profissional</p>
+    </div>
+    <div class="curva"></div>
+    <div class="conteudo">
+      <div style="display:flex;gap:0.4rem;overflow-x:auto;margin-bottom:1rem;padding-bottom:0.5rem">
+        <button class="btn-aba ativa" id="aba-ex-peito" onclick="trocarCatExercicio('peito')">💪 Peito</button>
+        <button class="btn-aba" id="aba-ex-perna" onclick="trocarCatExercicio('perna')">🦵 Pernas</button>
+        <button class="btn-aba" id="aba-ex-core" onclick="trocarCatExercicio('core')">🔥 Core</button>
+        <button class="btn-aba" id="aba-ex-cardio" onclick="trocarCatExercicio('cardio')">❤️ Cardio</button>
+        <button class="btn-aba" id="aba-ex-costas" onclick="trocarCatExercicio('costas')">🏊 Costas</button>
+        <button class="btn-aba" id="aba-ex-relaxa" onclick="trocarCatExercicio('relaxa')">🧘 Relaxamento</button>
+      </div>
+      <div id="ex-lista"></div>
+      <div style="background:#fff8e1;border-radius:12px;padding:1rem;margin-top:1rem;border-left:4px solid #f59e0b">
+        <p style="font-size:0.8rem;color:#92400e">⚠️ Os exercícios são informativos. Consulte um profissional de educação física antes de iniciar qualquer atividade física.</p>
+      </div>
+    </div>
+  </div>
+
   <div id="pag-mente-sa" class="pagina">
     <div class="header-verde" style="background:linear-gradient(145deg,#1a1a2e,#16213e,#0f3460)">
       <h1>🌱 Mente Sã</h1>

@@ -659,6 +659,165 @@ function _continuarIniciarApp() {
   }, 1000);
 }
 
+
+// ── EXERCÍCIOS ──
+const EX_DB = {
+  peito:[
+    {nome:'Flexão de braços',desc:'Exercício clássico para peito, ombros e tríceps. Corpo reto do calcanhar à cabeça durante todo o movimento.',muscles:['Peitoral','Tríceps'],sec:['Deltóide'],dur:30,yt:'NZM9dui2MZo'},
+    {nome:'Flexão inclinada',desc:'Mãos elevadas — ativa o peitoral inferior. Ótimo para iniciantes que ainda não conseguem a flexão completa.',muscles:['Peitoral inferior'],sec:['Tríceps'],dur:30,yt:'gvoTIZGmcFY'},
+    {nome:'Flexão declinada',desc:'Pés elevados numa cadeira — ênfase no peitoral superior e deltóide anterior.',muscles:['Peitoral superior','Deltóide'],sec:['Tríceps'],dur:30,yt:'EwuP99VG4ao'},
+    {nome:'Flexão diamante',desc:'Mãos em triângulo abaixo do peito — máxima ativação do tríceps e peitoral interno.',muscles:['Tríceps','Peitoral'],sec:['Deltóide'],dur:30,yt:'Ei7Tzagz1do'},
+  ],
+  perna:[
+    {nome:'Agachamento livre',desc:'Movimento base para pernas e glúteos. Pés na largura dos ombros, joelhos seguem a direção dos pés, desça até 90°.',muscles:['Quadríceps','Glúteos'],sec:['Isquiotibiais','Panturrilha'],dur:45,yt:'DKg6dkbPoWI'},
+    {nome:'Afundo',desc:'Passo à frente com joelho dobrado a 90°. Alterna as pernas a cada repetição. Mantenha o tronco ereto.',muscles:['Quadríceps','Glúteos'],sec:['Isquiotibiais'],dur:40,yt:'DKg6dkbPoWI'},
+    {nome:'Ponte glútea',desc:'Deitado de costas, pés apoiados no chão, eleve o quadril contraindo os glúteos. Segure 2 segundos no topo.',muscles:['Glúteos','Isquiotibiais'],sec:['Core'],dur:40,yt:'DKg6dkbPoWI'},
+    {nome:'Elevação de panturrilha',desc:'Em pé, eleve os calcanhares usando somente a panturrilha. Desça lentamente controlando a resistência.',muscles:['Gastrocnêmio','Sóleo'],sec:[],dur:45,yt:'DKg6dkbPoWI'},
+  ],
+  core:[
+    {nome:'Prancha abdominal',desc:'Antebraços apoiados no chão, corpo em linha reta. Abdômen contraído o tempo todo. Respire normalmente.',muscles:['Reto abdominal','Transverso'],sec:['Oblíquos','Glúteos'],dur:30,yt:'NZM9dui2MZo'},
+    {nome:'Abdominal supra',desc:'Deitado, mãos atrás da cabeça, eleve o tronco até os omoplatas saírem do chão. Não puxe o pescoço.',muscles:['Reto abdominal'],sec:['Oblíquos'],dur:30,yt:'NZM9dui2MZo'},
+    {nome:'Bicicleta abdominal',desc:'Alternando cotovelo e joelho opostos em rotação. Excelente ativação dos oblíquos e reto abdominal.',muscles:['Oblíquos','Reto abdominal'],sec:[],dur:40,yt:'NZM9dui2MZo'},
+    {nome:'Elevação de pernas',desc:'Deitado, eleve as pernas até 90° e desça lentamente sem tocar o chão. Lombar pressionada no chão.',muscles:['Reto abdominal inferior','Flexor do quadril'],sec:[],dur:30,yt:'NZM9dui2MZo'},
+  ],
+  cardio:[
+    {nome:'Polichinelo',desc:'Clássico exercício aeróbico. Salte abrindo pernas e elevando braços simultaneamente. Mantenha ritmo constante.',muscles:['Full body'],sec:['Cardio'],dur:45,yt:'NZM9dui2MZo'},
+    {nome:'Burpee',desc:'Agachamento + flexão + salto. Exercício completo que eleva muito a frequência cardíaca e queima calorias.',muscles:['Full body'],sec:['Cardio'],dur:30,yt:'NZM9dui2MZo'},
+    {nome:'Mountain climber',desc:'Posição de flexão, alterne joelhos em direção ao peito rapidamente. Excelente para core e cardio.',muscles:['Core','Quadríceps'],sec:['Cardio'],dur:40,yt:'NZM9dui2MZo'},
+  ],
+  costas:[
+    {nome:'Superman',desc:'Deitado de bruços, eleve braços e pernas simultaneamente. Fortalece toda a cadeia posterior do corpo.',muscles:['Eretores da espinha','Glúteos'],sec:['Rombóide','Isquiotibiais'],dur:30,yt:'NZM9dui2MZo'},
+    {nome:'Prancha lateral',desc:'Antebraço lateral apoiado, corpo em linha reta. Isola oblíquos e quadrado lombar. Alterne os lados.',muscles:['Oblíquos','Quadrado lombar'],sec:['Core'],dur:30,yt:'NZM9dui2MZo'},
+    {nome:'Remada com toalha',desc:'Envolva uma toalha numa porta fechada, incline o corpo e puxe. Substituto eficaz da remada.',muscles:['Latíssimo','Rombóide'],sec:['Bíceps','Deltóide posterior'],dur:40,yt:'NZM9dui2MZo'},
+  ],
+  relaxa:[
+    {nome:'Respiração 4-7-8',desc:'Inspire 4s, segure 7s, expire 8s. Ativa o sistema parassimpático, reduz cortisol e melhora o sono.',muscles:['Diafragma'],sec:[],dur:120,yt:'NZM9dui2MZo'},
+    {nome:'Alongamento cervical',desc:'Incline a cabeça para cada lado segurando 20 segundos. Alivia tensão acumulada no pescoço e ombros.',muscles:['Esternocleidomastoídeo','Escalenos'],sec:[],dur:60,yt:'NZM9dui2MZo'},
+    {nome:'Postura da criança',desc:'Ajoelhado, estique os braços à frente e apoie a testa no chão. Descomprime a coluna e relaxa o corpo.',muscles:['Eretores da espinha','Latíssimo'],sec:[],dur:60,yt:'NZM9dui2MZo'},
+  ]
+};
+
+let _exTimers = {};
+let _exCatAtual = 'peito';
+
+function trocarCatExercicio(cat) {
+  _exCatAtual = cat;
+  Object.keys(_exTimers).forEach(k => clearInterval(_exTimers[k]));
+  _exTimers = {};
+  document.querySelectorAll('[id^="aba-ex-"]').forEach(b => b.classList.remove('ativa'));
+  const btn = document.getElementById('aba-ex-' + cat);
+  if (btn) btn.classList.add('ativa');
+  renderExercicios(cat);
+}
+
+function renderExercicios(cat) {
+  const lista = document.getElementById('ex-lista');
+  if (!lista) return;
+  const exs = EX_DB[cat] || [];
+  lista.innerHTML = exs.map((ex, i) => `
+    <div style="background:white;border-radius:16px;margin-bottom:0.75rem;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+      <div onclick="toggleExercicio('${cat}${i}')" style="display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer">
+        <div style="width:80px;height:54px;border-radius:10px;background:#000;flex-shrink:0;overflow:hidden;position:relative">
+          <img src="https://img.youtube.com/vi/${ex.yt}/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover" loading="lazy" alt="${ex.nome}">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3)">
+            <span style="color:white;font-size:20px">▶</span>
+          </div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <p style="font-weight:600;font-size:0.9rem;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ex.nome}</p>
+          <p style="font-size:0.75rem;color:#666;line-height:1.3">${ex.desc.slice(0,60)}...</p>
+          <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
+            ${ex.muscles.slice(0,2).map(m=>`<span style="font-size:10px;padding:2px 6px;border-radius:8px;background:#E1F5EE;color:#085041;font-weight:500">${m}</span>`).join('')}
+          </div>
+        </div>
+        <span style="color:#aaa;font-size:14px" id="chev-ex-${cat}${i}">▼</span>
+      </div>
+      <div id="det-ex-${cat}${i}" style="display:none;border-top:1px solid #f0f0f0">
+        <div style="position:relative;padding-bottom:56.25%;height:0;background:#000">
+          <iframe id="yt-ex-${cat}${i}" src="" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen title="${ex.nome}"></iframe>
+        </div>
+        <div style="padding:14px 16px">
+          <p style="font-weight:600;font-size:0.95rem;margin-bottom:6px">${ex.nome}</p>
+          <p style="font-size:0.82rem;color:#555;line-height:1.6;margin-bottom:12px">${ex.desc}</p>
+          <p style="font-size:0.75rem;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Músculos</p>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px">
+            ${ex.muscles.map(m=>`<span style="font-size:11px;padding:3px 8px;border-radius:8px;background:#E1F5EE;color:#085041;font-weight:500">${m}</span>`).join('')}
+            ${ex.sec.map(m=>`<span style="font-size:11px;padding:3px 8px;border-radius:8px;background:#FAEEDA;color:#633806;font-weight:500">${m} (sec.)</span>`).join('')}
+          </div>
+          <div style="background:#f8f8f8;border-radius:12px;padding:12px;text-align:center;margin-bottom:12px">
+            <div style="font-size:48px;font-weight:600;color:#1a9e6e;line-height:1" id="tv-ex-${cat}${i}">${ex.dur}</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">segundos</div>
+            <div style="height:4px;background:#e0e0e0;border-radius:2px;margin-top:8px;overflow:hidden">
+              <div style="height:100%;background:#1a9e6e;border-radius:2px;transition:width .9s linear;width:100%" id="pf-ex-${cat}${i}"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onclick="iniciarExercicio('${cat}${i}',${ex.dur})" style="flex:2;padding:11px;background:#1a9e6e;color:white;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer">▶ Iniciar</button>
+            <button onclick="resetarExercicio('${cat}${i}',${ex.dur})" style="flex:1;padding:11px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:13px;cursor:pointer">↺ Reset</button>
+          </div>
+          <div id="done-ex-${cat}${i}"></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleExercicio(id) {
+  const det = document.getElementById('det-ex-' + id);
+  const chev = document.getElementById('chev-ex-' + id);
+  const yt = document.getElementById('yt-ex-' + id);
+  if (!det) return;
+  const open = det.style.display === 'none';
+  det.style.display = open ? 'block' : 'none';
+  if (chev) chev.textContent = open ? '▲' : '▼';
+  if (yt && open && !yt.src.includes('youtube')) {
+    const ytId = yt.closest('[style*="background:white"]').querySelector('img').src.split('/vi/')[1].split('/')[0];
+    yt.src = 'https://www.youtube.com/embed/' + ytId + '?rel=0&modestbranding=1';
+  }
+  if (!open && yt) yt.src = '';
+}
+
+async function iniciarExercicio(id, dur) {
+  if (_exTimers[id]) clearInterval(_exTimers[id]);
+  const doneEl = document.getElementById('done-ex-' + id);
+  if (doneEl) doneEl.innerHTML = '';
+  let r = dur;
+  _exTimers[id] = setInterval(async () => {
+    r--;
+    const tv = document.getElementById('tv-ex-' + id);
+    const pf = document.getElementById('pf-ex-' + id);
+    if (tv) tv.textContent = Math.max(0, r);
+    if (pf) pf.style.width = Math.round(r / dur * 100) + '%';
+    if (r <= 0) {
+      clearInterval(_exTimers[id]);
+      if (tv) { tv.style.fontSize = '18px'; tv.textContent = 'Concluído!'; }
+      try {
+        await api('POST', '/api/cuidados/atividade', {
+          familia_id: APP.familiaId,
+          membro_id: APP.membroId,
+          tipo: 'exercicio',
+          hora: new Date().toTimeString().slice(0, 5),
+          obs: 'Exercício concluído pelo app'
+        });
+      } catch(e) {}
+      if (doneEl) doneEl.innerHTML = '<div style="text-align:center;margin-top:10px;font-size:12px;color:#085041;background:#E1F5EE;padding:8px;border-radius:10px">✅ Registrado no Meu Dia!</div>';
+    }
+  }, 1000);
+}
+
+function resetarExercicio(id, dur) {
+  if (_exTimers[id]) clearInterval(_exTimers[id]);
+  const tv = document.getElementById('tv-ex-' + id);
+  const pf = document.getElementById('pf-ex-' + id);
+  const done = document.getElementById('done-ex-' + id);
+  if (tv) { tv.style.fontSize = '48px'; tv.textContent = dur; }
+  if (pf) pf.style.width = '100%';
+  if (done) done.innerHTML = '';
+}
+
+function iniciarAreaExercicios() {
+  trocarCatExercicio('peito');
+}
+
 // ── NAVEGAÇÃO ──
 
 async function carregarPerfil() {
@@ -870,6 +1029,7 @@ function navegarPara(pagina) {
   if (pagina === 'historico') { carregarDoencas(); }
   if (pagina === 'meu-dia') iniciarMeuDia();
   if (pagina === 'mente-sa') iniciarMenteSa();
+  if (pagina === 'exercicios') iniciarAreaExercicios();
   if (pagina === 'cuidados') {
     if (APP.membroTipo === 'cuidador') {
       // Cuidador vê formulários para registrar
