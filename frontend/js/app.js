@@ -667,6 +667,24 @@ function _continuarIniciarApp() {
 
 
 
+
+// ── IMC ──
+function calcularIMCPerfil(altura, peso) {
+  const el = document.getElementById('pf-imc-resultado');
+  if (!el || !altura || !peso) return;
+  const alturaM = altura / 100;
+  const imc = (peso / (alturaM * alturaM)).toFixed(1);
+  let classificacao, cor, emoji;
+  if (imc < 18.5) { classificacao = 'Abaixo do peso'; cor = '#e3f2fd'; emoji = '⚠️'; }
+  else if (imc < 25) { classificacao = 'Peso normal'; cor = '#e8f5e9'; emoji = '✅'; }
+  else if (imc < 30) { classificacao = 'Sobrepeso'; cor = '#fff8e1'; emoji = '⚠️'; }
+  else if (imc < 35) { classificacao = 'Obesidade grau I'; cor = '#fce4ec'; emoji = '🔴'; }
+  else { classificacao = 'Obesidade grau II+'; cor = '#ffebee'; emoji = '🔴'; }
+  el.style.display = 'block';
+  el.style.background = cor;
+  el.innerHTML = `${emoji} <strong>IMC: ${imc}</strong> — ${classificacao}`;
+}
+
 // ── SAÚDE FEMININA ──
 function trocarAbaSaudeFem(aba) {
   ['ciclo','endometriose','sintomas','cuidados'].forEach(a => {
@@ -1007,6 +1025,9 @@ async function carregarPerfil() {
           document.getElementById('pf-nasc-mes').value = String(d.getUTCMonth() + 1).padStart(2, '0');
           document.getElementById('pf-nasc-ano').value = String(d.getUTCFullYear());
         }
+        document.getElementById('pf-altura').value = p.altura || '';
+        document.getElementById('pf-peso').value = p.peso || '';
+        if (p.altura && p.peso) calcularIMCPerfil(p.altura, p.peso);
         document.getElementById('pf-sangue').value = p.tipo_sanguineo || '';
         document.getElementById('pf-alergias').value = p.alergias || '';
         document.getElementById('pf-cpf').value = p.cpf || '';
@@ -1039,7 +1060,9 @@ async function salvarPerfil() {
       cartao_sus: document.getElementById('pf-sus').value.trim() || null,
       convenio: document.getElementById('pf-convenio').value.trim() || null,
       contato_emergencia: document.getElementById('pf-contato').value.trim() || null,
-      tel_emergencia: document.getElementById('pf-tel').value.trim() || null
+      tel_emergencia: document.getElementById('pf-tel').value.trim() || null,
+      altura: document.getElementById('pf-altura').value ? parseInt(document.getElementById('pf-altura').value) : null,
+      peso: document.getElementById('pf-peso').value ? parseFloat(document.getElementById('pf-peso').value) : null
     };
     // Salvar foto se foi alterada
     if (_fotoPerfil) {

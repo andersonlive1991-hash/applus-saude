@@ -9,6 +9,8 @@ db.query('ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS nome_completo VARCHA
 
 // Ampliar colunas para suportar dados criptografados
 db.query('ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS sexo VARCHAR(20)').catch(()=>{});
+db.query('ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS altura INTEGER').catch(()=>{});
+db.query('ALTER TABLE perfil_idoso ADD COLUMN IF NOT EXISTS peso DECIMAL(5,2)').catch(()=>{});
 db.query('ALTER TABLE perfil_idoso ALTER COLUMN tipo_sanguineo TYPE TEXT')
   .catch(e => console.log('ALTER tipo_sanguineo:', e.message));
 db.query('ALTER TABLE perfil_idoso ALTER COLUMN cpf TYPE TEXT')
@@ -38,7 +40,7 @@ router.post('/', async (req, res) => {
   const {
     id_pessoal, nome_completo, data_nascimento, tipo_sanguineo,
     alergias, cpf, cartao_sus, convenio,
-    contato_emergencia, tel_emergencia, sexo
+    contato_emergencia, tel_emergencia, sexo, altura, peso
   } = req.body;
 
   if (!id_pessoal) return res.status(400).json({ erro: 'id_pessoal obrigatorio' });
@@ -51,16 +53,16 @@ router.post('/', async (req, res) => {
     const membro_id = memRes.rows[0].id;
     const result = await db.query(
       `INSERT INTO perfil_idoso
-        (membro_id, nome_completo, data_nascimento, tipo_sanguineo, alergias, cpf, cartao_sus, convenio, contato_emergencia, tel_emergencia, sexo)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+        (membro_id, nome_completo, data_nascimento, tipo_sanguineo, alergias, cpf, cartao_sus, convenio, contato_emergencia, tel_emergencia, sexo, altura, peso)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
         ON CONFLICT (membro_id) DO UPDATE SET
         nome_completo=$2, data_nascimento=$3, tipo_sanguineo=$4,
         alergias=$5, cpf=$6, cartao_sus=$7, convenio=$8,
         contato_emergencia=$9, tel_emergencia=$10,
-        sexo=$11, atualizado_em=NOW()
+        sexo=$11, altura=$12, peso=$13, atualizado_em=NOW()
         RETURNING *`,
       [membro_id, nome_completo, dataNasc, encrypt(tipo_sanguineo),
-       encrypt(alergias), encrypt(cpf), cartao_sus, convenio, contato_emergencia, tel_emergencia, sexo || null]
+       encrypt(alergias), encrypt(cpf), cartao_sus, convenio, contato_emergencia, tel_emergencia, sexo || null, altura || null, peso || null]
     );
     console.log('[perfil] salvo id:', result.rows[0].id);
     // Sincroniza sexo na tabela membros para APP.sexo carregar corretamente
