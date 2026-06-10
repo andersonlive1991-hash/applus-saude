@@ -171,4 +171,54 @@ router.get('/intercorrencias/:familia_id', async (req, res) => {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+
+// Rotas por id_pessoal para card de metas da home
+router.get('/agua/:familia_id/:id_pessoal', async (req, res) => {
+  try {
+    const mem = await db.query('SELECT id FROM membros WHERE id_pessoal=$1', [req.params.id_pessoal]);
+    if (!mem.rows.length) return res.json({ total: 0 });
+    const r = await db.query(
+      'SELECT COALESCE(SUM(copos),0) as total FROM cuidados_hidratacao WHERE familia_id=$1 AND membro_id=$2 AND data=CURRENT_DATE',
+      [req.params.familia_id, mem.rows[0].id]
+    );
+    res.json({ total: parseInt(r.rows[0].total) });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+router.get('/refeicoes/:familia_id/:id_pessoal', async (req, res) => {
+  try {
+    const mem = await db.query('SELECT id FROM membros WHERE id_pessoal=$1', [req.params.id_pessoal]);
+    if (!mem.rows.length) return res.json([]);
+    const r = await db.query(
+      'SELECT * FROM cuidados_refeicoes WHERE familia_id=$1 AND membro_id=$2 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC',
+      [req.params.familia_id, mem.rows[0].id]
+    );
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+router.get('/atividades/:familia_id/:id_pessoal', async (req, res) => {
+  try {
+    const mem = await db.query('SELECT id FROM membros WHERE id_pessoal=$1', [req.params.id_pessoal]);
+    if (!mem.rows.length) return res.json([]);
+    const r = await db.query(
+      'SELECT * FROM cuidados_atividades WHERE familia_id=$1 AND membro_id=$2 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC',
+      [req.params.familia_id, mem.rows[0].id]
+    );
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+router.get('/sono/:familia_id/:id_pessoal', async (req, res) => {
+  try {
+    const mem = await db.query('SELECT id FROM membros WHERE id_pessoal=$1', [req.params.id_pessoal]);
+    if (!mem.rows.length) return res.json(null);
+    const r = await db.query(
+      'SELECT * FROM cuidados_sono WHERE familia_id=$1 AND membro_id=$2 AND DATE(criado_em)=CURRENT_DATE ORDER BY criado_em DESC LIMIT 1',
+      [req.params.familia_id, mem.rows[0].id]
+    );
+    res.json(r.rows[0] || null);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 module.exports = router;

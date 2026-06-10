@@ -677,10 +677,10 @@ async function carregarMetasDia() {
     if (dataEl) dataEl.textContent = hoje;
 
     const [aguaRes, refRes, exRes, sonoRes] = await Promise.all([
-      api('GET', `/api/cuidados/agua/${APP.familiaId}/${APP.membroId}`).catch(()=>null),
-      api('GET', `/api/cuidados/refeicoes/${APP.familiaId}/${APP.membroId}`).catch(()=>null),
-      api('GET', `/api/cuidados/atividades/${APP.familiaId}/${APP.membroId}`).catch(()=>null),
-      api('GET', `/api/cuidados/sono/${APP.familiaId}/${APP.membroId}`).catch(()=>null)
+      api('GET', `/api/cuidados/agua/${APP.familiaId}/${APP.idPessoal}`).catch(()=>null),
+      api('GET', `/api/cuidados/refeicoes/${APP.familiaId}/${APP.idPessoal}`).catch(()=>null),
+      api('GET', `/api/cuidados/atividades/${APP.familiaId}/${APP.idPessoal}`).catch(()=>null),
+      api('GET', `/api/cuidados/sono/${APP.familiaId}/${APP.idPessoal}`).catch(()=>null)
     ]);
 
     // Água

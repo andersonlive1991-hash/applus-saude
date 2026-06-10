@@ -316,6 +316,7 @@ app.use('/api/prescricoes', require('./routes/prescricoes'));
 app.use('/api/perfil-cuidador', require('./routes/perfil_cuidador'));
 app.use('/api/qrcode', require('./routes/qrcode'));
 app.use('/api/cuidados', require('./routes/cuidados'));
+app.use('/api/habitos', require('./routes/habitos'));
 app.use('/api/historico', require('./routes/saude_historico'));
 app.use('/api/prontuarios', require('./routes/prontuarios'));
 app.use('/api/rotina-tea', require('./routes/rotina_tea'));
