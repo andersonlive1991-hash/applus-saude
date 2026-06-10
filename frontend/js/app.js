@@ -1903,6 +1903,11 @@ function conectarSocket() {
   });
 
   
+  APP.socket.on('metas-atualizadas', (data) => {
+    // Atualiza metas em tempo real quando hábito é confirmado
+    if (typeof carregarMetasDia === 'function') carregarMetasDia();
+  });
+
   APP.socket.on('cuidador-novo-registro', (data) => {
     if (data.familiaId == APP.familiaId) {
       mostrarToast('💚 ' + (data.cuidadorNome||'Cuidador') + ' registrou: ' + (data.registro.tipo||''));
