@@ -285,7 +285,7 @@ function nomeSinal(tipo) {
 // ── PERFIL IDOSO ──
 async function carregarPerfil() {
   try {
-    const res = await api('GET', `/api/perfil/${APP.membroId}`);
+    const res = await api('GET', `/api/perfil/${APP.idPessoal}`);
     if (res) {
       document.getElementById('pf-nome').value = res.nome_completo || '';
       if (res.data_nascimento) {
@@ -331,7 +331,7 @@ async function salvarPerfil() {
     const ano = document.getElementById('pf-nasc-ano').value;
     const dataNasc = (dia && mes && ano) ? ano + '-' + mes + '-' + dia : '';
     await api('POST', '/api/perfil', {
-      membro_id: membroId,
+      id_pessoal: APP.idPessoal,
       nome_completo: document.getElementById('pf-nome').value,
       data_nascimento: dataNasc,
       tipo_sanguineo: document.getElementById('pf-sangue').value,

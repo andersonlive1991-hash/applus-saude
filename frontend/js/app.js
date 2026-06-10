@@ -142,7 +142,7 @@ async function carregarSessao() {
     APP.membroTipo = dados.membroTipo;
     APP.idPessoal = dados.idPessoal;
     APP.membroAtivo = { id: dados.membroId, nome: dados.membroNome, tipo: dados.membroTipo, id_pessoal: dados.idPessoal };
-    try { const p = await api('GET', '/api/perfil/' + dados.membroId); if (p && p.sexo) APP.sexo = p.sexo; } catch(e) {}
+    try { const p = await api('GET', '/api/perfil/' + dados.idPessoal); if (p && p.sexo) APP.sexo = p.sexo; } catch(e) {}
     iniciarApp();
   } else if (familia) {
     const dados = JSON.parse(familia);
@@ -432,9 +432,8 @@ async function criarFamilia() {
 
     const temDados = dataNasc || tipoSangue || alergias || cpf || cartaoSus || convenio || contatoEmerg || telEmerg || sexoCadastro;
     if (temDados) {
-      const membroId = resMem.id;
       const dadosPerfil = {
-        membro_id: membroId,
+        id_pessoal: resMem.id_pessoal,
         nome_completo: membro,
         data_nascimento: dataNasc !== '' ? dataNasc : null,
         tipo_sanguineo: tipoSangue !== '' ? tipoSangue : null,
@@ -846,7 +845,7 @@ async function carregarPerfil() {
     if (!mem || !mem.id) return;
     APP.membroAtivo = mem;
     document.getElementById('pf-nome').value = mem.nome || '';
-    const res = await fetch('/api/perfil/' + mem.id);
+    const res = await fetch(getBase() + '/api/perfil/' + mem.id_pessoal);
     if (res.ok) {
       const p = await res.json();
       if (p && !p.erro) {
@@ -880,7 +879,7 @@ async function salvarPerfil() {
     const pfAno = document.getElementById('pf-nasc-ano').value;
     const dataNasc = (pfDia && pfMes && pfAno) ? pfAno + '-' + pfMes.padStart(2,'0') + '-' + pfDia.padStart(2,'0') : null;
     const dados = {
-      membro_id: mem.id,
+      id_pessoal: idPessoal,
       nome_completo: document.getElementById('pf-nome').value.trim() || mem.nome,
       data_nascimento: dataNasc,
       tipo_sanguineo: document.getElementById('pf-sangue').value || null,
@@ -892,7 +891,6 @@ async function salvarPerfil() {
       tel_emergencia: document.getElementById('pf-tel').value.trim() || null
     };
     // Salvar foto se foi alterada
-    alerta('Foto: ' + (_fotoPerfil ? 'tem foto ' + _fotoPerfil.length + ' chars' : 'SEM FOTO') + ' | mem.id=' + mem.id);
     if (_fotoPerfil) {
       await api('PUT', '/api/membros/' + mem.id + '/foto', { foto: _fotoPerfil });
       _fotoPerfil = null;
@@ -2085,7 +2083,7 @@ async function exportarMeusDados() {
   try {
     alerta('⏳ Coletando seus dados...');
     const [perfil, meds, sinais, vacinas, eventos, doencas, tratamentos, internacoes, gastos] = await Promise.all([
-      api('GET', '/api/perfil/' + APP.membroId).catch(() => null),
+      api('GET', '/api/perfil/' + APP.idPessoal).catch(() => null),
       api('GET', '/api/medicamentos/' + APP.familiaId + '?membro_id=' + APP.membroId).catch(() => []),
       api('GET', '/api/sinais/' + APP.membroId).catch(() => []),
       api('GET', '/api/vacinas/' + APP.membroId).catch(() => []),
@@ -3212,7 +3210,7 @@ function verJustificativasMetasMeuDia() {
 
 async function iniciarMeuDia() {
   try {
-    const perfil = await api('GET', '/api/perfil/' + APP.membroId);
+    const perfil = await api('GET', '/api/perfil/' + APP.idPessoal);
     if (perfil && !perfil.erro) {
       if (!perfil.meta_justificativas) {
         try {
