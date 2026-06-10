@@ -1015,5 +1015,57 @@ app.get('/api/ciclo/sintomas/:membro_id', async (req, res) => {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+
+// ── AGENDADOR DE HÁBITOS DIÁRIOS ──
+const HABITOS_HORARIOS = {
+  'agua':        ['07:00','09:00','11:00','13:00','15:00','17:00','19:00','21:00'],
+  'alimentacao': ['07:30','12:00','15:00','19:30'],
+  'exercicio':   ['07:00'],
+  'sono':        ['22:00'],
+  'pausa':       ['10:00','14:00','17:00']
+};
+const HABITOS_MSG = {
+  'agua':        { titulo: 'Hora de beber água!', corpo: 'Mantenha-se hidratado. Beba um copo agora!' },
+  'alimentacao': { titulo: 'Hora de se alimentar!', corpo: 'Uma refeição saudável agora faz bem ao corpo.' },
+  'exercicio':   { titulo: 'Hora de se exercitar!', corpo: 'Que tal uma caminhada ou alongamento hoje?' },
+  'sono':        { titulo: 'Hora de dormir!', corpo: 'Um bom sono é essencial para sua saúde.' },
+  'pausa':       { titulo: 'Pausa mental!', corpo: 'Respire fundo. Um minuto de pausa faz diferença.' }
+};
+
+setInterval(async () => {
+  try {
+    const agora = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const horaAtual = String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0');
+    for (const [tipo, horarios] of Object.entries(HABITOS_HORARIOS)) {
+      if (!horarios.includes(horaAtual)) continue;
+      const msg = HABITOS_MSG[tipo];
+      console.log('[Habitos] Disparando:', tipo, 'às', horaAtual);
+      const membros = await pool.query(
+        'SELECT ps.membro_id, ps.fcm_token, ps.familia_id FROM push_subscriptions ps WHERE ps.fcm_token IS NOT NULL'
+      );
+      for (const row of membros.rows) {
+        if (!row.fcm_token || !admin.apps.length) continue;
+        await admin.messaging().send({
+          token: row.fcm_token,
+          data: {
+            tipo: 'habito',
+            categoria: tipo,
+            membro_id: String(row.membro_id),
+            familia_id: String(row.familia_id || ''),
+            titulo: msg.titulo,
+            corpo: msg.corpo
+          },
+          android: { priority: 'high' }
+        }).catch(e => {
+          if (e.code === 'messaging/registration-token-not-registered') {
+            pool.query('UPDATE push_subscriptions SET fcm_token=NULL WHERE membro_id=$1', [row.membro_id]).catch(()=>{});
+          }
+        });
+      }
+    }
+  } catch(e) { console.log('[Habitos] Erro cron:', e.message); }
+}, 60000);
+
 module.exports = { admin };
+
 
