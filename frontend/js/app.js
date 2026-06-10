@@ -447,7 +447,7 @@ async function criarFamilia() {
       };
       try {
         
-      const respPerfil = await fetch('/api/perfil', {
+      const respPerfil = await fetch(getBase() + '/api/perfil', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(dadosPerfil)
