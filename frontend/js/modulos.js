@@ -948,15 +948,15 @@ async function iniciarSOSCompleto() {
       mensagem: '🚨 EMERGÊNCIA! ' + (APP.membroNome || 'Familiar') + ' precisa de ajuda!'
     });
   }
-  // 2. Envia push para família
+  // 2. Envia push FCM para família (funciona com app fechado no APK)
   try {
-    await api('POST', '/api/push/enviar-familia', {
+    await api('POST', '/api/sos/disparar', {
       familia_id: APP.familiaId,
-      titulo: '🚨 EMERGÊNCIA!',
-      corpo: (APP.membroNome || 'Familiar') + ' precisa de ajuda imediata!',
-      url: '/#emergencia'
+      membro_id: APP.membroId,
+      id_pessoal: APP.idPessoal || '',
+      nome: APP.membroNome || 'Familiar'
     });
-  } catch(e) { console.log('Push erro:', e); }
+  } catch(e) { console.log('Push FCM SOS erro:', e); }
   // 2.5 Envia push para contatos SOS externos
   try {
     const contatos = await api("GET", "/api/sos/contatos/" + APP.membroId);
