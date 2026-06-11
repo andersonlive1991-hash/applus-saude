@@ -1067,6 +1067,45 @@ setInterval(async () => {
   } catch(e) { console.log('[Habitos] Erro cron:', e.message); }
 }, 60000);
 
+
+// ── SOS DISPARAR COM FCM ──
+app.post('/api/sos/disparar', async (req, res) => {
+  const { familia_id, membro_id, id_pessoal, nome } = req.body;
+  if (!familia_id) return res.status(400).json({ erro: 'familia_id obrigatorio' });
+  try {
+    // Busca todos os tokens FCM da família exceto quem disparou
+    const subs = await pool.query(
+      'SELECT ps.fcm_token, ps.membro_id FROM push_subscriptions ps WHERE ps.familia_id=$1 AND ps.fcm_token IS NOT NULL AND ps.membro_id != $2',
+      [familia_id, membro_id || 0]
+    );
+    let enviados = 0;
+    for (const row of subs.rows) {
+      if (!admin.apps.length) continue;
+      await admin.messaging().send({
+        token: row.fcm_token,
+        data: {
+          tipo: 'sos-chamada',
+          familia_id: String(familia_id),
+          membro_id: String(membro_id || ''),
+          id_pessoal: String(id_pessoal || ''),
+          nome: String(nome || 'Familiar')
+        },
+        android: { priority: 'high' }
+      }).then(() => enviados++).catch(e => {
+        if (e.code === 'messaging/registration-token-not-registered') {
+          pool.query('UPDATE push_subscriptions SET fcm_token=NULL WHERE membro_id=$1', [row.membro_id]).catch(()=>{});
+        }
+      });
+    }
+    console.log('[SOS] FCM enviado para', enviados, 'membros da familia', familia_id);
+    res.json({ ok: true, enviados });
+  } catch(e) {
+    console.log('[SOS] ERRO:', e.message);
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 module.exports = { admin };
+
 
 

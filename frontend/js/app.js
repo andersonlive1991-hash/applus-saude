@@ -2028,6 +2028,110 @@ function mostrarAlertaEmergencia(data) {
   setTimeout(() => div.remove(), 8000);
 }
 
+
+// ── SOS COMPLETO ──
+async function iniciarSOSCompleto() {
+  const confirmado = await new Promise(resolve => {
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center';
+    div.innerHTML = `
+      <div style="background:white;border-radius:20px;padding:28px;max-width:320px;width:90%;text-align:center">
+        <div style="font-size:3rem;margin-bottom:12px">🚨</div>
+        <p style="font-weight:700;font-size:1.1rem;margin-bottom:8px">Confirmar SOS?</p>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:20px">Sua família será alertada imediatamente</p>
+        <div style="display:flex;gap:10px">
+          <button id="sos-cancelar" style="flex:1;padding:14px;border-radius:12px;border:none;background:#f0f0f0;font-size:15px;cursor:pointer;font-weight:600">Cancelar</button>
+          <button id="sos-confirmar" style="flex:1;padding:14px;border-radius:12px;border:none;background:#ef4444;color:white;font-size:15px;cursor:pointer;font-weight:700">🆘 SOS!</button>
+        </div>
+      </div>`;
+    document.body.appendChild(div);
+    div.querySelector('#sos-confirmar').onclick = () => { div.remove(); resolve(true); };
+    div.querySelector('#sos-cancelar').onclick = () => { div.remove(); resolve(false); };
+  });
+
+  if (!confirmado) return;
+
+  try {
+    // Emite via Socket.io em tempo real
+    if (APP.socket) {
+      APP.socket.emit('sos-chamar', {
+        familiaId: APP.familiaId,
+        membroId: APP.membroId,
+        idPessoal: APP.idPessoal,
+        nome: APP.membroNome || 'Familiar'
+      });
+    }
+
+    // Envia FCM para toda família
+    await api('POST', '/api/sos/disparar', {
+      familia_id: APP.familiaId,
+      membro_id: APP.membroId,
+      id_pessoal: APP.idPessoal,
+      nome: APP.membroNome || 'Familiar'
+    }).catch(() => {});
+
+    // Feedback visual
+    mostrarToast('🚨 SOS disparado! Sua família foi alertada.', 5000);
+  } catch(e) {
+    alerta('Erro ao disparar SOS. Ligue para o SAMU: 192');
+  }
+}
+
+function registrarEventosSOS() {
+  if (!APP.socket) return;
+  APP.socket.on('sos-recebendo', (data) => {
+    if (data.idPessoal === APP.idPessoal) return; // não alerta quem disparou
+    mostrarAlertaEmergencia(data);
+  });
+}
+
+function mostrarAlertaEmergencia(data) {
+  // Remove alerta anterior se existir
+  document.getElementById('sos-alerta-overlay')?.remove();
+
+  const div = document.createElement('div');
+  div.id = 'sos-alerta-overlay';
+  div.style.cssText = 'position:fixed;inset:0;background:#ef4444;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:sos-pulse 1s infinite';
+  div.innerHTML = `
+    <div style="font-size:5rem;margin-bottom:16px">🚨</div>
+    <p style="color:white;font-size:1.5rem;font-weight:800;margin-bottom:8px;text-align:center">EMERGÊNCIA!</p>
+    <p style="color:white;font-size:1.1rem;margin-bottom:30px;text-align:center">${data.nome || 'Familiar'} precisa de ajuda!</p>
+    <button onclick="document.getElementById('sos-alerta-overlay').remove()" 
+      style="padding:16px 40px;background:white;color:#ef4444;border:none;border-radius:16px;font-size:1.1rem;font-weight:700;cursor:pointer">
+      ✅ Atendido
+    </button>
+    <p style="color:rgba(255,255,255,0.8);font-size:0.85rem;margin-top:20px">Toque em Atendido quando socorrer</p>`;
+  document.body.appendChild(div);
+
+  // Som de alarme
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const beep = (freq, start, dur) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.5, ctx.currentTime + start);
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
+      o.start(ctx.currentTime + start);
+      o.stop(ctx.currentTime + start + dur);
+    };
+    for (let i = 0; i < 5; i++) {
+      beep(880, i * 0.4, 0.3);
+      beep(660, i * 0.4 + 0.2, 0.2);
+    }
+  } catch(e) {}
+
+  // TTS
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance('Emergência! ' + (data.nome || 'Familiar') + ' precisa de ajuda!');
+    u.lang = 'pt-BR';
+    u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }
+}
+
 // ── ASSISTENTE IA ──
 const IA_HISTORICO = [];
 async function perguntarIA() {
