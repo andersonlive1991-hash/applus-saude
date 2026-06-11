@@ -1876,8 +1876,11 @@ function conectarSocket() {
   if (typeof io === 'undefined') return;
   APP.socket = io();
   APP.socket.emit('entrar-familia', APP.familiaId);
-  registrarEventosSOS();
-  if (typeof registrarEventosVideo === 'function') registrarEventosVideo();
+  // Aguarda modulos.js carregar antes de registrar eventos WebRTC
+  setTimeout(() => {
+    if (typeof registrarEventosSOS === 'function') registrarEventosSOS();
+    if (typeof registrarEventosVideo === 'function') registrarEventosVideo();
+  }, 0);
 
   APP.socket.on('nova-mensagem', (msg) => {
     if (msg.autor_id !== APP.idPessoal) {
@@ -2075,14 +2078,6 @@ async function iniciarSOSCompleto() {
   } catch(e) {
     alerta('Erro ao disparar SOS. Ligue para o SAMU: 192');
   }
-}
-
-function registrarEventosSOS() {
-  if (!APP.socket) return;
-  APP.socket.on('sos-recebendo', (data) => {
-    if (data.idPessoal === APP.idPessoal) return; // não alerta quem disparou
-    mostrarAlertaEmergencia(data);
-  });
 }
 
 function mostrarAlertaEmergencia(data) {
