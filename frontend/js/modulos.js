@@ -801,6 +801,18 @@ let _sosChamando = false;
 
 async function iniciarChamadaSOS() {
   try {
+    // Pede permissão de microfone via Capacitor no APK
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      try {
+        const { Permissions } = window.Capacitor.Plugins;
+        if (Permissions) {
+          const status = await Permissions.query({ name: 'microphone' });
+          if (status.state !== 'granted') {
+            await Permissions.request({ name: 'microphone' });
+          }
+        }
+      } catch(pe) { console.log('Permissao microfone:', pe.message); }
+    }
     _sosStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     _sosPC = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
     _sosStream.getTracks().forEach(t => _sosPC.addTrack(t, _sosStream));
