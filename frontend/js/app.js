@@ -1880,7 +1880,7 @@ function conectarSocket() {
   setTimeout(() => {
     if (typeof registrarEventosSOS === 'function') registrarEventosSOS();
     if (typeof registrarEventosVideo === 'function') registrarEventosVideo();
-  }, 0);
+  }, 500);
 
   APP.socket.on('nova-mensagem', (msg) => {
     if (msg.autor_id !== APP.idPessoal) {
