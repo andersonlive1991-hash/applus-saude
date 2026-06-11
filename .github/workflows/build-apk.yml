@@ -60,3 +60,25 @@ jobs:
         with:
           name: AP-Plus-Saude-v1.5-apk
           path: android/app/build/outputs/apk/release/*.apk
+
+      - name: Build AAB
+        run: |
+          cd android
+          ./gradlew bundleRelease
+
+      - name: Sign AAB
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: android/app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+          alias: applus
+          keyStorePassword: applus2026
+          keyPassword: applus2026
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: AP-Plus-Saude-v1.5-aab
+          path: android/app/build/outputs/bundle/release/*.aab
