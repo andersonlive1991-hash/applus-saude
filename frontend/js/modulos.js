@@ -901,6 +901,7 @@ function iniciarTimerChamada() {
 // Eventos Socket.io para chamada SOS
 function registrarEventosSOS() {
   APP.socket.on('sos-recebendo', async (data) => {
+    if (data.idPessoal && data.idPessoal === APP.idPessoal) return; // não alerta quem disparou
     window._sosNomeQuemChamou = data.nome;
     _sosPC = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
     _sosPC.onicecandidate = (e) => {
@@ -915,6 +916,26 @@ function registrarEventosSOS() {
     };
     await _sosPC.setRemoteDescription(new RTCSessionDescription(data.offer));
     mostrarTelaChamada('recebendo');
+    // Som de alerta
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const beep = (freq, start, dur) => {
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.5, ctx.currentTime + start);
+        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
+        o.start(ctx.currentTime + start); o.stop(ctx.currentTime + start + dur);
+      };
+      for (let i = 0; i < 5; i++) { beep(880, i*0.4, 0.3); beep(660, i*0.4+0.2, 0.2); }
+    } catch(e) {}
+    // TTS
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance('Emergência! ' + (data.nome || 'Familiar') + ' precisa de ajuda!');
+      u.lang = 'pt-BR'; u.rate = 0.9;
+      speechSynthesis.speak(u);
+    }
   });
   APP.socket.on('sos-answer', async (data) => {
     if (_sosPC) {
