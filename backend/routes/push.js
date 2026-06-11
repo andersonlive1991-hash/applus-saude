@@ -157,14 +157,14 @@ router.post('/enviar-medico-crm', async (req, res) => {
 });
 
 router.post('/salvar-fcm-token', async (req, res) => {
-  const { membro_id, fcm_token } = req.body;
+  const { membro_id, fcm_token, familia_id } = req.body;
   if (!membro_id || !fcm_token) return res.status(400).json({ erro: 'Campos obrigatorios' });
   try {
     await db.query(
-      `INSERT INTO push_subscriptions (membro_id, fcm_token)
-       VALUES ($1, $2)
-       ON CONFLICT (membro_id) DO UPDATE SET fcm_token = $2`,
-      [membro_id, fcm_token]
+      `INSERT INTO push_subscriptions (membro_id, fcm_token, familia_id)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (membro_id) DO UPDATE SET fcm_token = $2, familia_id = $3`,
+      [membro_id, fcm_token, familia_id || null]
     );
     res.json({ ok: true });
   } catch(e) {
