@@ -5225,8 +5225,10 @@ function _renderDashEventos(eventos) {
   if (!card || !lista) return;
 
   lista.innerHTML = eventos.map(ev => {
-    const dt = new Date(ev.data_inicio);
-    const label = dt.getDate()+'/'+(dt.getMonth()+1)+' '+dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0');
+    const partes = (ev.data || '').split('-');
+    const label = partes.length === 3
+      ? partes[2] + '/' + partes[1] + (ev.hora ? ' ' + (ev.hora||'').slice(0,5) : '')
+      : (ev.data || '');
     return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0">
       <div style="font-size:20px">📅</div>
       <div><div style="font-size:13px;font-weight:600">${ev.titulo||''}</div>
