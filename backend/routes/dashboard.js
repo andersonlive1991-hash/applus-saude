@@ -93,10 +93,10 @@ router.get('/:membro_id', async (req, res) => {
 
     // 8. Próximos eventos (agenda) — sempre dos próximos 7 dias
     const eventos = await db.query(
-      `SELECT titulo, data_inicio::text, tipo
+      `SELECT titulo, data::text, hora::text, tipo
        FROM eventos
-       WHERE membro_id = $1 AND data_inicio >= NOW() AND data_inicio <= NOW() + INTERVAL '7 days'
-       ORDER BY data_inicio ASC LIMIT 5`,
+       WHERE membro_id = $1 AND data >= CURRENT_DATE AND data <= CURRENT_DATE + INTERVAL '7 days'
+       ORDER BY data ASC, hora ASC LIMIT 5`,
       [membro_id]
     );
 
