@@ -2907,7 +2907,7 @@ function alertaInteracao(msg) {
   overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
   const box = document.createElement('div');
   box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:400px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.3)';
-  box.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:28px">⚠️</span><strong style="color:#dc2626;font-size:16px">Interação Medicamentosa</strong></div><p style="color:#333;font-size:14px;line-height:1.6;margin:0 0 20px">' + msg + '</p><button id="btn-interacao-ok" style="width:100%;padding:12px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">Entendi</button>';
+  box.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:28px">⚠️</span><strong style="color:#dc2626;font-size:16px">Interação Medicamentosa</strong></div><p style="color:#333;font-size:14px;line-height:1.6;margin:0 0 12px">' + msg + '</p><p style="color:#9ca3af;font-size:11px;text-align:center;margin:0 0 16px">🤖 Verificação por IA. Consulte seu médico ou farmacêutico.</p><button id="btn-interacao-ok" style="width:100%;padding:12px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">Entendi</button>';
   overlay.appendChild(box);
   document.body.appendChild(overlay);
   document.getElementById("btn-interacao-ok").addEventListener("click", () => overlay.remove());
