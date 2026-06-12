@@ -100,23 +100,37 @@ router.get('/:membro_id', async (req, res) => {
       [membro_id]
     );
 
-    // 9. Resumos IA do período
-    const resumos = await db.query(
-      `SELECT data::text, resumo
-       FROM resumo_diario
-       WHERE membro_id = $1 AND ${intervaloData}
-       ORDER BY data DESC LIMIT 7`,
-      [membro_id]
-    );
+    // 9. Resumos IA do período — tabela pode não existir ainda
+    let resumos = { rows: [] };
+    try {
+      await db.query(`CREATE TABLE IF NOT EXISTS resumo_diario (
+        id SERIAL PRIMARY KEY,
+        membro_id INTEGER,
+        data DATE DEFAULT CURRENT_DATE,
+        resumo TEXT,
+        dados JSONB,
+        criado_em TIMESTAMP DEFAULT NOW()
+      )`);
+      resumos = await db.query(
+        `SELECT data::text, resumo
+         FROM resumo_diario
+         WHERE membro_id = $1 AND ${intervaloData}
+         ORDER BY data DESC LIMIT 7`,
+        [membro_id]
+      );
+    } catch(e2) { console.log('[Dashboard] resumo_diario:', e2.message); }
 
-    // 10. Ciclo menstrual — sintomas no período (só para perfis femininos)
-    const cicloSintomas = await db.query(
-      `SELECT DATE(criado_em)::text as data, dor, humor as humor_ciclo, fluxo
-       FROM ciclo_sintomas
-       WHERE membro_id = $1 AND ${intervalo}
-       ORDER BY criado_em ASC`,
-      [membro_id]
-    );
+    // 10. Ciclo menstrual — sintomas no período
+    let cicloSintomas = { rows: [] };
+    try {
+      cicloSintomas = await db.query(
+        `SELECT DATE(criado_em)::text as data, dor, humor as humor_ciclo, fluxo
+         FROM ciclo_sintomas
+         WHERE membro_id = $1 AND ${intervalo}
+         ORDER BY criado_em ASC`,
+        [membro_id]
+      );
+    } catch(e3) { console.log('[Dashboard] ciclo_sintomas:', e3.message); }
 
     res.json({
       periodo,
