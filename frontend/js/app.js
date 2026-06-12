@@ -2902,6 +2902,26 @@ function fecharModal(id) {
 }
 
 // ── UTILITÁRIOS ──
+
+async function verificarTodasInteracoes() {
+  if (!window._listaMedsCache || window._listaMedsCache.length < 2) {
+    return alerta('Cadastre pelo menos 2 medicamentos para verificar interações.', 'aviso');
+  }
+  alerta('🔍 Verificando interações...');
+  try {
+    const r = await api('POST', '/api/interacoes/verificar-todos', { membro_id: APP.membroId });
+    if (r && r.alerta) {
+      alertaInteracao(r.alerta);
+    } else if (r && r.total < 2) {
+      alerta('Cadastre pelo menos 2 medicamentos para verificar interações.', 'aviso');
+    } else {
+      alerta('✅ Nenhuma interação relevante encontrada entre os medicamentos.');
+    }
+  } catch(e) {
+    alerta('Erro ao verificar interações. Tente novamente.', 'erro');
+  }
+}
+
 function alertaInteracao(msg) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
