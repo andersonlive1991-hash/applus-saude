@@ -33,4 +33,29 @@ router.post('/verificar', async (req, res) => {
   }
 });
 
+
+// Verificar interações entre TODOS os medicamentos ativos do membro
+router.post('/verificar-todos', async (req, res) => {
+  const { membro_id } = req.body;
+  try {
+    const result = await db.query(
+      'SELECT nome FROM medicamentos WHERE membro_id = $1 ORDER BY nome',
+      [membro_id]
+    );
+    if (result.rows.length < 2) return res.json({ alerta: null, total: result.rows.length });
+
+    const lista = result.rows.map(m => m.nome).join(', ');
+    const prompt = 'Você é um farmacêutico especialista. Um paciente usa simultaneamente os seguintes medicamentos: ' + lista + '. Verifique se há interações medicamentosas relevantes entre eles. Responda em português brasileiro, de forma clara para leigos. Se houver interações graves ou moderadas, liste-as brevemente (máximo 4 linhas). Se não houver interações relevantes, responda apenas: SEM_INTERACAO. Não use markdown.';
+
+    const resposta = await chamarGemini(prompt) || '';
+    if (resposta && !resposta.includes('SEM_INTERACAO')) {
+      return res.json({ alerta: resposta.trim(), total: result.rows.length });
+    }
+    res.json({ alerta: null, total: result.rows.length });
+  } catch (e) {
+    console.log('[InteracaoTodos] Erro:', e.message);
+    res.json({ alerta: null });
+  }
+});
+
 module.exports = router;
