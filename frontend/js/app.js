@@ -1269,6 +1269,7 @@ function navegarPara(pagina) {
   if (pagina === 'mente-sa') iniciarMenteSa();
   if (pagina === 'exercicios') iniciarAreaExercicios();
   if (pagina === 'saude-feminina') iniciarSaudeFeminina();
+  if (pagina === 'dashboard') carregarDashboard();
   if (pagina === 'cuidados') {
     if (APP.membroTipo === 'cuidador') {
       // Cuidador vê formulários para registrar
@@ -1909,6 +1910,9 @@ function conectarSocket() {
   APP.socket.on('metas-atualizadas', (data) => {
     // Atualiza metas em tempo real quando hábito é confirmado
     if (typeof carregarMetasDia === 'function') carregarMetasDia();
+    // Atualiza dashboard em tempo real se estiver aberto
+    const dashEl = document.getElementById('pag-dashboard');
+    if (dashEl && dashEl.classList.contains('ativa')) carregarDashboard(false);
   });
 
   APP.socket.on('cuidador-novo-registro', (data) => {
@@ -4930,4 +4934,357 @@ async function salvarExame() {
   } catch(e) {
     alerta('Erro ao salvar exame: ' + e.message);
   }
+}
+
+
+// ══════════════════════════════════════════
+// ── DASHBOARD ──
+// ══════════════════════════════════════════
+
+let _dashPeriodo = 'dia';
+let _dashDados = null;
+let _dashSinalAtivo = 'pressao';
+
+function trocarPeriodoDash(periodo) {
+  _dashPeriodo = periodo;
+  ['dia','semana','mes','ano'].forEach(p => {
+    const btn = document.getElementById('dash-aba-' + p);
+    if (btn) btn.classList.toggle('ativa', p === periodo);
+  });
+  carregarDashboard(true);
+}
+
+async function carregarDashboard(mostrarLoading = true) {
+  if (!APP.membroId) return;
+  const nomeEl = document.getElementById('dash-membro-nome');
+  if (nomeEl) nomeEl.textContent = APP.membroNome || '';
+
+  const loading = document.getElementById('dash-loading');
+  const vazio = document.getElementById('dash-vazio');
+  if (mostrarLoading && loading) loading.style.display = 'block';
+  if (vazio) vazio.style.display = 'none';
+
+  // Esconder todos os cards enquanto carrega
+  ['habitos','meds','sinais','sono','humor','eventos','resumos'].forEach(c => {
+    const el = document.getElementById('dash-card-' + c);
+    if (el) el.style.display = 'none';
+  });
+
+  try {
+    const dados = await api('GET', '/api/dashboard/' + APP.membroId + '?periodo=' + _dashPeriodo);
+    if (!dados) return;
+    _dashDados = dados;
+    if (loading) loading.style.display = 'none';
+
+    let temDados = false;
+
+    // 1. Hábitos
+    const temHabitos = dados.hidratacao.length || dados.refeicoes.length || dados.atividades.length || dados.sono.length;
+    if (temHabitos) {
+      temDados = true;
+      _renderDashHabitos(dados);
+    }
+
+    // 2. Medicamentos
+    if (dados.meds.length) {
+      temDados = true;
+      _renderDashMeds(dados.meds);
+    }
+
+    // 3. Sinais vitais
+    if (dados.sinais.length) {
+      temDados = true;
+      _renderDashSinais(dados.sinais);
+    }
+
+    // 4. Sono
+    if (dados.sono.length) {
+      temDados = true;
+      _renderDashSono(dados.sono);
+    }
+
+    // 5. Humor
+    if (dados.humor.length) {
+      temDados = true;
+      _renderDashHumor(dados.humor);
+    }
+
+    // 6. Próximos eventos
+    if (dados.eventos.length) {
+      temDados = true;
+      _renderDashEventos(dados.eventos);
+    }
+
+    // 7. Resumos IA
+    if (dados.resumos.length) {
+      temDados = true;
+      _renderDashResumos(dados.resumos);
+    }
+
+    if (!temDados && vazio) vazio.style.display = 'block';
+
+  } catch(e) {
+    if (loading) loading.style.display = 'none';
+    console.log('[Dashboard] Erro:', e.message);
+  }
+}
+
+function _renderDashHabitos(dados) {
+  const card = document.getElementById('dash-card-habitos');
+  const grid = document.getElementById('dash-habitos-grid');
+  if (!card || !grid) return;
+
+  const totalAgua = dados.hidratacao.reduce((s, r) => s + (parseInt(r.copos) || 0), 0);
+  const totalRef  = dados.refeicoes.reduce((s, r) => s + (parseInt(r.total) || 0), 0);
+  const totalEx   = dados.atividades.reduce((s, r) => s + (parseInt(r.total) || 0), 0);
+  const diasSono  = dados.sono.filter(r => r.horas && parseFloat(r.horas) > 0).length;
+
+  const itens = [
+    { icone: '💧', label: 'Água',      valor: totalAgua + ' copos',  cor: '#2196f3' },
+    { icone: '🍽️', label: 'Refeições', valor: totalRef  + ' refeições', cor: '#ff9800' },
+    { icone: '🏋️', label: 'Exercícios',valor: totalEx   + ' sessões',cor: '#1a9e6e' },
+    { icone: '😴', label: 'Sono',      valor: diasSono  + ' dias',   cor: '#9c27b0' },
+  ];
+
+  grid.innerHTML = itens.map(it => `
+    <div style="background:#f8fafc;border-radius:12px;padding:10px;text-align:center;border-left:3px solid ${it.cor}">
+      <div style="font-size:20px">${it.icone}</div>
+      <div style="font-size:13px;font-weight:700;color:${it.cor}">${it.valor}</div>
+      <div style="font-size:11px;color:#6b7280">${it.label}</div>
+    </div>`).join('');
+
+  card.style.display = 'block';
+}
+
+function _renderDashMeds(meds) {
+  const card = document.getElementById('dash-card-meds');
+  const pct  = document.getElementById('dash-meds-pct');
+  if (!card) return;
+
+  const totalTomados = meds.reduce((s, r) => s + (parseInt(r.tomados) || 0), 0);
+  const totalEsperado = meds.reduce((s, r) => s + (parseInt(r.total) || 0), 0);
+  const aderencia = totalEsperado > 0 ? Math.round((totalTomados / totalEsperado) * 100) : 0;
+  const cor = aderencia >= 80 ? '#1a9e6e' : aderencia >= 50 ? '#f59e0b' : '#ef4444';
+
+  if (pct) pct.innerHTML = `<span style="color:${cor};font-weight:700;font-size:15px">${aderencia}%</span> de aderência (${totalTomados}/${totalEsperado} doses)`;
+
+  // Gráfico de barras por dia
+  const canvas = document.getElementById('dash-canvas-meds');
+  if (!canvas || !meds.length) { card.style.display = 'block'; return; }
+  _desenharBarras(canvas, meds.map(r => ({
+    label: r.data ? r.data.slice(5) : '',
+    valor: parseInt(r.tomados) || 0,
+    total: parseInt(r.total) || 0,
+    cor
+  })), 'doses tomadas');
+
+  card.style.display = 'block';
+}
+
+function _renderDashSinais(sinais) {
+  const card = document.getElementById('dash-card-sinais');
+  const abasEl = document.getElementById('dash-sinais-abas');
+  if (!card || !abasEl) return;
+
+  // Descobrir tipos disponíveis
+  const tipos = [...new Set(sinais.map(s => s.tipo))];
+  const nomes = { pressao:'🩺 Pressão', glicemia:'🩸 Glicemia', peso:'⚖️ Peso', oximetria:'💨 Oximetria', temperatura:'🌡️ Temp', frequencia:'💓 FC', dor:'🤕 Dor' };
+
+  abasEl.innerHTML = tipos.map(t =>
+    `<button onclick="trocarSinalDash('${t}')" id="dash-sinal-${t}" class="btn-aba${t === _dashSinalAtivo || (tipos.indexOf(t)===0 && !tipos.includes(_dashSinalAtivo)) ? ' ativa' : ''}" style="padding:4px 10px;font-size:12px">${nomes[t]||t}</button>`
+  ).join('');
+
+  if (!tipos.includes(_dashSinalAtivo)) _dashSinalAtivo = tipos[0];
+  _desenharLinhaSinais(sinais, _dashSinalAtivo);
+
+  card.style.display = 'block';
+}
+
+function trocarSinalDash(tipo) {
+  _dashSinalAtivo = tipo;
+  document.querySelectorAll('[id^="dash-sinal-"]').forEach(b => b.classList.remove('ativa'));
+  const btn = document.getElementById('dash-sinal-' + tipo);
+  if (btn) btn.classList.add('ativa');
+  if (_dashDados) _desenharLinhaSinais(_dashDados.sinais, tipo);
+}
+
+function _desenharLinhaSinais(sinais, tipo) {
+  const canvas = document.getElementById('dash-canvas-sinais');
+  const ultimo = document.getElementById('dash-sinais-ultimo');
+  if (!canvas) return;
+
+  const filtrados = sinais.filter(s => s.tipo === tipo);
+  if (!filtrados.length) { canvas.style.display = 'none'; return; }
+  canvas.style.display = 'block';
+
+  if (ultimo) {
+    const ult = filtrados[filtrados.length - 1];
+    const val = tipo === 'pressao' ? ult.valor + '/' + (ult.valor2||'') + ' mmHg' : ult.valor;
+    ultimo.textContent = 'Último: ' + val;
+  }
+
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 320;
+  const H = 140;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr); ctx.clearRect(0, 0, W, H);
+
+  const vals = filtrados.map(s => parseFloat(s.valor));
+  const minV = Math.min(...vals) * 0.95;
+  const maxV = Math.max(...vals) * 1.05;
+  const pad = { t:12, r:12, b:24, l:32 };
+  const gW = W - pad.l - pad.r;
+  const gH = H - pad.t - pad.b;
+  const toX = i => pad.l + (i / (filtrados.length - 1 || 1)) * gW;
+  const toY = v => pad.t + gH - ((v - minV) / (maxV - minV || 1)) * gH;
+
+  // Grid
+  ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) {
+    const y = pad.t + (i / 3) * gH;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gW, y); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText((maxV - (i/3)*(maxV-minV)).toFixed(0), pad.l - 4, y + 3);
+  }
+
+  // Linha
+  ctx.beginPath(); ctx.strokeStyle = '#e53e3e'; ctx.lineWidth = 2;
+  filtrados.forEach((s, i) => { const x=toX(i); const y=toY(parseFloat(s.valor)); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.stroke();
+
+  // Pontos
+  filtrados.forEach((s, i) => {
+    ctx.beginPath(); ctx.arc(toX(i), toY(parseFloat(s.valor)), 3, 0, Math.PI*2);
+    ctx.fillStyle = '#e53e3e'; ctx.fill();
+  });
+
+  // Eixo X
+  ctx.fillStyle = '#9ca3af'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+  const passo = Math.max(1, Math.floor(filtrados.length / 5));
+  filtrados.forEach((s, i) => {
+    if (i % passo === 0 || i === filtrados.length - 1) {
+      const dt = new Date(s.criado_em);
+      ctx.fillText(dt.getDate()+'/'+(dt.getMonth()+1), toX(i), H - pad.b + 12);
+    }
+  });
+}
+
+function _renderDashSono(sono) {
+  const card = document.getElementById('dash-card-sono');
+  const media = document.getElementById('dash-sono-media');
+  if (!card) return;
+
+  const comHoras = sono.filter(r => r.horas && parseFloat(r.horas) > 0);
+  if (!comHoras.length) return;
+
+  const mediaHoras = comHoras.reduce((s, r) => s + parseFloat(r.horas), 0) / comHoras.length;
+  const cor = mediaHoras >= 7 ? '#1a9e6e' : mediaHoras >= 5 ? '#f59e0b' : '#ef4444';
+  if (media) media.innerHTML = `Média: <span style="color:${cor};font-weight:700">${mediaHoras.toFixed(1)}h</span> por noite`;
+
+  const canvas = document.getElementById('dash-canvas-sono');
+  if (canvas) {
+    _desenharBarras(canvas, comHoras.map(r => ({
+      label: r.data ? r.data.slice(5) : '',
+      valor: parseFloat(r.horas) || 0,
+      total: 8,
+      cor: parseFloat(r.horas) >= 7 ? '#9c27b0' : parseFloat(r.horas) >= 5 ? '#f59e0b' : '#ef4444'
+    })), 'horas de sono');
+  }
+
+  card.style.display = 'block';
+}
+
+function _renderDashHumor(humor) {
+  const card = document.getElementById('dash-card-humor');
+  const lista = document.getElementById('dash-humor-lista');
+  if (!card || !lista) return;
+
+  const emojis = { otimo:'😄', bem:'😊', neutro:'😐', mal:'😞', pessimo:'😢' };
+  lista.innerHTML = humor.map(r => {
+    const dt = new Date(r.data);
+    const label = dt.getDate()+'/'+(dt.getMonth()+1);
+    return `<div style="text-align:center;background:#f8fafc;border-radius:10px;padding:6px 8px;min-width:44px">
+      <div style="font-size:20px">${emojis[r.humor]||'😐'}</div>
+      <div style="font-size:10px;color:#6b7280">${label}</div>
+    </div>`;
+  }).join('');
+
+  card.style.display = 'block';
+}
+
+function _renderDashEventos(eventos) {
+  const card = document.getElementById('dash-card-eventos');
+  const lista = document.getElementById('dash-eventos-lista');
+  if (!card || !lista) return;
+
+  lista.innerHTML = eventos.map(ev => {
+    const dt = new Date(ev.data_inicio);
+    const label = dt.getDate()+'/'+(dt.getMonth()+1)+' '+dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0">
+      <div style="font-size:20px">📅</div>
+      <div><div style="font-size:13px;font-weight:600">${ev.titulo||''}</div>
+      <div style="font-size:11px;color:#6b7280">${label}</div></div>
+    </div>`;
+  }).join('');
+
+  card.style.display = 'block';
+}
+
+function _renderDashResumos(resumos) {
+  const card = document.getElementById('dash-card-resumos');
+  const lista = document.getElementById('dash-resumos-lista');
+  if (!card || !lista) return;
+
+  lista.innerHTML = resumos.map(r => {
+    const dt = new Date(r.data);
+    const label = dt.getDate()+'/'+(dt.getMonth()+1)+'/'+ dt.getFullYear();
+    return `<div style="background:#f0fdf4;border-radius:10px;padding:10px;margin-bottom:8px;border-left:3px solid #1a9e6e">
+      <div style="font-size:11px;color:#6b7280;margin-bottom:4px">📅 ${label}</div>
+      <div style="font-size:12px;line-height:1.6;color:#374151">${(r.resumo||'').slice(0,200)}${r.resumo&&r.resumo.length>200?'...':''}</div>
+    </div>`;
+  }).join('');
+
+  card.style.display = 'block';
+}
+
+function _desenharBarras(canvas, dados, labelY) {
+  if (!canvas || !dados.length) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 320;
+  const H = 120;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr); ctx.clearRect(0, 0, W, H);
+
+  const maxV = Math.max(...dados.map(d => d.total || d.valor), 1);
+  const pad = { t:8, r:8, b:24, l:8 };
+  const gW = W - pad.l - pad.r;
+  const gH = H - pad.t - pad.b;
+  const bW = Math.max(4, (gW / dados.length) - 4);
+
+  dados.forEach((d, i) => {
+    const x = pad.l + (i / dados.length) * gW + (gW/dados.length - bW) / 2;
+    // Barra fundo (total)
+    if (d.total) {
+      ctx.fillStyle = '#e5e7eb';
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(x, pad.t, bW, gH, 3) : ctx.rect(x, pad.t, bW, gH);
+      ctx.fill();
+    }
+    // Barra valor
+    const h = (d.valor / maxV) * gH;
+    ctx.fillStyle = d.cor || '#1a9e6e';
+    ctx.beginPath();
+    const yBar = pad.t + gH - h;
+    ctx.roundRect ? ctx.roundRect(x, yBar, bW, h, 3) : ctx.rect(x, yBar, bW, h);
+    ctx.fill();
+    // Label X
+    if (d.label) {
+      ctx.fillStyle = '#9ca3af'; ctx.font = '8px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(d.label, x + bW/2, H - pad.b + 12);
+    }
+  });
 }
