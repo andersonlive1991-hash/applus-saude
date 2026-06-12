@@ -5026,6 +5026,11 @@ async function carregarDashboard(mostrarLoading = true) {
   } catch(e) {
     if (loading) loading.style.display = 'none';
     console.log('[Dashboard] Erro:', e.message);
+    const vazio2 = document.getElementById('dash-vazio');
+    if (vazio2) {
+      vazio2.style.display = 'block';
+      vazio2.innerHTML = '⚠️ Erro ao carregar dados: ' + e.message;
+    }
   }
 }
 
