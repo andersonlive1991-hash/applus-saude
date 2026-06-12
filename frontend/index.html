@@ -393,11 +393,98 @@
         <div class="card-titulo">Exames</div>
         <div class="card-sub">Resultados e histórico</div>
       </div>
+      <div class="card destaque" onclick="navegarPara('dashboard')" style="background:linear-gradient(135deg,#1a4e9e,#3b9eff);color:white">
+        <div class="card-icone">📊</div>
+        <div>
+          <div class="card-titulo" style="color:white">Dashboard</div>
+          <div class="card-sub" style="color:rgba(255,255,255,0.8)">Saúde em tempo real</div>
+        </div>
+      </div>
     </div>
 
     <div class="secao">
       <div class="secao-titulo">Hoje</div>
       <div id="home-eventos"></div>
+    </div>
+  </div>
+
+
+  <!-- ── DASHBOARD ── -->
+  <div id="pag-dashboard" class="pagina">
+    <div class="header-verde" style="background:linear-gradient(145deg,#1a4e9e,#1a6eb5,#3b9eff)">
+      <button onclick="navegarPara('home')" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px">← Voltar</button>
+      <h1>📊 Dashboard de Saúde</h1>
+      <p id="dash-membro-nome">Carregando...</p>
+    </div>
+    <div class="curva"></div>
+
+    <!-- Abas de período -->
+    <div style="display:flex;gap:6px;padding:12px 16px 0;overflow-x:auto">
+      <button onclick="trocarPeriodoDash('dia')" id="dash-aba-dia" class="btn-aba ativa" style="padding:6px 14px;font-size:13px;white-space:nowrap">📅 Hoje</button>
+      <button onclick="trocarPeriodoDash('semana')" id="dash-aba-semana" class="btn-aba" style="padding:6px 14px;font-size:13px;white-space:nowrap">📆 Semana</button>
+      <button onclick="trocarPeriodoDash('mes')" id="dash-aba-mes" class="btn-aba" style="padding:6px 14px;font-size:13px;white-space:nowrap">🗓️ Mês</button>
+      <button onclick="trocarPeriodoDash('ano')" id="dash-aba-ano" class="btn-aba" style="padding:6px 14px;font-size:13px;white-space:nowrap">📈 Ano</button>
+    </div>
+
+    <div id="dash-conteudo" style="padding:12px 16px;display:flex;flex-direction:column;gap:12px">
+
+      <!-- Carregando -->
+      <div id="dash-loading" style="text-align:center;padding:40px;color:#9ca3af;font-size:14px">
+        ⏳ Carregando dados...
+      </div>
+
+      <!-- Card Hábitos do Dia -->
+      <div id="dash-card-habitos" class="secao" style="display:none">
+        <div style="font-size:14px;font-weight:700;color:#1a4e9e;margin-bottom:10px">💚 Hábitos</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="dash-habitos-grid"></div>
+      </div>
+
+      <!-- Card Medicamentos -->
+      <div id="dash-card-meds" class="secao" style="display:none">
+        <div style="font-size:14px;font-weight:700;color:#1a4e9e;margin-bottom:10px">💊 Aderência de Medicamentos</div>
+        <canvas id="dash-canvas-meds" style="width:100%;border-radius:8px;background:#f8fafc"></canvas>
+        <div id="dash-meds-pct" style="text-align:center;font-size:13px;color:#6b7280;margin-top:6px"></div>
+      </div>
+
+      <!-- Card Sinais Vitais -->
+      <div id="dash-card-sinais" class="secao" style="display:none">
+        <div style="font-size:14px;font-weight:700;color:#1a4e9e;margin-bottom:10px">❤️ Sinais Vitais</div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap" id="dash-sinais-abas"></div>
+        <canvas id="dash-canvas-sinais" style="width:100%;border-radius:8px;background:#f8fafc"></canvas>
+        <div id="dash-sinais-ultimo" style="font-size:12px;color:#6b7280;margin-top:6px;text-align:center"></div>
+      </div>
+
+      <!-- Card Sono -->
+      <div id="dash-card-sono" class="secao" style="display:none">
+        <div style="font-size:14px;font-weight:700;color:#1a4e9e;margin-bottom:10px">😴 Qualidade do Sono</div>
+        <canvas id="dash-canvas-sono" style="width:100%;border-radius:8px;background:#f8fafc"></canvas>
+        <div id="dash-sono-media" style="text-align:center;font-size:13px;color:#6b7280;margin-top:6px"></div>
+      </div>
+
+      <!-- Card Humor -->
+      <div id="dash-card-humor" class="secao" style="display:none">
+        <div style="font-size:14px;font-weight:700;color:#1a4e9e;margin-bottom:10px">😊 Evolução do Humor</div>
+        <div id="dash-humor-lista" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+
+      <!-- Card Próximos Eventos -->
+      <div id="dash-card-eventos" class="secao" style="display:none">
+        <div style="font-size:14px;font-weight:700;color:#1a4e9e;margin-bottom:10px">📅 Próximos Eventos</div>
+        <div id="dash-eventos-lista"></div>
+      </div>
+
+      <!-- Card Resumos IA -->
+      <div id="dash-card-resumos" class="secao" style="display:none">
+        <div style="font-size:14px;font-weight:700;color:#1a4e9e;margin-bottom:10px">🤖 Resumos IA do Período</div>
+        <div id="dash-resumos-lista"></div>
+        <p style="font-size:10px;color:#9ca3af;text-align:center;margin-top:6px">🤖 Conteúdo gerado por IA. Não substitui avaliação médica.</p>
+      </div>
+
+      <!-- Sem dados -->
+      <div id="dash-vazio" style="display:none;text-align:center;padding:40px;color:#9ca3af;font-size:14px">
+        📭 Nenhum dado registrado neste período ainda.
+      </div>
+
     </div>
   </div>
 
