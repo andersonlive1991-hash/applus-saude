@@ -273,8 +273,8 @@ router.get('/mensal/id/:id_pessoal', async (req, res) => {
 
     doc.end();
   } catch(e) {
-    console.log('[PDF Mensal] Erro:', e.message);
-    res.status(500).json({ erro: e.message });
+    console.log('[PDF Mensal] Erro:', e.stack || e.message);
+    if (!res.headersSent) res.status(500).json({ erro: e.message, detalhe: e.stack });
   }
 });
 
