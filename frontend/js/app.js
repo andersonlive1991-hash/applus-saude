@@ -2552,18 +2552,47 @@ function abrirTrocarIdioma() {
 }
 
 
-function baixarPDFMedicamentos() {
+async function baixarPDFMedicamentos() {
   if (!APP.membroId) return alerta('Faça login primeiro');
-  const url = '/api/pdf/medicamentos/' + APP.membroId;
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'relatorio-medicamentos.pdf';
-  a.target = '_blank';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  alerta('⏳ Gerando PDF...');
+  try {
+    const BASE = window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost'
+      ? 'https://applus-saude-production.up.railway.app' : '';
+    const res = await fetch(BASE + '/api/pdf/medicamentos/' + APP.membroId);
+    if (!res.ok) throw new Error('Erro ao gerar PDF');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'relatorio-medicamentos.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) { alerta('Erro ao gerar PDF: ' + e.message, 'erro'); }
 }
 
+
+async function baixarRelatorioMensal() {
+  if (!APP.membroId) return alerta('Faça login primeiro');
+  alerta('⏳ Gerando relatório mensal com IA... pode levar alguns segundos.');
+  try {
+    const BASE = window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost'
+      ? 'https://applus-saude-production.up.railway.app' : '';
+    const res = await fetch(BASE + '/api/pdf/mensal/' + APP.membroId);
+    if (!res.ok) throw new Error('Erro ao gerar relatório');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const mes = new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' }).replace('/', '-');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'relatorio-saude-' + mes + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) { alerta('Erro ao gerar relatório: ' + e.message, 'erro'); }
+}
 function sair() {
   localStorage.clear();
   window.location.href = '/';
@@ -4647,13 +4676,22 @@ async function carregarStatusPin() {
 
 async function baixarPDFPlantao() {
   const hoje = new Date().toLocaleDateString('sv-SE');
-  const url = `/api/pdf/plantao/${APP.membroId}?data=${hoje}`;
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `plantao-${hoje}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  alerta('⏳ Gerando PDF...');
+  try {
+    const BASE = window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost'
+      ? 'https://applus-saude-production.up.railway.app' : '';
+    const res = await fetch(BASE + `/api/pdf/plantao/${APP.membroId}?data=${hoje}`);
+    if (!res.ok) throw new Error('Erro ao gerar PDF');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `plantao-${hoje}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) { alerta('Erro ao gerar PDF: ' + e.message, 'erro'); }
 }
 
 function togglePRN() {
