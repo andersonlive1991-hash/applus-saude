@@ -1059,7 +1059,7 @@ async function carregarPerfil() {
     // Gerar anos dinamicamente (ano atual até 1910)
     const selAno = document.getElementById('pf-nasc-ano');
     if (selAno && selAno.options.length <= 1) {
-      const anoAtual = new Date().getFullYear() - 1;
+      const anoAtual = new Date().getFullYear();
       for (let a = anoAtual; a >= 1910; a--) {
         const opt = document.createElement('option');
         opt.value = a; opt.textContent = a;
@@ -1130,13 +1130,8 @@ async function salvarPerfil() {
       atualizarDropdown();
     }
 
-    const resp = await fetch('/api/perfil', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dados)
-    });
-    const json = await resp.json();
-    if (json.erro) {
+    const json = await api('POST', '/api/perfil', dados);
+    if (json && json.erro) {
       alerta('Erro: ' + json.erro);
     } else {
       alerta('Perfil salvo com sucesso!');
