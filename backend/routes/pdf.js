@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const PDFDocument = require('pdfkit');
+const { decrypt } = require('../crypto');
 
 router.get('/medicamentos/:membro_id', async (req, res) => {
   try {
@@ -112,6 +113,9 @@ router.get('/mensal/:membro_id', async (req, res) => {
 
     const perfilRes = await db.query('SELECT * FROM perfil_idoso WHERE membro_id = $1', [membro_id]);
     const perfil = perfilRes.rows[0] || {};
+    if (perfil.tipo_sanguineo) perfil.tipo_sanguineo = decrypt(perfil.tipo_sanguineo);
+    if (perfil.alergias) perfil.alergias = decrypt(perfil.alergias);
+    if (perfil.cpf) perfil.cpf = decrypt(perfil.cpf);
 
     // Período: últimos 30 dias
     const intervalo = "criado_em >= NOW() - INTERVAL '30 days'";
