@@ -131,7 +131,7 @@ router.get('/mensal/id/:id_pessoal', async (req, res) => {
     // Medicamentos e aderência
     const medsRes = await db.query('SELECT * FROM medicamentos WHERE membro_id=$1 ORDER BY nome', [membro_id]);
     const histRes = await db.query(
-      `SELECT h.status, h.criado_em, m.nome as med_nome FROM historico_meds h JOIN medicamentos m ON m.id = h.med_id WHERE m.membro_id=$1 AND ${intervalo}`,
+      `SELECT h.status, h.criado_em, m.nome as med_nome FROM historico_meds h JOIN medicamentos m ON m.id = h.med_id WHERE m.membro_id=$1 AND h.criado_em >= NOW() - INTERVAL '30 days'`,
       [membro_id]
     );
 
