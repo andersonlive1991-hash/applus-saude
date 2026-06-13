@@ -2579,7 +2579,7 @@ async function baixarRelatorioMensal() {
   try {
     const BASE = window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost'
       ? 'https://applus-saude-production.up.railway.app' : '';
-    const res = await fetch(BASE + '/api/pdf/mensal/' + APP.membroId);
+    const res = await fetch(BASE + '/api/pdf/mensal/id/' + APP.idPessoal);
     if (!res.ok) throw new Error('Erro ao gerar relatório');
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
