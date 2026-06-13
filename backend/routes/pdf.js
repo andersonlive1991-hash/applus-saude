@@ -101,15 +101,16 @@ router.get('/medicamentos/:membro_id', async (req, res) => {
 
 
 // ── RELATÓRIO MENSAL DE SAÚDE ──
-router.get('/mensal/:membro_id', async (req, res) => {
+router.get('/mensal/id/:id_pessoal', async (req, res) => {
   try {
-    const { membro_id } = req.params;
+    const { id_pessoal } = req.params;
     const { chamarGemini } = require('../gemini');
 
-    // Buscar membro e perfil
-    const memRes = await db.query('SELECT * FROM membros WHERE id = $1', [membro_id]);
+    // Buscar membro pelo id_pessoal (permanente)
+    const memRes = await db.query('SELECT * FROM membros WHERE id_pessoal = $1', [id_pessoal]);
     if (!memRes.rows.length) return res.status(404).json({ erro: 'Membro não encontrado' });
     const membro = memRes.rows[0];
+    const membro_id = membro.id;
 
     const perfilRes = await db.query('SELECT * FROM perfil_idoso WHERE membro_id = $1', [membro_id]);
     const perfil = perfilRes.rows[0] || {};
