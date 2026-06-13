@@ -2907,6 +2907,107 @@ function fecharModal(id) {
 
 // ── UTILITÁRIOS ──
 
+
+// ══════════════════════════════════════════
+// ── CARTEIRINHA DE EMERGÊNCIA ──
+// ══════════════════════════════════════════
+
+let _cartPerfilCache = null;
+
+async function abrirCarteirinha() {
+  abrirModal('modal-carteirinha');
+  const qrImg = document.getElementById('cart-qrcode');
+  if (qrImg) qrImg.src = '';
+
+  try {
+    const idPessoal = APP.idPessoal;
+    if (!idPessoal) return;
+
+    const p = await api('GET', '/api/perfil/' + idPessoal);
+    if (!p || p.erro) return;
+    _cartPerfilCache = p;
+
+    const el = (id) => document.getElementById(id);
+
+    el('cart-nome').textContent = p.nome_completo || APP.membroNome || '';
+
+    if (p.data_nascimento) {
+      const dt = new Date(p.data_nascimento);
+      const idade = new Date().getFullYear() - dt.getFullYear();
+      el('cart-nascimento').textContent = dt.getUTCDate() + '/' + (dt.getUTCMonth()+1) + '/' + dt.getUTCFullYear() + ' · ' + idade + ' anos';
+    } else {
+      el('cart-nascimento').textContent = '';
+    }
+
+    el('cart-sangue').textContent = p.tipo_sanguineo || '?';
+    el('cart-convenio').textContent = p.convenio || 'Não informado';
+    el('cart-sus').textContent = p.cartao_sus || 'Não informado';
+    el('cart-alergias').textContent = p.alergias || 'Nenhuma alergia registrada';
+    el('cart-contato').textContent = p.contato_emergencia || 'Não informado';
+    el('cart-tel').textContent = p.tel_emergencia || '';
+
+    const meds = (window._listaMedsCache && window._listaMedsCache.length)
+      ? window._listaMedsCache
+      : await api('GET', '/api/medicamentos/' + APP.familiaId + '?membro_id=' + APP.membroId);
+
+    const nomeMeds = Array.isArray(meds) && meds.length
+      ? meds.map(function(m) { return m.nome + (m.dosagem ? ' ' + m.dosagem : ''); })
+      : [];
+
+    el('cart-meds').innerHTML = nomeMeds.length
+      ? nomeMeds.map(function(m) { return '• ' + m; }).join('<br>')
+      : 'Nenhum medicamento registrado';
+
+    const textoQR = 'EMERGENCIA AP+ | Nome: ' + (p.nome_completo || APP.membroNome || '') +
+      ' | Sangue: ' + (p.tipo_sanguineo || '?') +
+      ' | Alergias: ' + (p.alergias || 'Nenhuma') +
+      ' | Meds: ' + (nomeMeds.length ? nomeMeds.join(', ') : 'Nenhum') +
+      ' | Contato: ' + (p.contato_emergencia || '') + ' ' + (p.tel_emergencia || '') +
+      ' | Convenio: ' + (p.convenio || 'Nenhum');
+
+    const resQR = await api('POST', '/api/qrcode', { texto: textoQR });
+    if (resQR && resQR.qrcode && qrImg) {
+      qrImg.src = resQR.qrcode;
+    }
+
+  } catch(e) {
+    console.log('[Carteirinha] Erro:', e.message);
+  }
+}
+
+async function compartilharCarteirinha() {
+  const p = _cartPerfilCache;
+  if (!p) return;
+
+  const nomeMeds = (window._listaMedsCache && window._listaMedsCache.length)
+    ? window._listaMedsCache.map(function(m) { return m.nome + (m.dosagem ? ' ' + m.dosagem : ''); }).join(', ')
+    : 'Nenhum';
+
+  const linhas = [
+    'CARTEIRINHA DE EMERGENCIA - AP+ Saude',
+    'Nome: ' + (p.nome_completo || APP.membroNome || ''),
+    'Tipo sanguineo: ' + (p.tipo_sanguineo || 'Nao informado'),
+    'Alergias: ' + (p.alergias || 'Nenhuma'),
+    'Medicamentos: ' + nomeMeds,
+    'Convenio: ' + (p.convenio || 'Nao informado'),
+    'SUS: ' + (p.cartao_sus || 'Nao informado'),
+    'Emergencia: ' + (p.contato_emergencia || 'Nao informado') + ' - ' + (p.tel_emergencia || '')
+  ];
+  const texto = linhas.join('\n');
+
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'Carteirinha de Emergencia', text: texto });
+    } else {
+      await navigator.clipboard.writeText(texto);
+      alerta('Dados copiados!');
+    }
+  } catch(e) {
+    alerta('Erro ao compartilhar: ' + e.message, 'erro');
+  }
+}
+
+
 async function verificarTodasInteracoes() {
   if (!window._listaMedsCache || window._listaMedsCache.length < 2) {
     return alerta('Cadastre pelo menos 2 medicamentos para verificar interações.', 'aviso');
