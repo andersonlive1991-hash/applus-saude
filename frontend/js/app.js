@@ -2557,49 +2557,44 @@ async function baixarPDFMedicamentos() {
   alerta('⏳ Gerando PDF...');
   try {
     const BASE = 'https://applus-saude-production.up.railway.app';
-    const url = BASE + '/api/pdf/medicamentos/' + APP.membroId;
-    if (window.location.protocol === 'capacitor:') {
-      window.open(url, '_system');
-    } else {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Erro ao gerar PDF');
-      const blob = await res.blob();
-      const objUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objUrl;
-      a.download = 'relatorio-medicamentos.pdf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(objUrl);
-    }
+    await abrirPDFexterno(BASE + '/api/pdf/medicamentos/' + APP.membroId, 'relatorio-medicamentos.pdf');
   } catch(e) { alerta('Erro ao gerar PDF: ' + e.message, 'erro'); }
 }
 
+
+// Abre URL no browser externo no APK ou faz download no PWA
+async function abrirPDFexterno(url, nomeArquivo) {
+  if (window.location.protocol === 'capacitor:') {
+    // No APK: usar Intent Android via anchor com target _blank
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 100);
+  } else {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Erro ao gerar PDF');
+    const blob = await res.blob();
+    const objUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objUrl;
+    a.download = nomeArquivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objUrl);
+  }
+}
 
 async function baixarRelatorioMensal() {
   if (!APP.idPessoal) return alerta('Faça login primeiro');
   alerta('⏳ Gerando relatório mensal com IA... pode levar alguns segundos.');
   try {
     const BASE = 'https://applus-saude-production.up.railway.app';
-    const url = BASE + '/api/pdf/mensal/id/' + APP.idPessoal;
-    // No APK abre no browser externo; no PWA faz download
-    if (window.location.protocol === 'capacitor:') {
-      window.open(url, '_system');
-    } else {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Erro ao gerar relatório');
-      const blob = await res.blob();
-      const objUrl = URL.createObjectURL(blob);
-      const mes = new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' }).replace('/', '-');
-      const a = document.createElement('a');
-      a.href = objUrl;
-      a.download = 'relatorio-saude-' + mes + '.pdf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(objUrl);
-    }
+    const mes = new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' }).replace('/', '-');
+    await abrirPDFexterno(BASE + '/api/pdf/mensal/id/' + APP.idPessoal, 'relatorio-saude-' + mes + '.pdf');
   } catch(e) { alerta('Erro ao gerar relatório: ' + e.message, 'erro'); }
 }
 function sair() {
