@@ -661,6 +661,14 @@
         <div class="item-info"><div class="item-nome" data-i18n="mais.vacinas">Vacinas</div></div>
         <span>›</span>
       </div>
+      <div class="item-lista" onclick="abrirCarteirinha()">
+        <span style="font-size:24px">🪪</span>
+        <div class="item-info">
+          <div class="item-nome">Carteirinha de Emergência</div>
+          <div class="item-sub">QR Code com dados vitais</div>
+        </div>
+        <span>›</span>
+      </div>
       <div class="item-lista" onclick="navegarPara('financeiro')">
         <span style="font-size:24px">💰</span>
         <div class="item-info"><div class="item-nome" data-i18n="mais.financeiro">Financeiro</div></div>
@@ -803,6 +811,72 @@
       <div id="modal-metas-ia-conteudo" style="margin-bottom:1rem"></div>
       <p style="font-size:11px;color:#6b7280;text-align:center;margin-bottom:0.5rem">🤖 Metas geradas por IA com base nos seus dados. Não substituem orientação profissional.</p>
       <button class="btn btn-verde btn-block" onclick="fecharModal('modal-metas-ia')">✅ Entendi</button>
+    </div>
+  </div>
+
+<!-- Modal Carteirinha de Emergência -->
+  <div id="modal-carteirinha" class="modal-overlay">
+    <div class="modal" style="max-height:90vh;overflow-y:auto;padding:0;border-radius:20px">
+
+      <!-- Cartão visual -->
+      <div id="cart-card" style="background:linear-gradient(135deg,#1a4e9e,#1a9e6e);padding:20px;border-radius:20px 20px 0 0;color:white">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:11px;opacity:0.8;letter-spacing:1px;text-transform:uppercase">AP+ Saúde · Carteirinha</div>
+            <div id="cart-nome" style="font-size:20px;font-weight:700;margin-top:4px"></div>
+            <div id="cart-nascimento" style="font-size:12px;opacity:0.85;margin-top:2px"></div>
+          </div>
+          <div style="background:rgba(255,255,255,0.2);border-radius:12px;padding:8px;text-align:center">
+            <div id="cart-sangue" style="font-size:22px;font-weight:900;line-height:1"></div>
+            <div style="font-size:9px;opacity:0.8;margin-top:2px">TIPO SANG.</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+          <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px">
+            <div style="font-size:9px;opacity:0.7;text-transform:uppercase;letter-spacing:0.5px">Convênio</div>
+            <div id="cart-convenio" style="font-size:13px;font-weight:600;margin-top:2px"></div>
+          </div>
+          <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px">
+            <div style="font-size:9px;opacity:0.7;text-transform:uppercase;letter-spacing:0.5px">Cartão SUS</div>
+            <div id="cart-sus" style="font-size:13px;font-weight:600;margin-top:2px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dados críticos -->
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+
+        <div style="background:#fff5f5;border-radius:12px;padding:12px;border-left:4px solid #ef4444">
+          <div style="font-size:11px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:0.5px">⚠️ Alergias</div>
+          <div id="cart-alergias" style="font-size:13px;color:#333;margin-top:4px;line-height:1.5"></div>
+        </div>
+
+        <div style="background:#fff9ed;border-radius:12px;padding:12px;border-left:4px solid #f59e0b">
+          <div style="font-size:11px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:0.5px">💊 Medicamentos em uso</div>
+          <div id="cart-meds" style="font-size:13px;color:#333;margin-top:4px;line-height:1.6"></div>
+        </div>
+
+        <div style="background:#f0fdf4;border-radius:12px;padding:12px;border-left:4px solid #1a9e6e">
+          <div style="font-size:11px;font-weight:700;color:#0f6647;text-transform:uppercase;letter-spacing:0.5px">🚨 Contato de Emergência</div>
+          <div id="cart-contato" style="font-size:13px;color:#333;margin-top:4px"></div>
+          <div id="cart-tel" style="font-size:14px;font-weight:700;color:#0f6647;margin-top:2px"></div>
+        </div>
+
+        <!-- QR Code -->
+        <div style="text-align:center;background:#f8fafc;border-radius:12px;padding:14px">
+          <div style="font-size:11px;color:#6b7280;margin-bottom:8px">📱 Escaneie para ver dados completos</div>
+          <img id="cart-qrcode" style="width:140px;height:140px;border-radius:8px" src="" alt="QR Code">
+        </div>
+
+        <p style="font-size:10px;color:#9ca3af;text-align:center;margin:0">Em caso de emergência, mostre esta carteirinha ao socorrista.</p>
+
+        <!-- Botões -->
+        <div style="display:flex;gap:8px">
+          <button onclick="compartilharCarteirinha()" style="flex:1;padding:12px;background:#1a9e6e;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">📤 Compartilhar</button>
+          <button onclick="fecharModal('modal-carteirinha')" style="flex:1;padding:12px;background:#f3f4f6;color:#374151;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer">Fechar</button>
+        </div>
+      </div>
     </div>
   </div>
 
