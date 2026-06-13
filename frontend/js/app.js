@@ -447,7 +447,7 @@ async function criarFamilia() {
       };
       try {
         
-      const respPerfil = await fetch(getBase() + '/api/perfil', {
+      const respPerfil = await fetch((window.location.protocol === 'capacitor:' ? 'https://applus-saude-production.up.railway.app' : '') + '/api/perfil', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(dadosPerfil)
@@ -1073,28 +1073,25 @@ async function carregarPerfil() {
     if (!mem || !mem.id) return;
     APP.membroAtivo = mem;
     document.getElementById('pf-nome').value = mem.nome || '';
-    const res = await fetch(getBase() + '/api/perfil/' + mem.id_pessoal);
-    if (res.ok) {
-      const p = await res.json();
-      if (p && !p.erro) {
-        document.getElementById('pf-nome').value = p.nome_completo || mem.nome || '';
-        if (p.data_nascimento) {
-          const d = new Date(p.data_nascimento);
-          document.getElementById('pf-nasc-dia').value = String(d.getUTCDate());
-          document.getElementById('pf-nasc-mes').value = String(d.getUTCMonth() + 1).padStart(2, '0');
-          document.getElementById('pf-nasc-ano').value = String(d.getUTCFullYear());
-        }
-        document.getElementById('pf-altura').value = p.altura || '';
-        document.getElementById('pf-peso').value = p.peso || '';
-        if (p.altura && p.peso) calcularIMCPerfil(p.altura, p.peso);
-        document.getElementById('pf-sangue').value = p.tipo_sanguineo || '';
-        document.getElementById('pf-alergias').value = p.alergias || '';
-        document.getElementById('pf-cpf').value = p.cpf || '';
-        document.getElementById('pf-sus').value = p.cartao_sus || '';
-        document.getElementById('pf-convenio').value = p.convenio || '';
-        document.getElementById('pf-contato').value = p.contato_emergencia || '';
-        document.getElementById('pf-tel').value = p.tel_emergencia || '';
+    const p = await api('GET', '/api/perfil/' + mem.id_pessoal).catch(() => null);
+    if (p && !p.erro) {
+      document.getElementById('pf-nome').value = p.nome_completo || mem.nome || '';
+      if (p.data_nascimento) {
+        const dt = new Date(p.data_nascimento);
+        document.getElementById('pf-nasc-dia').value = String(dt.getUTCDate()).padStart(2,'0');
+        document.getElementById('pf-nasc-mes').value = String(dt.getUTCMonth() + 1).padStart(2, '0');
+        document.getElementById('pf-nasc-ano').value = String(dt.getUTCFullYear());
       }
+      document.getElementById('pf-altura').value = p.altura || '';
+      document.getElementById('pf-peso').value = p.peso || '';
+      if (p.altura && p.peso) calcularIMCPerfil(p.altura, p.peso);
+      document.getElementById('pf-sangue').value = p.tipo_sanguineo || '';
+      document.getElementById('pf-alergias').value = p.alergias || '';
+      document.getElementById('pf-cpf').value = p.cpf || '';
+      document.getElementById('pf-sus').value = p.cartao_sus || '';
+      document.getElementById('pf-convenio').value = p.convenio || '';
+      document.getElementById('pf-contato').value = p.contato_emergencia || '';
+      document.getElementById('pf-tel').value = p.tel_emergencia || '';
     }
   } catch(e) { console.log('carregarPerfil erro:', e.message); }
 }
