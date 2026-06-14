@@ -2565,14 +2565,8 @@ async function baixarPDFMedicamentos() {
 // Abre URL no browser externo no APK ou faz download no PWA
 async function abrirPDFexterno(url, nomeArquivo) {
   if (window.location.protocol === 'capacitor:') {
-    // No APK: usar Intent Android via anchor com target _blank
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => document.body.removeChild(a), 100);
+    // No APK: navegação direta para o MainActivity.java interceptar via shouldOverrideUrlLoading
+    window.location.href = url;
   } else {
     const res = await fetch(url);
     if (!res.ok) throw new Error('Erro ao gerar PDF');
