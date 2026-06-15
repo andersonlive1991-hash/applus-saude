@@ -178,6 +178,7 @@ app.use('/api/mente-sa', require('./routes/mente-sa'));
 app.use('/api/anvisa', require('./routes/anvisa'));
 app.use('/api/exames', require('./routes/exames'));
 app.use('/api/comportamentos-tea', require('./routes/comportamentos-tea'));
+app.use('/api/dashboard', require('./routes/dashboard'));
 const rateLimit = require('express-rate-limit');
 
 // Auto-migration
