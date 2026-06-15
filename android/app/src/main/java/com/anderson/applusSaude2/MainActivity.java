@@ -1,12 +1,8 @@
 package com.anderson.applusSaude2;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.WindowManager;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -16,32 +12,6 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         criarCanalAlarme();
         verificarPararAlarme(getIntent());
-        configurarAberturaPDFExterna();
-    }
-
-    private void configurarAberturaPDFExterna() {
-        WebView webView = getBridge().getWebView();
-        WebViewClient clienteOriginal = webView.getWebViewClient();
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                String url = request.getUrl().toString();
-                if (url.contains("/api/pdf/")) {
-                    try {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-                        return true;
-                    } catch (Exception e) {
-                        return false;
-                    }
-                }
-                if (clienteOriginal != null) {
-                    return clienteOriginal.shouldOverrideUrlLoading(view, request);
-                }
-                return super.shouldOverrideUrlLoading(view, request);
-            }
-        });
     }
 
     private void criarCanalAlarme() {
