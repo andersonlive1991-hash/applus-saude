@@ -2565,8 +2565,31 @@ async function baixarPDFMedicamentos() {
 // Abre URL no browser externo no APK ou faz download no PWA
 async function abrirPDFexterno(url, nomeArquivo) {
   if (window.location.protocol === 'capacitor:') {
-    // No APK: navegação direta para o MainActivity.java interceptar via shouldOverrideUrlLoading
-    window.location.href = url;
+    // APK: Filesystem.writeFile + Share.share (Blob+anchor nao funciona no WebView Capacitor)
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Erro ao gerar PDF');
+    const blob = await res.blob();
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+      reader.readAsDataURL(blob);
+    });
+    const { Filesystem, Share } = window.Capacitor.Plugins;
+    await Filesystem.writeFile({
+      path: nomeArquivo,
+      data: base64,
+      directory: 'CACHE'
+    });
+    const fileUri = await Filesystem.getUri({
+      path: nomeArquivo,
+      directory: 'CACHE'
+    });
+    await Share.share({
+      title: nomeArquivo,
+      url: fileUri.uri,
+      dialogTitle: 'Salvar ou compartilhar PDF'
+    });
   } else {
     const res = await fetch(url);
     if (!res.ok) throw new Error('Erro ao gerar PDF');
@@ -2589,7 +2612,7 @@ async function baixarRelatorioMensal() {
     const BASE = 'https://applus-saude-production.up.railway.app';
     const mes = new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' }).replace('/', '-');
     await abrirPDFexterno(BASE + '/api/pdf/mensal/id/' + APP.idPessoal, 'relatorio-saude-' + mes + '.pdf');
-  } catch(e) { alerta('Erro ao gerar relatório: ' + e.message, 'erro'); }
+  } catch(e) { alerta('Erro: ' + e.message + ' | ' + (e.stack || '').split('\n')[1], 'erro'); console.error('[PDF]', e); }
 }
 function sair() {
   localStorage.clear();
