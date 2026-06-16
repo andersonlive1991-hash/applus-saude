@@ -2575,7 +2575,6 @@ async function abrirPDFexterno(url, nomeArquivo) {
       reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
       reader.readAsDataURL(blob);
     });
-    alerta('DEBUG 1: blob ok, Capacitor=' + typeof window.Capacitor + ' Plugins=' + JSON.stringify(Object.keys(window.Capacitor && window.Capacitor.Plugins || {})));
     const { Filesystem, Share } = window.Capacitor.Plugins;
     await Filesystem.writeFile({
       path: nomeArquivo,
