@@ -12,6 +12,8 @@ dependencies {
     implementation project(':capacitor-community-keep-awake')
     implementation project(':capacitor-local-notifications')
     implementation project(':capacitor-push-notifications')
+    implementation project(':capacitor-filesystem')
+    implementation project(':capacitor-share')
 
 }
 
