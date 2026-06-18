@@ -30,7 +30,7 @@ self.addEventListener('fetch', e => {
       fetch(e.request.clone())
         .then(res => {
           // Salva resposta GET no cache
-          if (e.request.method === 'GET' && res.ok) {
+          if (e.request.method === 'GET' && res.ok && !url.includes('/api/pdf/')) {
             const resClone = res.clone();
             caches.open(CACHE).then(cache => cache.put(e.request, resClone));
           }
