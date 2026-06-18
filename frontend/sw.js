@@ -1,5 +1,5 @@
 // v3 - modo offline
-const CACHE = 'applus-v22';
+const CACHE = 'applus-v23';
 const ARQUIVOS = [
   '/', '/index.html', '/css/style.css',
   '/js/modulos.js', '/manifest.json', '/offline.html',
