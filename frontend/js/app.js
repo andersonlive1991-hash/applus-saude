@@ -2564,7 +2564,7 @@ async function baixarPDFMedicamentos() {
 
 // Abre URL no browser externo no APK ou faz download no PWA
 async function abrirPDFexterno(url, nomeArquivo) {
-  if (window.location.protocol === 'capacitor:') {
+  if (window.location.protocol === 'capacitor:' || (typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) {
     // APK: Filesystem.downloadFile baixa direto da URL sem passar pelo WebView (nao e interceptado pelo SW)
     const { Filesystem, Share } = window.Capacitor.Plugins;
     await Filesystem.downloadFile({
