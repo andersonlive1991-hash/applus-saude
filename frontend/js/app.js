@@ -2565,20 +2565,11 @@ async function baixarPDFMedicamentos() {
 // Abre URL no browser externo no APK ou faz download no PWA
 async function abrirPDFexterno(url, nomeArquivo) {
   if (window.location.protocol === 'capacitor:') {
-    // APK: Filesystem.writeFile + Share.share (Blob+anchor nao funciona no WebView Capacitor)
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Erro ao gerar PDF');
-    const blob = await res.blob();
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
-      reader.readAsDataURL(blob);
-    });
+    // APK: Filesystem.downloadFile baixa direto da URL sem passar pelo WebView (nao e interceptado pelo SW)
     const { Filesystem, Share } = window.Capacitor.Plugins;
-    await Filesystem.writeFile({
+    await Filesystem.downloadFile({
+      url: url,
       path: nomeArquivo,
-      data: base64,
       directory: 'CACHE'
     });
     const fileUri = await Filesystem.getUri({
