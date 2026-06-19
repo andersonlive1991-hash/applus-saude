@@ -2440,13 +2440,26 @@ async function exportarMeusDados() {
       gastos
     };
 
-    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'applus-saude-meus-dados-' + new Date().toISOString().split('T')[0] + '.json';
-    a.click();
-    URL.revokeObjectURL(url);
+    const json = JSON.stringify(dados, null, 2);
+    const nomeArquivo = 'applus-saude-meus-dados-' + new Date().toISOString().split('T')[0] + '.json';
+    if (typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      const { Filesystem, Share } = window.Capacitor.Plugins;
+      await Filesystem.writeFile({
+        path: nomeArquivo,
+        data: btoa(unescape(encodeURIComponent(json))),
+        directory: 'CACHE'
+      });
+      const fileUri = await Filesystem.getUri({ path: nomeArquivo, directory: 'CACHE' });
+      await Share.share({ title: nomeArquivo, url: fileUri.uri, dialogTitle: 'Salvar ou compartilhar dados' });
+    } else {
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomeArquivo;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
     alerta('✅ Dados exportados com sucesso!');
   } catch(e) {
     alerta('Erro ao exportar dados: ' + e.message);
@@ -4690,19 +4703,8 @@ async function baixarPDFPlantao() {
   const hoje = new Date().toLocaleDateString('sv-SE');
   alerta('⏳ Gerando PDF...');
   try {
-    const BASE = window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost'
-      ? 'https://applus-saude-production.up.railway.app' : '';
-    const res = await fetch(BASE + `/api/pdf/plantao/${APP.membroId}?data=${hoje}`);
-    if (!res.ok) throw new Error('Erro ao gerar PDF');
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `plantao-${hoje}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const BASE = 'https://applus-saude-production.up.railway.app';
+    await abrirPDFexterno(BASE + `/api/pdf/plantao/${APP.membroId}?data=${hoje}`, `plantao-${hoje}.pdf`);
   } catch(e) { alerta('Erro ao gerar PDF: ' + e.message, 'erro'); }
 }
 
